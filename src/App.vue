@@ -3,8 +3,7 @@
 </template>
 
 <style lang="scss">
-@import "./assets/scss/app.scss";
-@import '~bootstrap/scss/bootstrap';
+@import '~@/assets/scss/app.scss';
 
 @font-face {
   font-family: 'Material Icons';
@@ -12,6 +11,7 @@
   font-weight: 400;
   src: local('Material Icons'),
        local('MaterialIcons-Regular'),
+       url(~@/assets/fonts/MaterialIcons-Regular.ttf) format('truetype'),
        url(~@/assets/fonts/MaterialIcons-Regular.woff2) format('woff2'),
 }
 
@@ -39,6 +39,7 @@
   /* Support for IE. */
   font-feature-settings: 'liga';
 }
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
