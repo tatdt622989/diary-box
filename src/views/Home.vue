@@ -62,6 +62,7 @@ import {
 } from 'vue';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import FunctionBar from '@/components/FunctionBar.vue';
 
 export default defineComponent({
@@ -71,6 +72,7 @@ export default defineComponent({
   },
   setup() {
     const mainScene = ref<HTMLElement | null>(null);
+    const publicPath = ref(process.env.BASE_URL);
 
     onMounted(() => {
       const renderer = new THREE.WebGLRenderer();
@@ -89,6 +91,23 @@ export default defineComponent({
         mainScene.value.appendChild(renderer.domElement);
         controls = new OrbitControls(camera, mainScene.value);
       }
+
+      const loader = new GLTFLoader();
+
+      loader.load(
+        `${publicPath.value}model/can.gltf`,
+        (gltf) => {
+          console.log(gltf);
+          scene.add(gltf.scene);
+        },
+        (xhr) => {
+          console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
+        },
+        (error) => {
+          console.log('An error happened');
+        },
+      );
+
       const geometry = new THREE.BoxGeometry();
       const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
       const cube = new THREE.Mesh(geometry, material);
