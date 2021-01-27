@@ -64,6 +64,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import FunctionBar from '@/components/FunctionBar.vue';
+import * as dat from 'dat.gui';
 
 export default defineComponent({
   name: 'Home',
@@ -73,8 +74,11 @@ export default defineComponent({
   setup() {
     const mainScene = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
+    // interface dataParameter {
+    // }
 
     onMounted(() => {
+      const datGui = new dat.GUI();
       const renderer = new THREE.WebGLRenderer();
       renderer.setSize(window.innerWidth, window.innerHeight - 66);
       const scene = new THREE.Scene();
@@ -85,6 +89,12 @@ export default defineComponent({
         0.1,
         1000,
       );
+
+      function render() {
+        requestAnimationFrame(render);
+        renderer.render(scene, camera);
+      }
+
       let controls;
       if (mainScene.value) {
         // 到這裡mainScene.value就一定不是null就不會報錯
@@ -93,12 +103,12 @@ export default defineComponent({
       }
 
       const loader = new GLTFLoader();
-
       loader.load(
         `${publicPath.value}model/can.gltf`,
         (gltf) => {
           console.log(gltf);
           scene.add(gltf.scene);
+          render();
         },
         (xhr) => {
           console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
@@ -107,11 +117,6 @@ export default defineComponent({
           console.log('An error happened');
         },
       );
-
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
 
       // 地板
       const planeGeometry = new THREE.PlaneGeometry(50, 50, 32);
@@ -124,6 +129,15 @@ export default defineComponent({
 
       camera.position.z = 5;
 
+      // 燈光
+      const ambientLight = new THREE.AmbientLight(0x404040, 2);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(1, 3, 1);
+      scene.add(directionalLight);
+      const helper = new THREE.DirectionalLightHelper(directionalLight, 5);
+      scene.add(helper);
+
       function resize() {
         renderer.setSize(window.innerWidth, window.innerHeight - 66);
         camera.aspect = window.innerWidth / (window.innerHeight - 66);
@@ -131,14 +145,6 @@ export default defineComponent({
       }
 
       window.addEventListener('resize', resize, false);
-
-      function animate() {
-        requestAnimationFrame(animate);
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-        renderer.render(scene, camera);
-      }
-      animate();
     });
     return {
       mainScene,
