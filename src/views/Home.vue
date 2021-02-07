@@ -74,12 +74,14 @@ export default defineComponent({
   setup() {
     const mainScene = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
-    // interface dataParameter {
+    // interface sceneParameter {
     // }
 
     onMounted(() => {
       const datGui = new dat.GUI();
       const renderer = new THREE.WebGLRenderer();
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.setSize(window.innerWidth, window.innerHeight - 66);
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x449966);
@@ -87,27 +89,64 @@ export default defineComponent({
         75,
         window.innerWidth / (window.innerHeight - 66),
         0.1,
-        1000,
+        10000,
       );
+      camera.position.set(20, 15, -10);
 
-      function render() {
-        requestAnimationFrame(render);
-        renderer.render(scene, camera);
-      }
+      let controls: OrbitControls;
 
-      let controls;
       if (mainScene.value) {
         // 到這裡mainScene.value就一定不是null就不會報錯
         mainScene.value.appendChild(renderer.domElement);
         controls = new OrbitControls(camera, mainScene.value);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
       }
 
-      const loader = new GLTFLoader();
+      function render() {
+        requestAnimationFrame(render);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      // 地板
+      const planeGeometry = new THREE.PlaneGeometry(50, 50, 32);
+      const planeMaterial = new THREE.MeshStandardMaterial(
+        { color: 0x449966, side: THREE.DoubleSide },
+      );
+      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      plane.rotateX(Math.PI / 2);
+      plane.receiveShadow = true;
+      scene.add(plane);
+
+      camera.position.z = 5;
+
+      // 燈光
+      const ambientLight = new THREE.AmbientLight(0x404040, 2);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(10, 10, 1);
+      directionalLight.castShadow = true;
+      scene.add(directionalLight);
+      directionalLight.shadow.mapSize.width = 512;
+      directionalLight.shadow.mapSize.height = 512;
+      directionalLight.shadow.camera.near = 0.1;
+      directionalLight.shadow.camera.far = 10000;
+      const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
+      scene.add(directionalLightHelper);
+
+      const loader = new THREE.ObjectLoader();
       loader.load(
-        `${publicPath.value}model/can.gltf`,
+        `${publicPath.value}model/can.json`,
         (gltf) => {
-          console.log(gltf);
-          scene.add(gltf.scene);
+          const can = gltf;
+          console.log(can);
+          scene.add(can);
+          directionalLight.target = can;
+          can.castShadow = true;
+          can.receiveShadow = false;
+          const helper = new THREE.CameraHelper(directionalLight.shadow.camera);
+          scene.add(helper);
           render();
         },
         (xhr) => {
@@ -117,26 +156,6 @@ export default defineComponent({
           console.log('An error happened');
         },
       );
-
-      // 地板
-      const planeGeometry = new THREE.PlaneGeometry(50, 50, 32);
-      const planeMaterial = new THREE.MeshBasicMaterial(
-        { color: 0x449966, side: THREE.DoubleSide },
-      );
-      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-      plane.rotateX(Math.PI / 2);
-      scene.add(plane);
-
-      camera.position.z = 5;
-
-      // 燈光
-      const ambientLight = new THREE.AmbientLight(0x404040, 2);
-      scene.add(ambientLight);
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-      directionalLight.position.set(1, 3, 1);
-      scene.add(directionalLight);
-      const helper = new THREE.DirectionalLightHelper(directionalLight, 5);
-      scene.add(helper);
 
       function resize() {
         renderer.setSize(window.innerWidth, window.innerHeight - 66);
