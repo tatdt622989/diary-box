@@ -50,6 +50,7 @@
     </div>
     <div id="mainScene" ref="mainScene"></div>
     <FunctionBar></FunctionBar>
+    <Menu></Menu>
   </div>
 </template>
 
@@ -63,13 +64,15 @@ import {
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import FunctionBar from '@/components/FunctionBar.vue';
 import * as dat from 'dat.gui';
+import FunctionBar from '@/components/FunctionBar.vue';
+import Menu from '@/components/Menu.vue';
 
 export default defineComponent({
   name: 'Home',
   components: {
     FunctionBar,
+    Menu,
   },
   setup() {
     const mainScene = ref<HTMLElement | null>(null);
@@ -217,11 +220,15 @@ export default defineComponent({
   right: 16px;
   display: block;
   flex-direction: column;
-  list-style: none;
 }
 .info {
   .info-list {
-    list-style: none;
+    li {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    margin: 0;
+    padding: 0 16px;
   }
   .toggler-btn {
     span {
@@ -230,13 +237,17 @@ export default defineComponent({
     }
     background-color: $secondary;
     border-radius: 0 20px 20px 0;
+    height: inherit;
   }
   background-color: rgba(248, 235, 207, .75);
   border-radius: 0 20px 20px 0;
   display: flex;
+  align-items: center;
   position: absolute;
   left: 0;
   bottom: 86px;
   min-height: 97px;
+  height: 97px;
+  justify-content: space-between;
 }
 </style>
