@@ -8,7 +8,7 @@
     </div>
     <ul class="tool-list">
       <li>
-        <button>
+        <button @click="isMenuOpen = true;">
           <span class="material-icons">menu</span>
         </button>
       </li>
@@ -50,7 +50,7 @@
     </div>
     <div id="mainScene" ref="mainScene"></div>
     <FunctionBar></FunctionBar>
-    <Menu></Menu>
+    <Menu v-model:is-menu-open="isMenuOpen"></Menu>
   </div>
 </template>
 
@@ -77,6 +77,8 @@ export default defineComponent({
   setup() {
     const mainScene = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
+    const isMenuOpen = ref<boolean>(false);
+
     // interface sceneParameter {
     // }
 
@@ -170,6 +172,7 @@ export default defineComponent({
     });
     return {
       mainScene,
+      isMenuOpen,
     };
   },
 });
@@ -178,6 +181,7 @@ export default defineComponent({
 <style lang="scss">
 .home {
   position: relative;
+  overflow: hidden;
 }
 .status {
   .currency {
