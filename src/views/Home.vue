@@ -8,7 +8,7 @@
     </div>
     <ul class="tool-list">
       <li>
-        <button @click="isMenuOpen = true;">
+        <button @click="menuToggler">
           <span class="material-icons">menu</span>
         </button>
       </li>
@@ -50,7 +50,7 @@
     </div>
     <div id="mainScene" ref="mainScene"></div>
     <FunctionBar></FunctionBar>
-    <Menu v-model:is-menu-open="isMenuOpen"></Menu>
+    <Menu></Menu>
   </div>
 </template>
 
@@ -60,11 +60,12 @@ import {
   reactive,
   defineComponent,
   onMounted,
+  computed,
 } from 'vue';
+import * as dat from 'dat.gui';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import * as dat from 'dat.gui';
+import { useStore } from 'vuex';
 import FunctionBar from '@/components/FunctionBar.vue';
 import Menu from '@/components/Menu.vue';
 
@@ -75,9 +76,10 @@ export default defineComponent({
     Menu,
   },
   setup() {
+    const store = useStore();
+
     const mainScene = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
-    const isMenuOpen = ref<boolean>(false);
 
     // interface sceneParameter {
     // }
@@ -172,7 +174,8 @@ export default defineComponent({
     });
     return {
       mainScene,
-      isMenuOpen,
+      isMenuOpen: computed(() => store.state.isMenuOpen),
+      menuToggler: () => store.commit('menuToggler', true),
     };
   },
 });
@@ -207,6 +210,9 @@ export default defineComponent({
 }
 .tool-list {
   li button {
+    &:hover, &:active {
+      background-color: #F0E0B9;
+    }
     span {
       color: $primary;
       font-size: 36px;
@@ -218,6 +224,7 @@ export default defineComponent({
     border-radius: 999px;
     background-color: $secondary;
     margin-bottom: 12px;
+    transition: $t-base;
   }
   position: absolute;
   top: 24px;
