@@ -32,7 +32,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 #nav {
   >img {
     width: 180px;

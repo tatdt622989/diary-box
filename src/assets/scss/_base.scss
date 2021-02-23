@@ -14,7 +14,7 @@ ul {
   transition: all .2s ease-out;
 }
 
-.btn-1 {
+.btn-circle {
   span {
     color: $primary;
     font-size: 36px;
@@ -30,4 +30,22 @@ ul {
   height: 52px;
   width: 52px;
   transition: $t-base;
+}
+
+.btn-rectangle {
+  &:hover, &:active {
+    font-size: 20px;
+    color: $primary;
+    font-weight: bold;
+    background: #F0E0B9;
+    border-color: $primary;
+  }
+  border: 3px solid $primary;
+  border-radius: 999px;
+  background: transparent;
+  color: $primary;
+  font-weight: bold;
+  font-size: 20px;
+  transition: $t-base;
+  height: 52px;
 }
