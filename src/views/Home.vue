@@ -218,13 +218,20 @@ export default defineComponent({
       font-size: 36px;
       line-height: 52px;
     }
-    border: 0;
-    height: 52px;
-    width: 52px;
-    border-radius: 999px;
+    img, span {
+      display: inline-block;
+    }
+    align-items: center;
     background-color: $secondary;
+    border-radius: 999px;
+    border: 0;
+    display: flex;
+    height: 52px;
+    justify-content: center;
     margin-bottom: 12px;
+    text-align: center;
     transition: $t-base;
+    width: 52px;
   }
   position: absolute;
   top: 24px;

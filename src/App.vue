@@ -2,6 +2,19 @@
   <router-view/>
 </template>
 
+<script lang="ts">
+import {
+  ref,
+  reactive,
+  defineComponent,
+  computed,
+} from 'vue';
+
+export default defineComponent({
+  name: 'app',
+});
+</script>
+
 <style lang="scss">
 @import '~@/assets/scss/app.scss';
 
@@ -40,17 +53,57 @@
   font-feature-settings: 'liga';
 }
 
-input {
-  &:focus {
-    outline: 0;
-  }
-}
-
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+}
+
+body {
+  background-color: $primary !important;
+}
+
+.function-menu {
+  li {
+    &:last-child {
+      button {
+        &:after {
+          content: normal;
+        }
+      }
+    }
+  }
+  button {
+    &:hover, &:active {
+      background-color: $tertiary;
+    }
+    &::after {
+      background-color: $primary;
+      bottom: 0;
+      content: "";
+      height: 1px;
+      left: 50%;
+      position: absolute;
+      transform: translateX(-50%);
+      width: 90px;
+    }
+    background-color: transparent;
+    color: $primary;
+    font-size: 18px;
+    font-weight: bold;
+    height: 52px;
+    margin: 0 auto;
+    position: relative;
+    text-align: center;
+    transition: $t-base;
+    width: 100%;
+  }
+  background-color: $secondary;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 </style>

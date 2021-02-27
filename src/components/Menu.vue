@@ -1,6 +1,6 @@
 <template>
   <div class="menu-wrap" :class="{ active: isMenuOpen }">
-    <div class="content">
+    <div class="content" :style="{height}">
       <button class="close-btn t-base" @click="menuToggler">
         <span class="material-icons">close</span>
       </button>
@@ -32,6 +32,7 @@ import {
   reactive,
   defineComponent,
   computed,
+  onMounted,
 } from 'vue';
 import { useStore } from 'vuex';
 
@@ -39,9 +40,25 @@ export default defineComponent({
   name: 'Menu',
   setup(props, { attrs, slots, emit }) {
     const store = useStore();
+    const timer = ref<number | null>(null);
+
+    onMounted(() => {
+      store.commit('getHeight', `${window.innerHeight}px`);
+      window.addEventListener('resize', () => {
+        if (timer.value) {
+          clearTimeout(timer.value);
+        }
+        timer.value = setTimeout(() => {
+          store.commit('getHeight', `${window.innerHeight}px`);
+          console.log('高度變動');
+          timer.value = null;
+        }, 500);
+      });
+    });
     return {
       isMenuOpen: computed(() => store.state.isMenuOpen),
       menuToggler: () => store.commit('menuToggler', false),
+      height: computed(() => store.state.height),
     };
   },
 });

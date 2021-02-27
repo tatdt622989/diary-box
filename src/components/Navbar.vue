@@ -1,6 +1,6 @@
 <template>
   <div id="nav">
-    <img src="@/assets/images/logo.svg" alt="貼生活">
+    <img src="@/assets/images/logo.svg" alt="貼生活" @click="$router.push('/')">
     <button @click="menuToggler">
       <span class="material-icons">menu</span>
     </button>
@@ -35,6 +35,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 #nav {
   >img {
+    cursor: pointer;
     width: 180px;
   }
   button {
@@ -46,21 +47,22 @@ export default defineComponent({
       font-size: 36px;
       line-height: 52px;
     }
+    background-color: $secondary;
+    border-radius: 999px;
     border: 0;
     height: 52px;
-    width: 52px;
-    border-radius: 999px;
-    background-color: $secondary;
     margin-bottom: 0px;
     transition: $t-base;
+    width: 52px;
   }
-  background-color: $secondary;
-  height: 66px;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  position: relative;
+  background-color: $secondary;
+  display: flex;
+  flex-shrink: 0;
+  height: 66px;
+  justify-content: space-between;
   padding: 0 20px;
+  position: relative;
+  width: 100%;
 }
 </style>
