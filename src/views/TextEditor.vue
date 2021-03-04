@@ -2,7 +2,7 @@
   <div class="text-editor-wrap" :style="{ height }" @click="activeTool = ''">
     <Navbar></Navbar>
     <div class="header">
-      <button class="btn-circle" @click="$router.push('/')">
+      <button class="btn-circle" @click="$router.push('/node-list')">
         <span class="material-icons">arrow_back</span>
       </button>
       <p>筆記編輯模式</p>
@@ -51,7 +51,14 @@
             v-if="activeTool === 'font-size'"
           >
             <span>20px</span>
-            <input type="range" name="" id="fontSizeRange" />
+            <input
+              type="range"
+              name=""
+              id="fontSizeRange"
+              max="40"
+              @change="updateTextStyle('font-size')"
+              v-model="fontSize"
+            />
           </div>
         </li>
         <li @click.stop>
@@ -64,7 +71,7 @@
               <span class="material-icons">format_color_text</span>
             </label>
           </button>
-          <input type="color" name="" id="textColor" />
+          <input type="color" name="" id="textColor" v-model="textColor" />
         </li>
         <li @click.stop>
           <button
@@ -117,7 +124,9 @@
           contenteditable="true"
           @mouseup="getSelectedText"
           @touchend="getSelectedText"
-        ></p>
+          spellcheck="false"
+          ref="editorContent"
+        ><span></span></p>
       </div>
     </div>
   </div>
@@ -142,15 +151,29 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const activeTool = ref<string>('');
+    const textColor = ref<string>('');
+    const fontSize = ref<number>(32);
 
-    const selObj = window.getSelection();
     let range: Range|null = null;
     let str: string|null = null;
+    const editorContent = ref<HTMLElement | null>(null);
 
     function getSelectedText() {
-      if (selObj && selObj.toString()) {
+      const selObj: Selection | null = window.getSelection();
+      if (selObj?.isCollapsed) { return; }
+      if (selObj && selObj.toString() && editorContent.value) {
         range = selObj.getRangeAt(0);
         str = range.toString();
+        const startNode: Node = range.startContainer;
+        const startNodeIndex = selObj.anchorOffset;
+        const endNode: Node = range.endContainer;
+        const endNodeIndex = selObj.focusOffset;
+        const nodeList = Array.from(editorContent.value.childNodes);
+        const startText: string | null = startNode.textContent;
+        const endText: string | null = endNode.textContent;
+        const afterStartNode = document.createElement('span');
+        const beforeEndNode = document.createElement('span');
+        console.log(startNode, endNode);
       }
     }
 
@@ -158,38 +181,37 @@ export default defineComponent({
       let wrap = null;
       switch (type) {
         case 'bold':
-          wrap = document.createElement('b');
+          wrap = document.createElement('strong');
+          break;
+        case 'font-size':
+          wrap = document.createElement('span');
+          wrap.style.fontSize = `${fontSize.value}px`;
           break;
         default:
           break;
       }
-      const editorNode: Element | null = document.querySelector('#editorContent');
-      if (editorNode && range && str && wrap) {
-        wrap.textContent = str;
-        range.deleteContents();
+      console.log(editorContent.value);
+      if (editorContent.value && range && str && wrap) {
+        wrap.appendChild(range.extractContents());
+        const wrapNodes = Array.from(wrap.childNodes as NodeListOf<HTMLElement>);
+        wrapNodes.forEach((el, i) => {
+          if (el.nodeName !== '#text' && el.style.fontSize) {
+            wrapNodes[i].style.fontSize = '';
+          }
+        });
         range.insertNode(wrap);
         console.log(range.startContainer, range.endContainer);
-        if (range.startContainer.parentNode?.nodeName === 'SPAN') {
-          console.log('外層為span');
-          const documentFragment = range.extractContents();
-          editorNode.appendChild(documentFragment);
-        }
-        let i = 0;
-        const allNodes: NodeList | undefined = editorNode?.childNodes;
-        while (i < allNodes?.length) {
-          if (allNodes[i].nodeName !== '#text' && allNodes[i].textContent === '') {
-            editorNode.removeChild(allNodes[i]);
-          }
-          i += 1;
-        }
       }
     }
 
     return {
       height: computed(() => store.state.height),
       activeTool,
+      textColor,
       getSelectedText,
       updateTextStyle,
+      editorContent,
+      fontSize,
     };
   },
 });
@@ -352,7 +374,9 @@ export default defineComponent({
     margin-bottom: 20px;
   }
   #editorContent {
-    &::selection, p::selection, span::selection {
+    &::selection,
+    p::selection,
+    span::selection {
       background-color: $primary;
       color: $secondary;
     }
@@ -361,10 +385,9 @@ export default defineComponent({
     }
     border-radius: 20px;
     border: 2px solid $primary;
-    color: #9b9b9b;
+    color: $primary;
     flex-grow: 1;
     font-size: 38px;
-    font-weight: bold;
     margin: 0;
     padding: 16px 20px;
     text-align: left;
