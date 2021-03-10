@@ -8,8 +8,9 @@ module.exports = {
         return args;
       });
   },
-  publicPath: '/',
+  publicPath: './',
   // 這是將bootstrap的variables和mixins導入到所有元件中的方式，讓這些內容可以在各個元件中使用
+  productionSourceMap: false,
   css: {
     loaderOptions: {
       scss: {

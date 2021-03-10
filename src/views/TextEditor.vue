@@ -25,16 +25,26 @@
             v-if="activeTool === 'font-family'"
           >
             <li>
-              <button>Noto Sans TC</button>
+              <button @click="updateTextStyle('font-family', 'Noto Sans TC')">
+                Noto Sans TC
+              </button>
             </li>
             <li>
-              <button>Noto Serif TC</button>
+              <button @click="updateTextStyle('font-family', 'Noto Serif TC')">
+                Noto Serif TC
+              </button>
             </li>
             <li>
-              <button>微軟正黑體</button>
+              <button
+                @click="updateTextStyle('font-family', 'Microsoft JhengHei')"
+              >
+                微軟正黑體
+              </button>
             </li>
             <li>
-              <button>Arial</button>
+              <button @click="updateTextStyle('font-family', 'Arial')">
+                Arial
+              </button>
             </li>
           </ul>
         </li>
@@ -64,14 +74,20 @@
         <li @click.stop>
           <button
             class="btn-circle"
-            @click="activeTool = 'text-color'"
-            :class="{ active: activeTool === 'text-color' }"
+            @click="activeTool = 'color'"
+            :class="{ active: activeTool === 'color' }"
           >
             <label for="textColor">
               <span class="material-icons">format_color_text</span>
             </label>
           </button>
-          <input type="color" name="" id="textColor" v-model="textColor" />
+          <input
+            type="color"
+            name=""
+            id="textColor"
+            v-model="textColor"
+            @change="updateTextStyle('color')"
+          />
         </li>
         <li @click.stop>
           <button
@@ -79,11 +95,17 @@
             @click="activeTool = 'bg-color'"
             :class="{ active: activeTool === 'bg-color' }"
           >
-            <label for="textColor">
+            <label for="bgColor">
               <span class="material-icons">format_color_fill</span>
             </label>
           </button>
-          <input type="color" name="" id="bgColor" />
+          <input
+            type="color"
+            name=""
+            id="bgColor"
+            v-model="bgColor"
+            @input="updateTextStyle('bg-color')"
+          />
         </li>
         <li @click.stop>
           <button
@@ -97,16 +119,16 @@
             class="function-menu text-align"
             v-if="activeTool === 'text-align'"
           >
-            <button class="btn-circle">
+            <button class="btn-circle" @click="updateTextStyle('align', 'left')">
               <span class="material-icons">format_align_left</span>
             </button>
-            <button class="btn-circle">
+            <button class="btn-circle" @click="updateTextStyle('align', 'center')">
               <span class="material-icons">format_align_center</span>
             </button>
-            <button class="btn-circle">
+            <button class="btn-circle" @click="updateTextStyle('align', 'right')">
               <span class="material-icons">format_align_right</span>
             </button>
-            <button class="btn-circle">
+            <button class="btn-circle" @click="updateTextStyle('align', 'justify')">
               <span class="material-icons">format_align_justify</span>
             </button>
           </div>
@@ -117,7 +139,7 @@
           </button>
         </li>
       </ul>
-      <div class="editor">
+      <div class="editor" ref="editor">
         <input type="text" name="" id="" placeholder="請輸入標題" />
         <p
           id="editorContent"
@@ -126,7 +148,9 @@
           @touchend="getSelectedText"
           spellcheck="false"
           ref="editorContent"
-        ><span></span></p>
+        >
+          <span></span>
+        </p>
       </div>
     </div>
   </div>
@@ -151,12 +175,14 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const activeTool = ref<string>('');
-    const textColor = ref<string>('');
+    const textColor = ref<string>('#449966');
+    const bgColor = ref<string>('#F8EBCF');
     const fontSize = ref<number>(32);
 
     let range: Range|null = null;
     let str: string|null = null;
     const editorContent = ref<HTMLElement | null>(null);
+    const editor = ref<HTMLElement | null>(null);
 
     function getSelectedText() {
       const selObj: Selection | null = window.getSelection();
@@ -177,26 +203,53 @@ export default defineComponent({
       }
     }
 
-    function updateTextStyle(type: string) {
-      let wrap = null;
-      switch (type) {
-        case 'bold':
-          wrap = document.createElement('strong');
-          break;
-        case 'font-size':
-          wrap = document.createElement('span');
-          wrap.style.fontSize = `${fontSize.value}px`;
-          break;
-        default:
-          break;
+    function updateTextStyle(type: string, data: string) {
+      console.log(editorContent.value, range, str, type);
+      const wrap: HTMLElement = document.createElement('span');
+      if (type === 'bg-color' && editor.value) {
+        editor.value.style.backgroundColor = bgColor.value;
+        return;
       }
-      console.log(editorContent.value);
-      if (editorContent.value && range && str && wrap) {
+      if (editorContent.value && range && str) {
+        console.log('update');
+        switch (type) {
+          case 'bold':
+            wrap.style.fontWeight = 'bold';
+            break;
+          case 'font-size':
+            wrap.style.fontSize = `${fontSize.value}px`;
+            break;
+          case 'font-family':
+            wrap.style.fontFamily = data;
+            break;
+          case 'color':
+            wrap.style.color = textColor.value;
+            break;
+          case 'bg-color':
+            break;
+          default:
+            break;
+        }
+        console.log(editorContent.value);
         wrap.appendChild(range.extractContents());
         const wrapNodes = Array.from(wrap.childNodes as NodeListOf<HTMLElement>);
-        wrapNodes.forEach((el, i) => {
-          if (el.nodeName !== '#text' && el.style.fontSize) {
-            wrapNodes[i].style.fontSize = '';
+        console.log(wrapNodes);
+        wrapNodes.forEach((node, i) => {
+          const text = wrapNodes[i].textContent;
+          let style = wrapNodes[i].style ? wrapNodes[i].style.cssText : null;
+          if (node.nodeName === 'SPAN') {
+            console.log(node.textContent, wrap.textContent, style, wrap.style.cssText);
+            if (node.textContent === wrap.textContent && style) {
+              wrapNodes[i].remove();
+              console.log(style.search(type) > -1);
+              if (style.search(type) > -1) {
+                style = style.replace(type, '');
+              }
+              wrap.style.cssText += style;
+              wrap.textContent = text;
+            } else if (style && style.indexOf(type) > -1) {
+              wrapNodes[i].style[type as any] = '';
+            }
           }
         });
         range.insertNode(wrap);
@@ -208,9 +261,11 @@ export default defineComponent({
       height: computed(() => store.state.height),
       activeTool,
       textColor,
+      bgColor,
       getSelectedText,
       updateTextStyle,
       editorContent,
+      editor,
       fontSize,
     };
   },
@@ -374,6 +429,10 @@ export default defineComponent({
     margin-bottom: 20px;
   }
   #editorContent {
+    .selection {
+      background-color: $primary;
+      color: $secondary;
+    }
     &::selection,
     p::selection,
     span::selection {
