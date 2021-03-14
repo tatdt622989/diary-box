@@ -1,10 +1,11 @@
+import { Note } from '@/types';
 import { createStore } from 'vuex';
 
 export default createStore({
   state: {
     isMenuOpen: false,
     height: null,
-    noteData: [],
+    noteData: [] as Array<Note>,
   },
   mutations: {
     menuToggler(state, data) {
@@ -14,7 +15,10 @@ export default createStore({
       state.height = data;
     },
     updateNote(state, data) {
-      state.noteData = data;
+      const idList = state.noteData.map((el) => el.id);
+      if (idList.indexOf(data.id) === -1) {
+        state.noteData.push(data);
+      }
     },
   },
   actions: {

@@ -40,7 +40,7 @@
         </ul>
       </div>
     </div>
-    <button class="add-btn" @click="$router.push('/text-editor')">
+    <button class="add-btn" @click="createNewNote">
       <span class="material-icons">add</span>
       <span>新增筆記</span>
     </button>
@@ -80,6 +80,7 @@ import {
   computed,
 } from 'vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import Navbar from '@/components/Navbar.vue';
 
 export default defineComponent({
@@ -89,15 +90,25 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const router = useRouter();
     const isFilterOpen = ref<boolean>(false);
 
     function openFilter() {
       isFilterOpen.value = true;
     }
 
+    function createNewNote() {
+      const ts = Date.now();
+      router.push({
+        name: 'TextEditor',
+        params: { status: 'note-add', id: ts },
+      });
+    }
+
     return {
       isFilterOpen,
       openFilter,
+      createNewNote,
       height: computed(() => store.state.height),
     };
   },
