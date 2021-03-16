@@ -18,6 +18,7 @@ export default createStore({
       const idList = state.noteData.map((el) => el.id);
       if (idList.indexOf(data.id) === -1) {
         state.noteData.push(data);
+        localStorage.setItem('note-data', JSON.stringify(state.noteData));
       }
     },
   },

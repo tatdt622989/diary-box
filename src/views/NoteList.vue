@@ -16,8 +16,8 @@
           <span>2021 / 02 / 25</span>
         </div>
         <ul class="note-list">
-          <li>
-            <span class="title">過年採買清單</span>
+          <li v-for="(note, i) in noteData" :key="i">
+            <span class="title">{{ note.title }}</span>
             <span class="time">08:30</span>
             <button class="btn-circle">
               <span class="material-icons">more_vert</span>
@@ -82,6 +82,7 @@ import {
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import Navbar from '@/components/Navbar.vue';
+import { Note } from '@/types';
 
 export default defineComponent({
   name: 'NoteList',
@@ -92,6 +93,20 @@ export default defineComponent({
     const store = useStore();
     const router = useRouter();
     const isFilterOpen = ref<boolean>(false);
+    const noteData = ref<Array<Note>>([]);
+
+    onMounted(() => {
+      try {
+        if (localStorage.getItem('note-data')) {
+          noteData.value = JSON.parse(localStorage.getItem('note-data') as string);
+        } else {
+          noteData.value = [];
+        }
+      } catch (e) {
+        noteData.value = [];
+      }
+      console.log(noteData.value);
+    });
 
     function openFilter() {
       isFilterOpen.value = true;
@@ -106,10 +121,11 @@ export default defineComponent({
     }
 
     return {
-      isFilterOpen,
-      openFilter,
       createNewNote,
       height: computed(() => store.state.height),
+      isFilterOpen,
+      noteData,
+      openFilter,
     };
   },
 });

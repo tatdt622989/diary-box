@@ -12,7 +12,7 @@
     </div>
     <div class="content">
       <div id="editorHeader">
-        <input type="text" placeholder="請輸入標題"/>
+        <input type="text" placeholder="請輸入標題" v-model="title"/>
       </div>
       <div class="editor-wrap" ref="editor">
         <div class="toolbar" id="toolbar">
@@ -65,6 +65,7 @@
         ></div>
       </div>
     </div>
+    <Toast></Toast>
   </div>
 </template>
 
@@ -81,11 +82,13 @@ import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
 import Quill from 'quill';
 import Navbar from '@/components/Navbar.vue';
+import Toast from '@/components/Toast.vue';
 
 export default defineComponent({
   name: 'TextEditor',
   components: {
     Navbar,
+    Toast,
   },
   setup() {
     const store = useStore();
@@ -98,6 +101,7 @@ export default defineComponent({
     const editor = ref<HTMLElement | null>(null);
     const quill = ref<Quill | null>(null);
     const sizeList = ref<Array<string>>([]);
+    const title = ref<string>('');
     let status: string | null = null;
     let noteId: string | null = null;
 
@@ -136,27 +140,33 @@ export default defineComponent({
     });
 
     function saveData() {
+      if (!title.value) {
+        return;
+      }
       if (quill.value && status) {
         const content = quill.value.getContents();
-        store.commit('updateNote', {
+        const data = {
           id: noteId,
           content,
-        });
+          title: title.value,
+        };
+        store.commit('updateNote', data);
         console.log(store.state.noteData);
       }
     }
 
     return {
-      height: computed(() => store.state.height),
-      noteData: computed(() => store.state.noteData),
       activeTool,
-      textColor,
       bgColor,
       editor,
+      editorInit,
       fontSize,
+      height: computed(() => store.state.height),
+      noteData: computed(() => store.state.noteData),
       saveData,
       sizeList,
-      editorInit,
+      textColor,
+      title,
     };
   },
 });
