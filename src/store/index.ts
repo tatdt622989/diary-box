@@ -1,4 +1,4 @@
-import { Note } from '@/types';
+import { Note, ToastMSG } from '@/types';
 import { createStore } from 'vuex';
 
 export default createStore({
@@ -6,6 +6,7 @@ export default createStore({
     isMenuOpen: false,
     height: null,
     noteData: [] as Array<Note>,
+    toastMsgList: [] as Array<ToastMSG>,
   },
   mutations: {
     menuToggler(state, data) {
@@ -21,8 +22,20 @@ export default createStore({
         localStorage.setItem('note-data', JSON.stringify(state.noteData));
       }
     },
+    addToast(state, data) {
+      state.toastMsgList.push(data);
+    },
+    removeToast(state) {
+      state.toastMsgList.splice(0, 1);
+    },
   },
   actions: {
+    updateToast({ commit }, data) {
+      commit('addToast', data);
+      setTimeout(() => {
+        commit('removeToast');
+      }, 3000);
+    },
   },
   modules: {
   },

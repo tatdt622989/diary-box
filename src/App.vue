@@ -1,5 +1,6 @@
 <template>
   <router-view/>
+  <Toast></Toast>
 </template>
 
 <script lang="ts">
@@ -9,9 +10,13 @@ import {
   defineComponent,
   computed,
 } from 'vue';
+import Toast from '@/components/Toast.vue';
 
 export default defineComponent({
   name: 'app',
+  components: {
+    Toast,
+  },
 });
 </script>
 

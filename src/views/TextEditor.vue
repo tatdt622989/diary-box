@@ -65,7 +65,6 @@
         ></div>
       </div>
     </div>
-    <Toast></Toast>
   </div>
 </template>
 
@@ -82,13 +81,11 @@ import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
 import Quill from 'quill';
 import Navbar from '@/components/Navbar.vue';
-import Toast from '@/components/Toast.vue';
 
 export default defineComponent({
   name: 'TextEditor',
   components: {
     Navbar,
-    Toast,
   },
   setup() {
     const store = useStore();
@@ -150,7 +147,10 @@ export default defineComponent({
           content,
           title: title.value,
         };
-        store.commit('updateNote', data);
+        store.dispatch('updateToast', {
+          type: 'success',
+          content: '成功新增',
+        });
         console.log(store.state.noteData);
       }
     }
