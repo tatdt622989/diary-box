@@ -138,6 +138,10 @@ export default defineComponent({
 
     function saveData() {
       if (!title.value) {
+        store.dispatch('updateToast', {
+          type: 'hint',
+          content: '請輸入標題',
+        });
         return;
       }
       if (quill.value && status) {

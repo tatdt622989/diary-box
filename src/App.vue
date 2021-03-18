@@ -111,4 +111,19 @@ body {
   flex-direction: column;
   overflow: hidden;
 }
+
+.toast-container .toast {
+  &.hint, &.hint .toast-header {
+    background-color: rgb(252, 193, 84);
+    color: rgb(47, 47, 47);
+  }
+  &.success, &.success .toast-header {
+    background-color: rgb(62, 167, 80);
+    color: rgb(255, 255, 255);
+  }
+  &.error, &.error .toast-header {
+    background-color: rgb(219, 62, 62);
+    color: rgb(255, 255, 255);
+  }
+}
 </style>
