@@ -11,14 +11,14 @@
       </button>
     </div>
     <div class="content" @click="isFilterOpen = false">
-      <div class="data-group">
+      <div class="data-group" v-for="(item, i) in noteList" :key="i">
         <div class="date-wrap">
-          <span>2021 / 02 / 25</span>
+          <span>{{ item.date }}</span>
         </div>
         <ul class="note-list">
-          <li v-for="(note, i) in noteData" :key="i">
-            <span class="title">{{ note.title }}</span>
-            <span class="time">08:30</span>
+          <li v-for="(item, n) in noteList[i].notes" :key="n">
+            <span class="title">{{ item.title }}</span>
+            <span class="time">{{ noteList[i].time[[n]] }}</span>
             <button class="btn-circle">
               <span class="material-icons">more_vert</span>
             </button>
@@ -82,7 +82,7 @@ import {
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import Navbar from '@/components/Navbar.vue';
-import { Note } from '@/types';
+import { Note, NoteList } from '@/types';
 
 export default defineComponent({
   name: 'NoteList',
@@ -93,19 +93,37 @@ export default defineComponent({
     const store = useStore();
     const router = useRouter();
     const isFilterOpen = ref<boolean>(false);
-    const noteData = ref<Array<Note>>([]);
+    const noteList = ref<Array<NoteList>>([]);
 
     onMounted(() => {
+      let noteData = [];
+      const dateList: Array<string> = [];
       try {
         if (localStorage.getItem('note-data')) {
-          noteData.value = JSON.parse(localStorage.getItem('note-data') as string);
-        } else {
-          noteData.value = [];
+          noteData = JSON.parse(localStorage.getItem('note-data') as string);
+          noteData.forEach((el: Note) => {
+            console.log(el.id);
+            const date = new Date(parseInt(el.id, 10));
+            const dateStr = `${date.getFullYear()} / ${date.getMonth() + 1 > 10 ? date.getMonth() + 1 : `0${date.getMonth() + 1}`} / ${date.getDate() > 10 ? date.getDate() : `0${date.getDate()}`}`;
+            console.log(dateStr);
+            const timeStr = `${date.getHours() > 10 ? date.getHours() : `0${date.getHours()}`} : ${date.getMinutes() > 10 ? date.getMinutes() : `0${date.getMinutes()}`}`;
+            const index = dateList.indexOf(dateStr);
+            if (index === -1) {
+              noteList.value.push({
+                date: dateStr,
+                notes: [el],
+                time: [timeStr],
+              });
+              dateList.push(dateStr);
+            } else {
+              noteList.value[index].notes.push(el);
+              noteList.value[index].time.push(timeStr);
+            }
+          });
         }
       } catch (e) {
-        noteData.value = [];
+        noteList.value = [];
       }
-      console.log(noteData.value);
     });
 
     function openFilter() {
@@ -124,7 +142,7 @@ export default defineComponent({
       createNewNote,
       height: computed(() => store.state.height),
       isFilterOpen,
-      noteData,
+      noteList,
       openFilter,
     };
   },
@@ -219,6 +237,17 @@ export default defineComponent({
       > span {
         color: $secondary;
         font-size: 20px;
+      }
+      .title {
+        flex: 1;
+        padding-right: 90px;
+        text-align: left;
+      }
+      .time {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 60px;
       }
       align-items: center;
       border-bottom: 1px solid $secondary;

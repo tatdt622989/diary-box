@@ -20,21 +20,21 @@
             <button class="ql-bold btn-circle"></button>
             <select class="ql-color">
               <option selected></option>
-              <option value="red"></option>
+              <option value="#e23b3b"></option>
               <option value="orange"></option>
-              <option value="yellow"></option>
+              <option value="#53d094"></option>
               <option value="#449966"></option>
-              <option value="blue"></option>
-              <option value="purple"></option>
+              <option value="#7070f1"></option>
+              <option value="#d44b87"></option>
             </select>
             <select class="ql-background">
               <option selected></option>
-              <option value="red"></option>
+              <option value="#e23b3b"></option>
               <option value="orange"></option>
-              <option value="yellow"></option>
+              <option value="#53d094"></option>
               <option value="#449966"></option>
-              <option value="blue"></option>
-              <option value="purple"></option>
+              <option value="#7070f1"></option>
+              <option value="#d44b87"></option>
             </select>
             <select class="ql-align">
               <option value=""></option>
@@ -213,14 +213,36 @@ export default defineComponent({
 #toolbar.toolbar {
   input[type="color"] {
     height: 0;
-    width: 0;
-    position: absolute;
     opacity: 0;
+    position: absolute;
+    width: 0;
   }
   .ql-formats {
     .ql-picker-item {
+      &:hover {
+        background: $tertiary;
+      }
+      &:focus, &:active {
+        border: 0;
+        outline: 0;
+      }
+      &::after {
+        background: $primary;
+        bottom: 0;
+        content: "";
+        height: 1px;
+        left: 50%;
+        position: absolute;
+        transform: translateX(-50%);
+        width: 90%;
+      }
       color: $primary;
       font-size: 20px;
+      height: 52px;
+      padding: 8px 0;
+      position: relative;
+      transition: $t-base;
+      width: 100%;
     }
     .ql-picker:not(.ql-color-picker):not(.ql-icon-picker) {
       &:first-child {
@@ -238,6 +260,7 @@ export default defineComponent({
           border: 0;
         }
         font-size: 20px;
+        border: 0;
       }
       height: 44px;
       border: 2px solid $primary;
@@ -255,6 +278,7 @@ export default defineComponent({
     .ql-picker-label {
       &:focus, &:active {
         border: 0;
+        outline: 0;
       }
       &::before {
         color: $primary;
@@ -270,9 +294,6 @@ export default defineComponent({
     }
     .ql-align {
       .ql-picker-item {
-        &:focus {
-          outline: 0;
-        }
         align-items: center;
         display: flex;
         height: 52px;
@@ -286,12 +307,53 @@ export default defineComponent({
       }
     }
     .ql-picker-options {
+      &:focus, &:active {
+        border: 0;
+        outline: 0;
+      }
+      &::-webkit-scrollbar {
+        width: 8px;
+      }
+      &::-webkit-scrollbar-track {
+        background: $tertiary;
+        border-radius: 0 20px 20px 0;
+        margin: 16px 0;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: $primary;
+        border-radius: 99px;
+      }
       background-color: $secondary;
       border-radius: 20px;
       border: 0;
       box-shadow: 3px 3px 12px rgba(68, 153, 102, 0.49);
-      padding: 0 12px;
+      max-height: 300px;
+      overflow: auto;
+      padding: 0;
       right: 0;
+    }
+    .ql-color, .ql-background {
+      .ql-picker-label {
+        border: 0;
+      }
+      .ql-picker-item {
+        &::after {
+          content: normal;
+        }
+        border-radius: 99px;
+        border: 0;
+        height: 44px;
+        margin: 6px;
+        padding: 0;
+        width: 44px;
+      }
+      .ql-picker-options {
+        left: 50%;
+        padding: 12px;
+        transform: translateX(-50%);
+        width: 192px;
+      }
+      position: relative;
     }
     button,
     > span {
