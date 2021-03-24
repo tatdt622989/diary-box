@@ -15,6 +15,9 @@ export default createStore({
     getHeight(state, data) {
       state.height = data;
     },
+    getNoteData(state, data) {
+      state.noteData = data;
+    },
     updateNote(state, data) {
       const idList = state.noteData.map((el) => el.id);
       if (idList.indexOf(data.id) === -1) {

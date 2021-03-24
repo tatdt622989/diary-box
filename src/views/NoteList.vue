@@ -1,5 +1,5 @@
 <template>
-  <div class="node-list-wrap" :style="{ height }">
+  <div class="node-list-wrap" :style="{ height }" @click="selectedMenu = []">
     <Navbar></Navbar>
     <div class="header">
       <button class="btn-circle" @click="$router.push('/')">
@@ -19,15 +19,19 @@
           <li v-for="(item, n) in noteList[i].notes" :key="n">
             <span class="title">{{ item.title }}</span>
             <span class="time">{{ noteList[i].time[[n]] }}</span>
-            <button class="btn-circle">
+            <button class="btn-circle" @click.stop="selectedMenu = [i, n]">
               <span class="material-icons">more_vert</span>
             </button>
-            <ul class="function-menu" v-if="selectedMenu">
+            <ul
+              class="function-menu"
+              @click.stop
+              v-if="selectedMenu[0] === i && selectedMenu[1] === n"
+            >
               <li>
                 <button>查看</button>
               </li>
               <li>
-                <button>編輯</button>
+                <button @click="editNote(item)">編輯</button>
               </li>
               <li>
                 <button>編輯位置</button>
@@ -40,7 +44,7 @@
         </ul>
       </div>
     </div>
-    <button class="add-btn" @click="createNewNote">
+    <button class="add-btn" @click="createNote">
       <span class="material-icons">add</span>
       <span>新增筆記</span>
     </button>
@@ -94,14 +98,14 @@ export default defineComponent({
     const router = useRouter();
     const isFilterOpen = ref<boolean>(false);
     const noteList = ref<Array<NoteList>>([]);
+    const selectedMenu = ref<Array<string>>([]);
+    const noteData = computed(() => store.state.noteData);
 
     onMounted(() => {
-      let noteData = [];
       const dateList: Array<string> = [];
       try {
         if (localStorage.getItem('note-data')) {
-          noteData = JSON.parse(localStorage.getItem('note-data') as string);
-          noteData.forEach((el: Note) => {
+          noteData.value.forEach((el: Note) => {
             console.log(el.id);
             const date = new Date(parseInt(el.id, 10));
             const dateStr = `${date.getFullYear()} / ${date.getMonth() + 1 > 10 ? date.getMonth() + 1 : `0${date.getMonth() + 1}`} / ${date.getDate() > 10 ? date.getDate() : `0${date.getDate()}`}`;
@@ -130,7 +134,7 @@ export default defineComponent({
       isFilterOpen.value = true;
     }
 
-    function createNewNote() {
+    function createNote() {
       const ts = Date.now();
       router.push({
         name: 'TextEditor',
@@ -138,12 +142,22 @@ export default defineComponent({
       });
     }
 
+    function editNote(note: Note) {
+      console.log(note);
+      router.push({
+        name: 'TextEditor',
+        params: { status: 'note-edit', id: note.id },
+      });
+    }
+
     return {
-      createNewNote,
+      createNote,
+      editNote,
       height: computed(() => store.state.height),
       isFilterOpen,
       noteList,
       openFilter,
+      selectedMenu,
     };
   },
 });
@@ -220,20 +234,20 @@ export default defineComponent({
     margin-bottom: 12px;
   }
   .note-list {
-    button {
+    > li {
+      > button {
       &:hover,
       &:active {
-        span {
-          color: $primary;
+          span {
+            color: $primary;
+          }
+          background-color: $secondary;
         }
-        background-color: $secondary;
+        span {
+          color: $secondary;
+        }
+        background-color: $primary;
       }
-      span {
-        color: $secondary;
-      }
-      background-color: $primary;
-    }
-    li {
       > span {
         color: $secondary;
         font-size: 20px;

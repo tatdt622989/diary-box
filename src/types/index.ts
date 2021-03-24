@@ -1,8 +1,6 @@
-import { DeltaOperation } from 'quill';
-
 export interface Note {
   id: string;
-  content: DeltaOperation;
+  content: object;
   title: string;
 }
 

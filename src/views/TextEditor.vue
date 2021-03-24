@@ -79,8 +79,9 @@ import {
 } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
-import Quill from 'quill';
+import Quill, { Sources } from 'quill';
 import Navbar from '@/components/Navbar.vue';
+import { Note } from '@/types';
 
 export default defineComponent({
   name: 'TextEditor',
@@ -99,6 +100,7 @@ export default defineComponent({
     const quill = ref<Quill | null>(null);
     const sizeList = ref<Array<string>>([]);
     const title = ref<string>('');
+    const noteData = computed(() => store.state.noteData);
     let status: string | null = null;
     let noteId: string | null = null;
 
@@ -124,12 +126,19 @@ export default defineComponent({
         placeholder: '請輸入內容',
         theme: 'snow', // or 'bubble'
       });
+
+      if (status === 'edit') {
+        const targetNote: Note = noteData.value.filter((note: Note) => note.id === noteId)[0];
+        if (targetNote) {
+          quill.value.setContents(targetNote.content as any, 'slient' as Sources);
+        }
+      }
     };
 
     onMounted(() => {
       console.log(route.params);
       if (!route.params.status) {
-        // router.push('/note-list');
+        router.push('/note-list');
       }
       status = route.params.status as string;
       noteId = route.params.id as string;

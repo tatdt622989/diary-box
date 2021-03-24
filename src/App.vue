@@ -9,13 +9,31 @@ import {
   reactive,
   defineComponent,
   computed,
+  onMounted,
 } from 'vue';
 import Toast from '@/components/Toast.vue';
+import { useStore } from 'vuex';
 
 export default defineComponent({
   name: 'app',
   components: {
     Toast,
+  },
+  setup() {
+    const store = useStore();
+
+    onMounted(() => {
+      try {
+        if (localStorage.getItem('note-data')) {
+          store.commit('getNoteData', JSON.parse(localStorage.getItem('note-data') as string));
+        }
+      } catch (e) {
+        localStorage.settItem('note-data', []);
+        store.commit('getNoteData', []);
+      }
+    });
+    return {
+    };
   },
 });
 </script>
