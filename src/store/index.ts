@@ -20,9 +20,12 @@ export default createStore({
     },
     updateNote(state, data) {
       const idList = state.noteData.map((el) => el.id);
-      if (idList.indexOf(data.id) === -1) {
+      const idIndex: number = idList.indexOf(data.id);
+      if (idIndex === -1) {
         state.noteData.push(data);
         localStorage.setItem('note-data', JSON.stringify(state.noteData));
+      } else {
+        state.noteData[idIndex] = data;
       }
     },
     addToast(state, data) {

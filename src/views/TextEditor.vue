@@ -101,6 +101,7 @@ export default defineComponent({
     const sizeList = ref<Array<string>>([]);
     const title = ref<string>('');
     const noteData = computed(() => store.state.noteData);
+    let qlEditor: HTMLElement | null = null;
     let status: string | null = null;
     let noteId: string | null = null;
 
@@ -127,10 +128,14 @@ export default defineComponent({
         theme: 'snow', // or 'bubble'
       });
 
-      if (status === 'edit') {
+      qlEditor = document.querySelector('.ql-editor');
+      console.log(qlEditor);
+
+      if (status === 'note-edit') {
         const targetNote: Note = noteData.value.filter((note: Note) => note.id === noteId)[0];
         if (targetNote) {
-          quill.value.setContents(targetNote.content as any, 'slient' as Sources);
+          (qlEditor as HTMLElement).innerHTML = targetNote.content;
+          title.value = targetNote.title;
         }
       }
     };
@@ -154,17 +159,25 @@ export default defineComponent({
         return;
       }
       if (quill.value && status) {
-        const content = quill.value.getContents();
+        const content = (qlEditor as HTMLElement).innerHTML;
         const data = {
           id: noteId,
           content,
           title: title.value,
         };
-        store.dispatch('updateToast', {
-          type: 'success',
-          content: '成功新增',
-        });
-        console.log(store.state.noteData);
+        if (status === 'note-edit') {
+          store.dispatch('updateToast', {
+            type: 'success',
+            content: '成功編輯',
+          });
+        } else if (status === 'note-add') {
+          store.dispatch('updateToast', {
+            type: 'success',
+            content: '成功新增',
+          });
+        }
+        store.commit('updateNote', data);
+        router.push('/note-list');
       }
     }
 
@@ -214,7 +227,8 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  padding-top: 16px;
+  padding: 16px;
+  width: 100%;
 }
 .ql-editor {
   font-size: 20px;

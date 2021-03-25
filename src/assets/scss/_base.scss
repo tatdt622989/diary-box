@@ -23,7 +23,7 @@ ul {
     user-select: none;
     display: inline-block;
   }
-  &:hover, &:active {
+  &:hover, &:active, &.active {
     background: #F0E0B9;
   }
   align-items: center;

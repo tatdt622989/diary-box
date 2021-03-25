@@ -16,10 +16,20 @@
           <span>{{ item.date }}</span>
         </div>
         <ul class="note-list">
-          <li v-for="(item, n) in noteList[i].notes" :key="n">
+          <li
+            v-for="(item, n) in noteList[i].notes"
+            :key="n"
+            @click="editNote(item)"
+          >
             <span class="title">{{ item.title }}</span>
             <span class="time">{{ noteList[i].time[[n]] }}</span>
-            <button class="btn-circle" @click.stop="selectedMenu = [i, n]">
+            <button
+              class="btn-circle"
+              @click.stop="selectedMenu = [i, n]"
+              :class="{
+                active: selectedMenu[0] === i && selectedMenu[1] === n,
+              }"
+            >
               <span class="material-icons">more_vert</span>
             </button>
             <ul
@@ -28,10 +38,10 @@
               v-if="selectedMenu[0] === i && selectedMenu[1] === n"
             >
               <li>
-                <button>查看</button>
+                <button @click="editNote(item)">查看</button>
               </li>
               <li>
-                <button @click="editNote(item)">編輯</button>
+                <button>預覽</button>
               </li>
               <li>
                 <button>編輯位置</button>
@@ -191,19 +201,11 @@ export default defineComponent({
     padding: 0;
     position: absolute;
     right: 0;
-    top: 0;
+    top: 65px;
     width: 114px;
+    z-index: 999;
   }
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  justify-content: flex-start;
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-}
-.header {
+  .header {
   p {
     color: $secondary;
     font-size: 24px;
@@ -219,7 +221,16 @@ export default defineComponent({
 }
 .content {
   flex-grow: 1;
-  padding: 32px 20px;
+  padding: 40px 20px 32px 20px;
+  width: 100%;
+}
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: flex-start;
+  overflow: hidden;
+  position: relative;
   width: 100%;
 }
 .data-group {
@@ -236,8 +247,8 @@ export default defineComponent({
   .note-list {
     > li {
       > button {
-      &:hover,
-      &:active {
+        &:hover,
+        &:active {
           span {
             color: $primary;
           }
@@ -265,14 +276,17 @@ export default defineComponent({
       }
       align-items: center;
       border-bottom: 1px solid $secondary;
+      cursor: pointer;
       display: flex;
       justify-content: space-between;
+      margin-bottom: 20px;
       padding: 7px 0;
       position: relative;
       width: 100%;
     }
     align-items: center;
     display: flex;
+    flex-direction: column;
     height: 68px;
     justify-content: space-between;
     margin-bottom: 0;
@@ -280,6 +294,7 @@ export default defineComponent({
   }
   display: flex;
   flex-direction: column;
+  margin-bottom: 32px;
 }
 .filter-wrap {
   p {
