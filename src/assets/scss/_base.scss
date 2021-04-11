@@ -56,3 +56,85 @@ ul {
   justify-content: center;
   transition: $t-base;
 }
+
+.header {
+  p {
+    color: $secondary;
+    flex-shrink: 0;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+  }
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 0 20px;
+  width: 100%;
+}
+
+.function-menu {
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 65px;
+  width: 114px;
+  z-index: 999;
+}
+
+.function-menu {
+  li {
+    &:last-child {
+      button {
+        &:after {
+          content: normal;
+        }
+      }
+    }
+  }
+  button {
+    &:hover, &:active {
+      background-color: $tertiary;
+    }
+    &::after {
+      background-color: $primary;
+      bottom: 0;
+      content: "";
+      height: 1px;
+      left: 50%;
+      position: absolute;
+      transform: translateX(-50%);
+      width: 90px;
+    }
+    background-color: transparent;
+    color: $primary;
+    font-size: 18px;
+    font-weight: bold;
+    height: 52px;
+    margin: 0 auto;
+    position: relative;
+    text-align: center;
+    transition: $t-base;
+    width: 100%;
+  }
+  background-color: $secondary;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.toast-container .toast {
+  &.hint, &.hint .toast-header {
+    background-color: rgb(252, 193, 84);
+    color: rgb(47, 47, 47);
+  }
+  &.success, &.success .toast-header {
+    background-color: rgb(62, 167, 80);
+    color: rgb(255, 255, 255);
+  }
+  &.error, &.error .toast-header {
+    background-color: rgb(219, 62, 62);
+    color: rgb(255, 255, 255);
+  }
+}

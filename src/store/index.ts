@@ -26,6 +26,7 @@ export default createStore({
         localStorage.setItem('note-data', JSON.stringify(state.noteData));
       } else {
         state.noteData[idIndex] = data;
+        localStorage.setItem('note-data', JSON.stringify(state.noteData));
       }
     },
     addToast(state, data) {

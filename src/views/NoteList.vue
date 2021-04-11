@@ -197,14 +197,6 @@ export default defineComponent({
     position: fixed;
     right: 20px;
   }
-  .function-menu {
-    padding: 0;
-    position: absolute;
-    right: 0;
-    top: 65px;
-    width: 114px;
-    z-index: 999;
-  }
   .header {
   p {
     color: $secondary;
@@ -248,7 +240,7 @@ export default defineComponent({
     > li {
       > button {
         &:hover,
-        &:active {
+        &:active, &.active {
           span {
             color: $primary;
           }

@@ -10,7 +10,7 @@
         <span class="material-icons">check</span>
       </button>
     </div>
-    <div class="content">
+    <div class="content container-fluid">
       <div id="editorHeader">
         <input type="text" placeholder="請輸入標題" v-model="title"/>
       </div>
@@ -207,21 +207,6 @@ export default defineComponent({
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-}
-.header {
-  p {
-    color: $secondary;
-    flex-shrink: 0;
-    font-size: 24px;
-    font-weight: bold;
-    margin: 0;
-  }
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-  padding: 0 20px;
-  width: 100%;
 }
 .content {
   display: flex;
