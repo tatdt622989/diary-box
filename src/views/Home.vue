@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div class="main-wrap home-wrap">
     <div class="status">
       <div class="currency">
         <span>999</span>
@@ -49,7 +49,7 @@
       </button>
     </div>
     <div id="mainScene" ref="mainScene"></div>
-    <FunctionBar></FunctionBar>
+    <FunctionBar :mode="'home'"></FunctionBar>
     <Menu></Menu>
   </div>
 </template>
@@ -182,10 +182,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-.home {
-  position: relative;
-  overflow: hidden;
-}
 .status {
   .currency {
     span {

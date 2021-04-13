@@ -1,5 +1,5 @@
 <template>
-  <div class="node-list-wrap" :style="{ height }" @click="selectedMenu = []">
+  <div class="main-wrap node-list-wrap" :style="{ height }" @click="selectedMenu = []">
     <Navbar></Navbar>
     <div class="header">
       <button class="btn-circle" @click="$router.push('/')">
@@ -221,8 +221,6 @@ export default defineComponent({
   flex-direction: column;
   height: 100vh;
   justify-content: flex-start;
-  overflow: hidden;
-  position: relative;
   width: 100%;
 }
 .data-group {

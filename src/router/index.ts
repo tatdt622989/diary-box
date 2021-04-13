@@ -3,6 +3,7 @@ import Home from '@/views/Home.vue';
 import NoteList from '@/views/NoteList.vue';
 import TextEditor from '@/views/TextEditor.vue';
 import ModelList from '@/views/ModelList.vue';
+import Store from '@/views/Store.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -24,6 +25,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/model-list',
     name: 'ModelList',
     component: ModelList,
+  },
+  {
+    path: '/store',
+    name: 'Store',
+    component: Store,
   },
 ];
 

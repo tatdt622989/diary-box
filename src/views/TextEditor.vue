@@ -1,5 +1,5 @@
 <template>
-  <div class="text-editor-wrap" :style="{ height }" @click="activeTool = ''">
+  <div class="main-wrap text-editor-wrap" :style="{ height }" @click="activeTool = ''">
     <Navbar></Navbar>
     <div class="header">
       <button class="btn-circle" @click="$router.push('/note-list')">
@@ -206,7 +206,6 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden;
 }
 .content {
   display: flex;

@@ -1,11 +1,17 @@
 <template>
   <div class="function-bar">
-    <button class="t-base" @click="$router.push('/note-list')">
+    <button class="t-base" @click="$router.push('/note-list')" v-if="mode === 'home'">
       <span class="material-icons">article</span>
     </button>
+    <button class="t-base" @click="$router.push('/')" v-if="mode === 'model-list'">
+      <span class="material-icons">edit</span>
+    </button>
     <button class="t-base"><span class="material-icons">add</span></button>
-    <button class="t-base" @click="$router.push('/model-list')">
+    <button class="t-base" @click="$router.push('/model-list')" v-if="mode === 'home'">
       <span class="material-icons">category</span>
+    </button>
+    <button class="t-base" @click="$router.push('/store')" v-if="mode === 'model-list'">
+      <span class="material-icons">store</span>
     </button>
   </div>
 </template>
@@ -53,5 +59,8 @@ import {
 
 export default defineComponent({
   name: 'FunctionBar',
+  props: ['mode'],
+  // setup(props) {
+  // },
 });
 </script>

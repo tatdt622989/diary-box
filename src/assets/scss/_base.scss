@@ -78,7 +78,7 @@ ul {
   position: absolute;
   right: 0;
   top: 65px;
-  width: 114px;
+  width: 120px;
   z-index: 999;
 }
 
@@ -137,4 +137,9 @@ ul {
     background-color: rgb(219, 62, 62);
     color: rgb(255, 255, 255);
   }
+}
+
+.main-wrap {
+  position: relative;
+  overflow: hidden;
 }

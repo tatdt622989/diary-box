@@ -1,12 +1,24 @@
 <template>
-  <div class="model-list-wrap" @click="selectedMenu = []">
+  <div
+    class="main-wrap model-list-wrap"
+    :class="{ all : listMode === 'all' }"
+    @click="selectedMenu = []"
+    :style="{ height: height + 'px' }"
+  >
     <Navbar></Navbar>
     <div class="header">
-      <button class="btn-circle" @click="$router.push('/')">
+      <button class="btn-circle" @click="$router.push('/')" v-if="listMode === 'using'">
         <span class="material-icons">home</span>
       </button>
-      <p>場景中物品</p>
-      <button class="btn-circle" @click="saveData">
+      <button
+        class="btn-circle"
+        @click="listMode = 'using'"
+        v-if="listMode === 'all'"
+      >
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <p>{{ listMode === 'using' ? '場景中物品' : '所有物品' }}</p>
+      <button class="btn-circle" @click="listMode = 'all'" v-if="listMode === 'using'">
         <span class="material-icons">all_inbox</span>
       </button>
     </div>
@@ -44,7 +56,7 @@
       </div>
     </div>
     <Menu></Menu>
-    <FunctionBar></FunctionBar>
+    <FunctionBar :mode="'model-list'"></FunctionBar>
   </div>
 </template>
 
@@ -71,10 +83,21 @@ export default defineComponent({
   setup() {
     const models = ref<Array<object>>([{}]);
     const selectedMenu = ref<Array<string>>([]);
+    const height = ref<number>(0);
+    const listMode = ref<string>('using');
+
+    onMounted(() => {
+      height.value = window.innerHeight;
+      window.addEventListener('resize', () => {
+        height.value = window.innerHeight;
+      }, false);
+    });
 
     return {
       selectedMenu,
       models,
+      height,
+      listMode,
     };
   },
 });
@@ -113,12 +136,24 @@ export default defineComponent({
     position: relative;
   }
   .function-menu {
+    button {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
     box-shadow: 4px 0px 16px rgba(68, 153, 102, 0.5);
+  }
+  &.all .header {
+    p {
+      flex-grow: 1;
+      padding-right: 52px;
+      text-align: center;
+    }
   }
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden;
-  position: relative;
 }
 </style>
