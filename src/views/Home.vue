@@ -18,7 +18,7 @@
         </button>
       </li>
       <li>
-        <button>
+        <button @click="openModal">
           <img src="@/assets/images/screen-shot.svg" alt="截圖圖示" />
         </button>
       </li>
@@ -51,6 +51,40 @@
     <div id="mainScene" ref="mainScene"></div>
     <FunctionBar :mode="'home'"></FunctionBar>
     <Menu></Menu>
+    <div
+      class="modal fade"
+      id="screenShotModal"
+      tabindex="-1"
+      aria-labelledby="screenShotModalLabel"
+      aria-hidden="true"
+      ref="screenShotModal"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="screenShotModalLabel">畫面截圖</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="img-frame"></div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-primary"
+            >
+              分享
+            </button>
+            <button type="button" class="btn btn-primary">下載</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -62,6 +96,7 @@ import {
   onMounted,
   computed,
 } from 'vue';
+import { Modal } from 'bootstrap';
 import * as dat from 'dat.gui';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -79,6 +114,7 @@ export default defineComponent({
     const store = useStore();
 
     const mainScene = ref<HTMLElement | null>(null);
+    const screenShotModal = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
 
     // interface sceneParameter {
@@ -172,9 +208,20 @@ export default defineComponent({
 
       window.addEventListener('resize', resize, false);
     });
+
+    function openModal() {
+      console.log(screenShotModal.value);
+      if (screenShotModal.value) {
+        const modal = new Modal(screenShotModal.value);
+        modal.show();
+      }
+    }
+
     return {
       mainScene,
+      screenShotModal,
       isMenuOpen: computed(() => store.state.isMenuOpen),
+      openModal,
       menuToggler: () => store.commit('menuToggler', true),
     };
   },
@@ -206,15 +253,17 @@ export default defineComponent({
 }
 .tool-list {
   li button {
-    &:hover, &:active {
-      background-color: #F0E0B9;
+    &:hover,
+    &:active {
+      background-color: #f0e0b9;
     }
     span {
       color: $primary;
       font-size: 36px;
       line-height: 52px;
     }
-    img, span {
+    img,
+    span {
       display: inline-block;
     }
     align-items: center;
@@ -253,7 +302,7 @@ export default defineComponent({
     border-radius: 0 20px 20px 0;
     height: inherit;
   }
-  background-color: rgba(248, 235, 207, .75);
+  background-color: rgba(248, 235, 207, 0.75);
   border-radius: 0 20px 20px 0;
   display: flex;
   align-items: center;
