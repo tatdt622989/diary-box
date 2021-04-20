@@ -1,41 +1,41 @@
 <template>
   <div
-    class="main-wrap model-list-wrap"
-    :class="{ all : listMode === 'all' }"
+    class="main-wrap model-list-wrap all"
     @click="selectedMenu = []"
     :style="{ height: height + 'px' }"
   >
     <Navbar></Navbar>
     <div class="header">
-      <button class="btn-circle" @click="$router.push('/')" v-if="listMode === 'using'">
-        <span class="material-icons">home</span>
-      </button>
       <button
         class="btn-circle"
-        @click="listMode = 'using'"
-        v-if="listMode === 'all'"
+        @click="$router.push('/')"
+        v-if="listMode === 'using'"
       >
-        <span class="material-icons">arrow_back</span>
+        <span class="material-icons">home</span>
       </button>
-      <p>{{ listMode === 'using' ? '場景中物品' : '所有物品' }}</p>
-      <button class="btn-circle" @click="listMode = 'all'" v-if="listMode === 'using'">
-        <span class="material-icons">all_inbox</span>
-      </button>
+      <p>所有物品</p>
     </div>
     <div class="content container-fluid">
       <div class="row">
-        <div class="item col-6 col-md-4 col-lg-3">
-          <div class="item-wrap" v-for="(item, i) in models" :key="i">
-            <span class="quantity">20 / 20</span>
-            <button
-              class="menu-btn btn-circle"
-              @click.stop="selectedMenu = [i, n]"
-              :class="{
-                active: selectedMenu[0] === i && selectedMenu[1] === n,
-              }"
-            >
-              <span class="material-icons">more_vert</span>
-            </button>
+        <div
+          class="item col-6 col-md-4 col-lg-3"
+          v-for="(item, i) in models"
+          :key="i"
+        >
+          <div class="item-wrap" :class="{ active: i === 0 }">
+            <div>
+              <span class="quantity">20 / 20</span>
+              <button
+                class="menu-btn btn-circle"
+                @click.stop="selectedMenu = [i, n]"
+                :class="{
+                  active: selectedMenu[0] === i && selectedMenu[1] === n,
+                }"
+              >
+                <span class="material-icons">more_vert</span>
+              </button>
+            </div>
+            <span class="item-status">{{ i === 0 ? '使用中' : '未使用' }}</span>
             <ul
               class="function-menu"
               @click.stop
@@ -81,7 +81,7 @@ export default defineComponent({
     FunctionBar,
   },
   setup() {
-    const models = ref<Array<object>>([{}]);
+    const models = ref<Array<object>>([{}, {}]);
     const selectedMenu = ref<Array<string>>([]);
     const height = ref<number>(0);
     const listMode = ref<string>('using');
@@ -106,6 +106,18 @@ export default defineComponent({
 <style lang="scss">
 .model-list-wrap {
   .item-wrap {
+    &.active{
+      background-color: $secondary;
+    }
+    .item-status {
+      color: $primary;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    >div {
+      display: flex;
+      width: 100%;
+    }
     .quantity {
       color: $primary;
       flex-grow: 1;
@@ -127,11 +139,12 @@ export default defineComponent({
       right: -10px;
       top: -10px;
     }
-    align-items: flex-start;
-    background-color: $secondary;
+    background-color: #d4dbba;
     border-radius: 20px;
     display: flex;
+    flex-direction: column;
     height: 230px;
+    justify-content: space-between;
     padding: 16px;
     position: relative;
   }
@@ -144,6 +157,7 @@ export default defineComponent({
       white-space: nowrap;
     }
     box-shadow: 4px 0px 16px rgba(68, 153, 102, 0.5);
+    opacity: 1;
   }
   &.all .header {
     p {

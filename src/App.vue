@@ -53,6 +53,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+@import "~bootstrap/scss/bootstrap";
 @import '~@/assets/scss/app.scss';
 
 @font-face {

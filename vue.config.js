@@ -16,8 +16,8 @@ module.exports = {
       scss: {
         // eslint-disable-next-line quotes
         prependData: `@import "~bootstrap/scss/functions";
-                      @import "~@/assets/scss/helpers/_variable"; 
-                      @import "~bootstrap";
+                      @import "~@/assets/scss/helpers/_variables";
+                      @import "~bootstrap/scss/variables";
                       @import "~@/assets/scss/_customVariable";
                       `,
       },

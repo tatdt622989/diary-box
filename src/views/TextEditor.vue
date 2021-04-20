@@ -5,7 +5,7 @@
       <button class="btn-circle" @click="$router.push('/note-list')">
         <span class="material-icons">arrow_back</span>
       </button>
-      <p>筆記編輯模式</p>
+      <p>{{ status === 'note-add' ? '新增筆記' : '編輯筆記' }}</p>
       <button class="btn-circle" @click="saveData">
         <span class="material-icons">check</span>
       </button>
@@ -100,9 +100,9 @@ export default defineComponent({
     const quill = ref<Quill | null>(null);
     const sizeList = ref<Array<string>>([]);
     const title = ref<string>('');
+    const status = ref<string | null>(null);
     const noteData = computed(() => store.state.noteData);
     let qlEditor: HTMLElement | null = null;
-    let status: string | null = null;
     let noteId: string | null = null;
 
     const editorInit = async () => {
@@ -131,7 +131,7 @@ export default defineComponent({
       qlEditor = document.querySelector('.ql-editor');
       console.log(qlEditor);
 
-      if (status === 'note-edit') {
+      if (status.value === 'note-edit') {
         const targetNote: Note = noteData.value.filter((note: Note) => note.id === noteId)[0];
         if (targetNote) {
           (qlEditor as HTMLElement).innerHTML = targetNote.content;
@@ -145,7 +145,7 @@ export default defineComponent({
       if (!route.params.status) {
         router.push('/note-list');
       }
-      status = route.params.status as string;
+      status.value = route.params.status as string;
       noteId = route.params.id as string;
       editorInit();
     });
@@ -165,12 +165,12 @@ export default defineComponent({
           content,
           title: title.value,
         };
-        if (status === 'note-edit') {
+        if (status.value === 'note-edit') {
           store.dispatch('updateToast', {
             type: 'success',
             content: '成功編輯',
           });
-        } else if (status === 'note-add') {
+        } else if (status.value === 'note-add') {
           store.dispatch('updateToast', {
             type: 'success',
             content: '成功新增',
@@ -187,6 +187,7 @@ export default defineComponent({
       editor,
       editorInit,
       fontSize,
+      status,
       height: computed(() => store.state.height),
       noteData: computed(() => store.state.noteData),
       saveData,
