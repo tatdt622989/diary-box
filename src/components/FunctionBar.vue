@@ -19,7 +19,12 @@
     </button>
     <button
       class="t-base"
-      @click="$router.push('/model-list')"
+      @click="$router.push({
+        name: 'ModelList',
+        params: {
+          status: 'all-models',
+        }
+      })"
       v-if="mode === 'home'"
     >
       <span class="material-icons">category</span>

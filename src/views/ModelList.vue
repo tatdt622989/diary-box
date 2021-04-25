@@ -8,12 +8,12 @@
     <div class="header">
       <button
         class="btn-circle"
-        @click="$router.push('/')"
+        @click="$router.go(-1)"
         v-if="listMode === 'using'"
       >
-        <span class="material-icons">home</span>
+        <span class="material-icons">arrow_back</span>
       </button>
-      <p>所有物品</p>
+      <p>{{ title }}</p>
     </div>
     <div class="content container-fluid">
       <div class="row">
@@ -24,6 +24,7 @@
         >
           <div class="item-wrap" :class="{ active: i === 0 }">
             <div>
+              <div class="model-frame"></div>
               <span class="quantity">20 / 20</span>
               <button
                 class="menu-btn btn-circle"
@@ -31,6 +32,7 @@
                 :class="{
                   active: selectedMenu[0] === i && selectedMenu[1] === n,
                 }"
+                v-if="status === 'all-models'"
               >
                 <span class="material-icons">more_vert</span>
               </button>
@@ -69,9 +71,13 @@ import {
   computed,
   nextTick,
 } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter, useRoute } from 'vue-router';
+import * as THREE from 'three';
 import Navbar from '@/components/Navbar.vue';
 import Menu from '@/components/Menu.vue';
 import FunctionBar from '@/components/FunctionBar.vue';
+import { Model } from '@/types';
 
 export default defineComponent({
   name: 'ModelList',
@@ -81,23 +87,55 @@ export default defineComponent({
     FunctionBar,
   },
   setup() {
-    const models = ref<Array<object>>([{}, {}]);
+    const store = useStore();
+    const route = useRoute();
+    const models = ref<Array<string | Model>>([]);
     const selectedMenu = ref<Array<string>>([]);
-    const height = ref<number>(0);
     const listMode = ref<string>('using');
+    const status = ref<string>('');
+    const title = ref<string>('所有模型');
 
     onMounted(() => {
-      height.value = window.innerHeight;
-      window.addEventListener('resize', () => {
-        height.value = window.innerHeight;
-      }, false);
+      status.value = route.params.status as string;
+      switch (status.value) {
+        case 'all-models':
+          title.value = '所有模型';
+          break;
+        case 'add-model':
+          title.value = '建立新模型';
+          models.value = store.state.modalsName;
+          break;
+        case 'select-model':
+          title.value = '選擇模型';
+          break;
+        case 'model-library':
+          title.value = '模型圖鑑';
+          break;
+        default:
+          break;
+      }
     });
+
+    function selectModel() {
+      if (status.value === 'select-model') {
+        store.state.selectedModel = {
+
+        };
+      } else if (status.value === 'add-model') {
+        store.state.selectedModel = {
+
+        };
+      }
+    }
 
     return {
       selectedMenu,
       models,
-      height,
+      height: computed(() => store.state.height),
       listMode,
+      status,
+      title,
+      selectModel,
     };
   },
 });

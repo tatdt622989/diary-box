@@ -45,6 +45,10 @@ export default defineComponent({
         localStorage.settItem('note-data', []);
         store.commit('getNoteData', []);
       }
+      store.commit('getHeight');
+      window.addEventListener('resize', () => {
+        store.commit('getHeight');
+      }, false);
     });
     return {
     };

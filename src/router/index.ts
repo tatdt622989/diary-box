@@ -4,6 +4,8 @@ import NoteList from '@/views/NoteList.vue';
 import TextEditor from '@/views/TextEditor.vue';
 import ModelList from '@/views/ModelList.vue';
 import Store from '@/views/Store.vue';
+import ModelSelector from '@/views/ModelSelector.vue';
+import ModelEditor from '@/views/ModelEditor.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -30,6 +32,16 @@ const routes: Array<RouteRecordRaw> = [
     path: '/store',
     name: 'Store',
     component: Store,
+  },
+  {
+    path: '/model-selector',
+    name: 'ModelSelector',
+    component: ModelSelector,
+  },
+  {
+    path: '/model-editor',
+    name: 'ModelEditor',
+    component: ModelEditor,
   },
 ];
 

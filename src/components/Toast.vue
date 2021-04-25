@@ -22,6 +22,7 @@
           class="btn-close"
           data-bs-dismiss="toast"
           aria-label="Close"
+          @click="removeToast(i)"
         ></button>
       </div>
       <div class="toast-body">{{ toast.content }}</div>
@@ -60,9 +61,13 @@ export default defineComponent({
       }
       return str;
     }
+    function removeToast(index: number) {
+      store.commit('removeToast', index);
+    }
     return {
       toastMsgList: computed(() => store.state.toastMsgList),
       getTypeStr,
+      removeToast,
     };
   },
 });

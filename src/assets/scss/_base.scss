@@ -73,6 +73,14 @@ ul {
   width: 100%;
 }
 
+.content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 16px;
+  width: 100%;
+}
+
 .function-menu {
   padding: 0;
   position: absolute;

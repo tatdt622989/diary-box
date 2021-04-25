@@ -1,19 +1,22 @@
-import { Note, ToastMSG } from '@/types';
+import { Model, Note, ToastMSG } from '@/types';
 import { createStore } from 'vuex';
 
 export default createStore({
   state: {
     isMenuOpen: false,
-    height: null,
+    height: '' as string,
     noteData: [] as Array<Note>,
     toastMsgList: [] as Array<ToastMSG>,
+    modalsName: ['can', 'pan', 'umbrella'] as Array<string>,
+    selectedModel: {} as Model,
+    userModels: [] as Array<Model>,
   },
   mutations: {
     menuToggler(state, data) {
       state.isMenuOpen = data;
     },
-    getHeight(state, data) {
-      state.height = data;
+    getHeight(state) {
+      state.height = `${window.innerHeight}px`;
     },
     getNoteData(state, data) {
       state.noteData = data;
@@ -32,8 +35,15 @@ export default createStore({
     addToast(state, data) {
       state.toastMsgList.push(data);
     },
-    removeToast(state) {
-      state.toastMsgList.splice(0, 1);
+    removeToast(state, index) {
+      if (typeof index === 'number') {
+        state.toastMsgList.splice(index, 1);
+      } else {
+        state.toastMsgList.splice(0, 1);
+      }
+    },
+    selectModel(state, data) {
+      state.selectedModel = data;
     },
   },
   actions: {

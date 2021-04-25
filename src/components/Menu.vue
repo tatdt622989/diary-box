@@ -43,7 +43,6 @@ export default defineComponent({
     const timer = ref<number | null>(null);
 
     onMounted(() => {
-      store.commit('getHeight', `${window.innerHeight}px`);
       window.addEventListener('resize', () => {
         if (timer.value) {
           clearTimeout(timer.value);

@@ -95,8 +95,8 @@ import {
 } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import Navbar from '@/components/Navbar.vue';
 import { Note, NoteList } from '@/types';
+import Navbar from '@/components/Navbar.vue';
 
 export default defineComponent({
   name: 'NoteList',
@@ -213,8 +213,11 @@ export default defineComponent({
 }
 .content {
   flex-grow: 1;
-  padding: 40px 20px 32px 20px;
+  padding: 0px 20px 0px 20px;
+  margin-bottom: 28px;
+  margin-top: 28px;
   width: 100%;
+  overflow-y: auto;
 }
   align-items: center;
   display: flex;
@@ -268,6 +271,7 @@ export default defineComponent({
       border-bottom: 1px solid $secondary;
       cursor: pointer;
       display: flex;
+      height: 68px;
       justify-content: space-between;
       margin-bottom: 20px;
       padding: 7px 0;
@@ -277,7 +281,6 @@ export default defineComponent({
     align-items: center;
     display: flex;
     flex-direction: column;
-    height: 68px;
     justify-content: space-between;
     margin-bottom: 0;
     padding: 0;

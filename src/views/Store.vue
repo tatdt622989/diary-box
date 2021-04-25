@@ -103,6 +103,10 @@ export default defineComponent({
     padding: 0;
     flex-grow: 1;
   }
+  .products {
+    padding: 16px;
+    padding-top: 0;
+  }
   .item-wrap {
     .price {
       .material-icons {

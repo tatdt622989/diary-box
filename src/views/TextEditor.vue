@@ -46,10 +46,10 @@
           <div class="ql-formats">
             <select class="ql-font">
               <option value=""></option>
-              <option value="Microsoft JhengHei">微軟正黑體</option>
-              <option value="Arial">Arial</option>
-              <option value="Noto Serif TC">Noto Serif TC</option>
-              <option value="Noto Sans TC">Noto Sans TC</option>
+              <option value="jhengHei">微軟正黑體</option>
+              <option value="arial">Arial</option>
+              <option value="noto-serif-tc">Noto Serif TC</option>
+              <option value="noto-sans-tc">Noto Sans TC</option>
             </select>
             <select class="ql-size">
               <option :value="size" v-for="size in sizeList" :key="size">
@@ -116,7 +116,7 @@ export default defineComponent({
 
       const font = Quill.import('formats/font');
       const size = Quill.import('attributors/style/size');
-      font.whitelist = ['Microsoft JhengHei', 'Arial', 'Noto Serif TC', 'Noto Sans TC'];
+      font.whitelist = ['jhengHei', 'arial', 'noto-serif-tc', 'noto-sans-tc'];
       size.whitelist = sizeList.value;
       Quill.register(font, true);
       Quill.register(size, true);
@@ -170,14 +170,15 @@ export default defineComponent({
             type: 'success',
             content: '成功編輯',
           });
+          router.push('/note-list');
         } else if (status.value === 'note-add') {
           store.dispatch('updateToast', {
             type: 'success',
             content: '成功新增',
           });
+          router.push('/model-selector');
         }
         store.commit('updateNote', data);
-        router.push('/note-list');
       }
     }
 
@@ -207,13 +208,6 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   height: 100vh;
-}
-.content {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  padding: 16px;
-  width: 100%;
 }
 .ql-editor {
   font-size: 20px;
@@ -476,5 +470,17 @@ export default defineComponent({
   flex-grow: 1;
   padding: 8px 16px 16px 16px;
   width: 100%;
+}
+.ql-font-arial {
+  font-family: Arial;
+}
+.ql-font-noto-serif-tc {
+  font-family: 'Noto Serif TC';
+}
+.ql-font-noto-sans-tc {
+  font-family: 'Noto Sans TC';
+}
+.ql-font-jhengHei {
+  font-family: 'Microsoft JhengHei';
 }
 </style>
