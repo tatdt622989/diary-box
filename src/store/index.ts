@@ -9,7 +9,15 @@ export default createStore({
     toastMsgList: [] as Array<ToastMSG>,
     modalsName: ['can', 'pan', 'umbrella'] as Array<string>,
     selectedModel: {} as Model,
-    userModels: [] as Array<Model>,
+    userModels: [{
+      name: 'umbrella',
+      id: '123456789',
+      position: {
+        x: 0,
+        y: 5.6,
+        z: 0,
+      },
+    }] as Array<Model>,
   },
   mutations: {
     menuToggler(state, data) {

@@ -117,7 +117,7 @@ export default defineComponent({
     const publicPath = ref(process.env.BASE_URL);
     const datGui = ref(new dat.GUI());
     const noteData = ref(null);
-    const useModels = ref<Array<Model> | null>(null);
+    const userModels = ref<Array<Model>>(store.state.userModels);
     const targetNote = ref<Note | null>(null);
 
     const gui = {
@@ -150,17 +150,6 @@ export default defineComponent({
 
     onMounted(() => {
       const ts = Date.now();
-      useModels.value = [
-        {
-          name: 'can',
-          id: String(ts),
-          position: {
-            x: 0,
-            y: 5.6,
-            z: 0,
-          },
-        },
-      ];
       // datGuiInit();
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
@@ -209,17 +198,17 @@ export default defineComponent({
       // 燈光
       const ambientLight = new THREE.AmbientLight(0xF0C98E, 0.9);
       scene.add(ambientLight);
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
-      directionalLight.position.set(100, 250, 0);
-      directionalLight.castShadow = true;
-      directionalLight.shadow.radius = 20;
-      directionalLight.shadow.mapSize.width = 1024;
-      directionalLight.shadow.mapSize.height = 1024;
-      directionalLight.shadow.camera.near = 1.75;
-      directionalLight.shadow.camera.far = 1000;
-      scene.add(directionalLight);
-      const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
-      scene.add(directionalLightHelper);
+      const pointLight = new THREE.PointLight(0xffffff, 0.7, 10000);
+      pointLight.position.set(7, 25, 7);
+      pointLight.castShadow = true;
+      pointLight.shadow.radius = 2;
+      pointLight.shadow.mapSize.width = 2048;
+      pointLight.shadow.mapSize.height = 2048;
+      pointLight.shadow.camera.near = 1;
+      pointLight.shadow.camera.far = 10000;
+      scene.add(pointLight);
+      const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
+      scene.add(pointLightHelper);
 
       // 霧
       scene.fog = new THREE.Fog(0x449966, 1, 150);
@@ -227,28 +216,27 @@ export default defineComponent({
       function render() {
         controls.update();
         // camera.position.set(gui.camera.pos.x, gui.camera.pos.y, gui.camera.pos.z);
-        // directionalLight.position.set(gui.dLight.pos.x, gui.dLight.pos.y, gui.dLight.pos.z);
+        // pointLight.position.set(gui.dLight.pos.x, gui.dLight.pos.y, gui.dLight.pos.z);
         requestAnimationFrame(render);
         renderer.render(scene, camera);
       }
 
       const loader = new THREE.ObjectLoader();
 
-      const modelLen = useModels.value.length;
+      const modelLen = userModels.value.length;
       let i = 0;
       while (i < modelLen) {
-        const model = useModels.value[i];
+        const model = userModels.value[i];
         loader.load(
           `${publicPath.value}model/${model.name}.json`,
           (gltf) => {
             const can = gltf;
             console.log(can);
             scene.add(can);
-            directionalLight.target = can;
             can.castShadow = true;
             can.position.set(model.position.x, model.position.y, model.position.z);
             can.receiveShadow = false;
-            const helper = new THREE.CameraHelper(directionalLight.shadow.camera);
+            const helper = new THREE.CameraHelper(pointLight.shadow.camera);
             scene.add(helper);
             render();
           },
@@ -296,7 +284,6 @@ export default defineComponent({
     return {
       mainScene,
       screenShotModal,
-      useModels,
       isMenuOpen: computed(() => store.state.isMenuOpen),
       openModal,
       createNote,

@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export interface Note {
   id: string;
   content: string;
@@ -26,4 +28,10 @@ export interface Model {
     y: number,
     z: number,
   }
+}
+
+export interface SceneData {
+  scene: THREE.Scene,
+  camera: THREE.PerspectiveCamera,
+  el: HTMLElement,
 }

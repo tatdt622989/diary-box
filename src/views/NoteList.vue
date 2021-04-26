@@ -214,7 +214,6 @@ export default defineComponent({
 .content {
   flex-grow: 1;
   padding: 0px 20px 0px 20px;
-  margin-bottom: 28px;
   margin-top: 28px;
   width: 100%;
   overflow-y: auto;

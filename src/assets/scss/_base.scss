@@ -130,6 +130,7 @@ ul {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  z-index: 9999;
 }
 
 .toast-container .toast {
