@@ -24,7 +24,6 @@
         >
           <div class="item-wrap" :class="{ active: i === 0 }" :id="'scene' + i">
             <div>
-              <div class="model-frame"></div>
               <span class="quantity">20 / 20</span>
               <button
                 class="menu-btn btn-circle"
@@ -37,6 +36,7 @@
                 <span class="material-icons">more_vert</span>
               </button>
             </div>
+            <div class="model-frame"></div>
             <span class="item-status" v-if="status === 'all-models'">{{
               i === 0 ? "使用中" : "未使用"
             }}</span>
@@ -79,7 +79,7 @@ import * as THREE from 'three';
 import Navbar from '@/components/Navbar.vue';
 import Menu from '@/components/Menu.vue';
 import FunctionBar from '@/components/FunctionBar.vue';
-import { Model, SceneData } from '@/types';
+import { LoadProvider, Model, SceneData } from '@/types';
 
 export default defineComponent({
   name: 'ModelList',
@@ -91,45 +91,37 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const route = useRoute();
-    const models = ref<Array<string | Model>>([]);
+    const models = ref<Array<string | Model>>(['can', 'pan', 'umbrella']);
     const selectedMenu = ref<Array<string>>([]);
     const listMode = ref<string>('using');
     const status = ref<string>('');
     const title = ref<string>('所有模型');
     const publicPath = ref(process.env.BASE_URL);
-    const modelsName = ref<Array<string>>([]);
+    const modelsName = ref<Array<string>>(['can', 'pan', 'umbrella']);
 
     async function init() {
       await nextTick();
+      console.log('init-start');
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
       });
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.setSize(window.innerWidth, window.innerHeight - 66);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.querySelector('.model-list-wrap')!.appendChild(renderer.domElement);
 
       function createScene(el: HTMLElement) {
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x449966);
+        scene.background = new THREE.Color(0xF8EBCF);
         // 相機
         const camera = new THREE.PerspectiveCamera(
           45,
-          window.innerWidth / (window.innerHeight - 66),
+          window.innerWidth / window.innerHeight,
           0.1,
           10000,
         );
-        camera.position.set(30, 10, 0);
+        camera.position.set(0, 5, 30);
         camera.zoom = 1;
-
-        // 地板
-        const planeGeometry = new THREE.PlaneGeometry(250, 250, 32);
-        const planeMaterial = new THREE.MeshStandardMaterial(
-          { color: 0x449966, side: THREE.DoubleSide },
-        );
-        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.rotateX(Math.PI / 2);
-        plane.receiveShadow = true;
-        scene.add(plane);
 
         // 燈光
         const ambientLight = new THREE.AmbientLight(0xF0C98E, 0.9);
@@ -152,43 +144,80 @@ export default defineComponent({
       }
       const loader = new THREE.ObjectLoader();
       const modelLen = modelsName.value.length;
+      console.log(modelLen);
       let i = 0;
-      let el = document.getElementById(`scene${i}`) as HTMLElement;
+      const loadResult: Array<Promise<LoadProvider>> = [];
       while (i < modelLen) {
-        el = document.getElementById(`scene${i}`) as HTMLElement;
+        const el = document.getElementById(`scene${i}`) as HTMLElement;
         console.log(el);
         const sceneData: SceneData = createScene(el);
-        sceneData.camera.aspect = window.innerWidth / (window.innerHeight - 66);
+        sceneData.camera.aspect = window.innerWidth / window.innerHeight;
         sceneData.camera.updateProjectionMatrix();
-        const {
-          left, right, top, bottom, width, height,
-        } = sceneData.el.getBoundingClientRect();
-        loader.load(
-          `${publicPath.value}model/${modelsName.value[i]}.json`,
-          (gltf) => {
-            const model = gltf;
-            console.log(gltf);
-            sceneData.scene.add(gltf);
-            model.castShadow = true;
-            gltf.position.set(gltf.position.x, gltf.position.y, gltf.position.z);
-            model.receiveShadow = false;
-            const render = function () {
-              renderer.render(sceneData.scene, sceneData.camera);
-              requestAnimationFrame(render);
-            };
-            render();
-          },
-          (xhr) => {
-            console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
-          },
-          (error) => {
-            console.log('An error happened');
-          },
-        );
+        const asyncLoad = (index: number) => new Promise<LoadProvider>((resolve) => {
+          loader.load(
+            `${publicPath.value}model/${modelsName.value[index]}.json`,
+            (gltf) => {
+              const model = gltf;
+              console.log(model);
+              model.castShadow = true;
+              model.position.set(0, 0, 0);
+              model.receiveShadow = false;
+              sceneData.scene.add(model);
+              const provider: LoadProvider = {
+                scene: sceneData.scene,
+                camera: sceneData.camera,
+                el: sceneData.el,
+              };
+              resolve(provider);
+            },
+            (xhr) => {
+              console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
+            },
+            (error) => {
+              console.log('An error happened');
+            },
+          );
+        });
+        loadResult.push(asyncLoad(i));
         i += 1;
       }
+      Promise.all(loadResult).then((data: Array<LoadProvider>) => {
+        const render = function () {
+          requestAnimationFrame(render);
+          renderer.setClearColor(0x449966);
+          renderer.setScissorTest(false);
+          renderer.clear();
+          renderer.setClearColor(0x449966);
+          renderer.setScissorTest(true);
+          i = 0;
+          while (i < data.length) {
+            const {
+              left, right, bottom, top,
+            } = data[i].el.getBoundingClientRect();
+
+            if (bottom < 0 || top > renderer.domElement.clientHeight
+            || right < 0 || left > renderer.domElement.clientWidth) {
+              return; // it's off screen
+            }
+            // set the viewport
+            const width = right - left;
+            const height = bottom - top;
+            const offsetLeft = left;
+            const offsetBottom = renderer.domElement.clientHeight - bottom;
+            renderer.setViewport(offsetLeft, offsetBottom, width, height);
+            renderer.setScissor(offsetLeft, offsetBottom, width, height);
+            renderer.autoClear = true;
+            // eslint-disable-next-line no-param-reassign
+            data[i].camera.aspect = width / height; // not changing in this example
+            data[i].camera.updateProjectionMatrix();
+            renderer.render(data[i].scene as THREE.Scene, data[i].camera);
+            i += 1;
+          }
+        };
+        render();
+      });
       const resize = function () {
-        renderer.setSize(window.innerWidth, window.innerHeight - 66);
+        renderer.setSize(window.innerWidth, window.innerHeight);
       };
       window.addEventListener('resize', resize, false);
     }
@@ -245,7 +274,7 @@ export default defineComponent({
 .model-list-wrap {
   .item-wrap {
     &.active {
-      background-color: $secondary;
+      background-color: transparent;
     }
     .item-status {
       color: $primary;
@@ -277,15 +306,20 @@ export default defineComponent({
       right: -10px;
       top: -10px;
     }
-    background-color: #d4dbba;
+    .model-frame {
+      flex-grow: 1;
+    }
+    background-color: transparent;
     border-radius: 20px;
     display: flex;
     flex-direction: column;
     height: 230px;
     justify-content: space-between;
+    overflow: hidden;
     padding: 16px;
     position: relative;
     margin-bottom: 20px;
+    z-index: 999;
   }
   .function-menu {
     button {
@@ -304,6 +338,11 @@ export default defineComponent({
       padding-right: 52px;
       text-align: center;
     }
+  }
+  canvas {
+    position: absolute;
+    left: 0;
+    z-index: -1;
   }
   display: flex;
   flex-direction: column;

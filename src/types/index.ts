@@ -35,3 +35,9 @@ export interface SceneData {
   camera: THREE.PerspectiveCamera,
   el: HTMLElement,
 }
+
+export interface LoadProvider {
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  el: HTMLElement;
+}
