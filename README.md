@@ -1,4 +1,4 @@
-# paste-life
+# Diary Box
 
 ## Project setup
 ```

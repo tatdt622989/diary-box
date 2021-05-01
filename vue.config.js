@@ -4,7 +4,7 @@ module.exports = {
       .plugin('html')
       .tap((args) => {
         // eslint-disable-next-line no-param-reassign
-        args[0].title = '貼生活';
+        args[0].title = '日記盒';
         return args;
       });
   },
