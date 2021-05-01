@@ -1,5 +1,5 @@
 <template>
-  <div class="function-bar">
+  <div class="function-bar container-fluid">
     <button
       class="t-base"
       @click="$router.push('/note-list')"
@@ -13,9 +13,6 @@
       v-if="mode === 'model-list'"
     >
       <span class="material-icons">edit</span>
-    </button>
-    <button class="t-base" @click="$emit('create-note')">
-      <span class="material-icons">add</span>
     </button>
     <button
       class="t-base"
@@ -42,12 +39,6 @@
 <style lang="scss">
 .function-bar {
   button {
-    &:first-child {
-      margin-right: 109px;
-    }
-    &:last-child {
-      margin-left: 109px;
-    }
     &:hover,
     &:active {
       background-color: darken($primary, 10%);
@@ -69,7 +60,7 @@
   background-color: $secondary;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   height: 66px;
   width: 100%;
 }

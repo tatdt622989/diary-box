@@ -24,7 +24,6 @@
         >
           <div class="item-wrap" :class="{ active: i === 0 }" :id="'scene' + i">
             <div>
-              <span class="quantity">20 / 20</span>
               <button
                 class="menu-btn btn-circle"
                 @click.stop="selectedMenu = [i, n]"
@@ -49,7 +48,7 @@
                 <button>預覽</button>
               </li>
               <li>
-                <button>放置到場景</button>
+                <button>切換為未使用</button>
               </li>
               <li>
                 <button>刪除</button>
@@ -76,10 +75,12 @@ import {
 import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Navbar from '@/components/Navbar.vue';
 import Menu from '@/components/Menu.vue';
 import FunctionBar from '@/components/FunctionBar.vue';
-import { LoadProvider, Model, SceneData } from '@/types';
+import { SceneData, Model } from '@/types';
 
 export default defineComponent({
   name: 'ModelList',
@@ -114,20 +115,30 @@ export default defineComponent({
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xF8EBCF);
         // 相機
+        const {
+          left, right, bottom, top,
+        } = el.getBoundingClientRect();
+        const width = right - left;
+        const height = bottom - top;
         const camera = new THREE.PerspectiveCamera(
           45,
-          window.innerWidth / window.innerHeight,
+          width / height,
           0.1,
-          10000,
+          1000,
         );
-        camera.position.set(0, 5, 30);
-        camera.zoom = 1;
+        camera.position.set(0, 8, 20);
+        camera.zoom = 1.8;
+        const controls = new OrbitControls(camera, el);
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 3;
+        controls.enabled = false;
+        controls.update();
 
         // 燈光
-        const ambientLight = new THREE.AmbientLight(0xF0C98E, 0.9);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
         scene.add(ambientLight);
-        const pointLight = new THREE.PointLight(0xffffff, 0.7, 10000);
-        pointLight.position.set(7, 25, 7);
+        const pointLight = new THREE.PointLight(0xF8EBCF, 0.8, 10000);
+        pointLight.position.set(0, 7, 5);
         pointLight.castShadow = true;
         pointLight.shadow.radius = 2;
         pointLight.shadow.mapSize.width = 2048;
@@ -140,35 +151,30 @@ export default defineComponent({
 
         // 霧
         scene.fog = new THREE.Fog(0x449966, 1, 150);
-        return { scene, camera, el };
+        return {
+          scene, camera, el, controls,
+        };
       }
-      const loader = new THREE.ObjectLoader();
+      const loader = new GLTFLoader();
       const modelLen = modelsName.value.length;
       console.log(modelLen);
       let i = 0;
-      const loadResult: Array<Promise<LoadProvider>> = [];
+      const loadResult: Array<Promise<SceneData>> = [];
       while (i < modelLen) {
         const el = document.getElementById(`scene${i}`) as HTMLElement;
         console.log(el);
         const sceneData: SceneData = createScene(el);
-        sceneData.camera.aspect = window.innerWidth / window.innerHeight;
-        sceneData.camera.updateProjectionMatrix();
-        const asyncLoad = (index: number) => new Promise<LoadProvider>((resolve) => {
+        const asyncLoad = (index: number) => new Promise<SceneData>((resolve) => {
           loader.load(
-            `${publicPath.value}model/${modelsName.value[index]}.json`,
+            `${publicPath.value}model/${modelsName.value[index]}.gltf`,
             (gltf) => {
-              const model = gltf;
+              const model = gltf.scene.children[0];
               console.log(model);
               model.castShadow = true;
               model.position.set(0, 0, 0);
               model.receiveShadow = false;
               sceneData.scene.add(model);
-              const provider: LoadProvider = {
-                scene: sceneData.scene,
-                camera: sceneData.camera,
-                el: sceneData.el,
-              };
-              resolve(provider);
+              resolve(sceneData);
             },
             (xhr) => {
               console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
@@ -181,7 +187,7 @@ export default defineComponent({
         loadResult.push(asyncLoad(i));
         i += 1;
       }
-      Promise.all(loadResult).then((data: Array<LoadProvider>) => {
+      Promise.all(loadResult).then((data: Array<SceneData>) => {
         const render = function () {
           requestAnimationFrame(render);
           renderer.setClearColor(0x449966);
@@ -210,6 +216,7 @@ export default defineComponent({
             // eslint-disable-next-line no-param-reassign
             data[i].camera.aspect = width / height; // not changing in this example
             data[i].camera.updateProjectionMatrix();
+            data[i].controls.update();
             renderer.render(data[i].scene as THREE.Scene, data[i].camera);
             i += 1;
           }
@@ -283,6 +290,7 @@ export default defineComponent({
     }
     > div {
       display: flex;
+      justify-content: flex-end;
       width: 100%;
     }
     .quantity {

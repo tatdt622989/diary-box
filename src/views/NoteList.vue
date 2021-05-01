@@ -198,26 +198,26 @@ export default defineComponent({
     right: 20px;
   }
   .header {
-  p {
-    color: $secondary;
-    font-size: 24px;
-    font-weight: bold;
-    margin: 0;
+    p {
+      color: $secondary;
+      font-size: 24px;
+      font-weight: bold;
+      margin: 0;
+    }
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding: 0 16px;
+    width: 100%;
   }
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-  padding: 0 20px;
-  width: 100%;
-}
-.content {
-  flex-grow: 1;
-  padding: 0px 20px 0px 20px;
-  margin-top: 28px;
-  width: 100%;
-  overflow-y: auto;
-}
+  .content {
+    flex-grow: 1;
+    padding: 0px 16px 0px 16px;
+    margin-top: 28px;
+    width: 100%;
+    overflow-y: auto;
+  }
   align-items: center;
   display: flex;
   flex-direction: column;

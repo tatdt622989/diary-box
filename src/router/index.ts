@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
 import Home from '@/views/Home.vue';
+import Welcome from '@/views/Welcome.vue';
 import NoteList from '@/views/NoteList.vue';
 import TextEditor from '@/views/TextEditor.vue';
 import ModelList from '@/views/ModelList.vue';
@@ -12,6 +13,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/',
     name: 'Home',
     component: Home,
+  },
+  {
+    path: '/welcome',
+    name: 'Welcome',
+    component: Welcome,
   },
   {
     path: '/note-list',

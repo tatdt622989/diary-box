@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export interface Note {
   id: string;
@@ -34,10 +35,12 @@ export interface SceneData {
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
   el: HTMLElement,
+  controls: OrbitControls,
 }
 
-export interface LoadProvider {
-  scene: THREE.Scene;
-  camera: THREE.PerspectiveCamera;
-  el: HTMLElement;
+export interface DefaultModelNum {
+  name: string;
+  x: number;
+  y: number;
+  z: number;
 }

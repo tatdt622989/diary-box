@@ -19,17 +19,7 @@
       </li>
       <li>
         <button @click="openModal">
-          <img src="@/assets/images/screen-shot.svg" alt="截圖圖示" />
-        </button>
-      </li>
-      <li>
-        <button>
-          <img src="@/assets/images/single-model.svg" alt="單模型顯示圖示" />
-        </button>
-      </li>
-      <li>
-        <button>
-          <img src="@/assets/images/all-model.svg" alt="全部模型顯示圖示" />
+          <span class="material-icons">photo_camera</span>
         </button>
       </li>
       <li>
@@ -38,17 +28,22 @@
         </button>
       </li>
     </ul>
-    <div class="info">
-      <ul class="info-list">
-        <li>最近筆記：<span></span></li>
-        <li>建立時間：<span></span></li>
-        <li>修改時間：<span></span></li>
-      </ul>
-      <button class="toggler-btn">
-        <span class="material-icons">chevron_left</span>
+    <div id="mainScene" ref="mainScene"></div>
+    <div class="note-wrap" :class="{ active: isNoteOpen }">
+      <div class="content">
+        <div class="d-flex justify-content-end">
+          <button class="btn btn-circle close-btn" @click="isNoteOpen = false">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <p class="date">{{ lastestNoteDate }}</p>
+        <div v-html="selectLastestNodeData.content">
+        </div>
+      </div>
+      <button class="toggler" @click="isNoteOpen = !isNoteOpen">
+        近期日記
       </button>
     </div>
-    <div id="mainScene" ref="mainScene"></div>
     <FunctionBar :mode="'home'" @create-note="createNote"></FunctionBar>
     <Menu></Menu>
     <div
@@ -92,11 +87,13 @@ import {
   defineComponent,
   onMounted,
   computed,
+  watchEffect,
 } from 'vue';
 import { Modal } from 'bootstrap';
 import * as dat from 'dat.gui';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import FunctionBar from '@/components/FunctionBar.vue';
@@ -116,9 +113,10 @@ export default defineComponent({
     const screenShotModal = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
     const datGui = ref(new dat.GUI());
-    const noteData = ref(null);
-    const userModels = ref<Array<Model>>(store.state.userModels);
-    const targetNote = ref<Note | null>(null);
+    const modalData = ref<Array<Model>>(store.state.modalData);
+    const isNoteOpen = ref<boolean>(false);
+    const lastestNoteData = ref<Array<Note>>([]);
+    const selectLastestNodeData = ref<Note>();
 
     const gui = {
       camera: {
@@ -148,8 +146,25 @@ export default defineComponent({
       camera.add(gui.camera.pos, 'z', -20, 50);
     }
 
+    function getNote() {
+      const data = store.state.noteData;
+      const lastestDayTime = data[data.length - 1].id - (data[data.length - 1].id % 100000);
+      console.log(lastestDayTime);
+      let i = 0;
+      while (i < data.length) {
+        if (data[i].id > lastestDayTime) {
+          lastestNoteData.value.splice(0, 0, data[i]);
+        }
+        i += 1;
+      }
+      [selectLastestNodeData.value] = lastestNoteData.value;
+    }
+
+    watchEffect(() => {
+      getNote();
+    });
+
     onMounted(() => {
-      const ts = Date.now();
       // datGuiInit();
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
@@ -168,19 +183,21 @@ export default defineComponent({
         0.1,
         10000,
       );
-      camera.position.set(30, 10, 0);
+      camera.position.set(20, 10, 0);
       camera.zoom = 1;
 
       // 控制器
-      let controls: OrbitControls;
+      let controls: MapControls;
       if (mainScene.value) {
         // 到這裡mainScene.value就一定不是null就不會報錯
         mainScene.value.appendChild(renderer.domElement);
-        controls = new OrbitControls(camera, mainScene.value);
+        controls = new MapControls(camera, mainScene.value);
         controls.target = new THREE.Vector3(0, 5, 0);
         controls.dampingFactor = 0.05;
         controls.enableDamping = true;
-        controls.enablePan = false;
+        controls.screenSpacePanning = false;
+        controls.minDistance = 10;
+        controls.maxDistance = 500;
         controls.minPolarAngle = 0;
         controls.maxPolarAngle = Math.PI / 2.5;
       }
@@ -188,7 +205,7 @@ export default defineComponent({
       // 地板
       const planeGeometry = new THREE.PlaneGeometry(250, 250, 32);
       const planeMaterial = new THREE.MeshStandardMaterial(
-        { color: 0x449966, side: THREE.DoubleSide },
+        { color: 0x2F6F48, side: THREE.DoubleSide },
       );
       const plane = new THREE.Mesh(planeGeometry, planeMaterial);
       plane.rotateX(Math.PI / 2);
@@ -196,17 +213,20 @@ export default defineComponent({
       scene.add(plane);
 
       // 燈光
-      const ambientLight = new THREE.AmbientLight(0xF0C98E, 0.9);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1);
       scene.add(ambientLight);
-      const pointLight = new THREE.PointLight(0xffffff, 0.7, 10000);
-      pointLight.position.set(7, 25, 7);
+      const pointLight = new THREE.PointLight(0xF8EBCF, 0.6, 10000);
+      pointLight.position.set(15, 27, 7);
       pointLight.castShadow = true;
       pointLight.shadow.radius = 2;
       pointLight.shadow.mapSize.width = 2048;
       pointLight.shadow.mapSize.height = 2048;
       pointLight.shadow.camera.near = 1;
       pointLight.shadow.camera.far = 10000;
+      const directionalLight = new THREE.DirectionalLight(0xF8EBCF, 0.6);
+      directionalLight.position.set(-10, 20, 0);
       scene.add(pointLight);
+      scene.add(directionalLight);
       const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
       scene.add(pointLightHelper);
 
@@ -215,27 +235,34 @@ export default defineComponent({
 
       function render() {
         controls.update();
+        camera.updateProjectionMatrix();
         // camera.position.set(gui.camera.pos.x, gui.camera.pos.y, gui.camera.pos.z);
         // pointLight.position.set(gui.dLight.pos.x, gui.dLight.pos.y, gui.dLight.pos.z);
         requestAnimationFrame(render);
         renderer.render(scene, camera);
       }
 
-      const loader = new THREE.ObjectLoader();
+      const loader = new GLTFLoader();
 
-      const modelLen = userModels.value.length;
+      const modelLen = modalData.value.length;
       let i = 0;
       while (i < modelLen) {
-        const model = userModels.value[i];
+        const model = modalData.value[i];
         loader.load(
-          `${publicPath.value}model/${model.name}.json`,
+          `${publicPath.value}model/${model.name}.gltf`,
           (gltf) => {
-            const can = gltf;
+            const can = gltf.scene;
+            can.traverse((object) => {
+              if (object instanceof THREE.Mesh) {
+                const mesh = object;
+                mesh.castShadow = true;
+              }
+            });
             console.log(can);
-            scene.add(can);
             can.castShadow = true;
             can.position.set(model.position.x, model.position.y, model.position.z);
             can.receiveShadow = false;
+            scene.add(can);
             const helper = new THREE.CameraHelper(pointLight.shadow.camera);
             scene.add(helper);
             render();
@@ -259,12 +286,6 @@ export default defineComponent({
       window.addEventListener('resize', resize, false);
     });
 
-    function loadNote() {
-      if (localStorage.getItem('note-data')) {
-        noteData.value = JSON.parse(localStorage.getItem('note-data') || '[]');
-      }
-    }
-
     function openModal() {
       console.log(screenShotModal.value);
       if (screenShotModal.value) {
@@ -285,15 +306,26 @@ export default defineComponent({
       mainScene,
       screenShotModal,
       isMenuOpen: computed(() => store.state.isMenuOpen),
+      lastestNoteDate: computed(() => {
+        const len = store.state.noteData.length;
+        const date = len > 0
+          ? new Date(Number(store.state.noteData[len - 1].id)) : null;
+        if (date) {
+          return `${date.getFullYear()} - ${date.getMonth() + 1} - ${date.getDate()}`;
+        }
+        return '';
+      }),
+      selectLastestNodeData,
       openModal,
       createNote,
+      isNoteOpen,
       menuToggler: () => store.commit('menuToggler', true),
     };
   },
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" socped>
 .status {
   .currency {
     span {
@@ -434,5 +466,46 @@ export default defineComponent({
     border: 0;
     justify-content: space-between;
   }
+}
+.note-wrap {
+  .toggler {
+    align-items: center;
+    background-color: $secondary;
+    border-radius: 0 20px 20px 0;
+    color: $primary;
+    display: flex;
+    flex-shrink: 0;
+    font-size: 20px;
+    font-weight: bold;
+    height: 135px;
+    justify-content: center;
+    line-height: 24px;
+    user-select: none;
+    width: 44px;
+    writing-mode: vertical-lr;
+    margin-right: -44px;
+  }
+  .content {
+    .date {
+      font-size: 28px;
+      font-weight: bold;
+      color: $primary;
+    }
+    background-color: $secondary;
+    border-left: 0;
+    height: 100%;
+  }
+  &.active {
+    left: 0;
+  }
+  align-items: center;
+  display: flex;
+  height: 100%;
+  left: -100%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: $t-base;
+  width: 100%;
 }
 </style>
