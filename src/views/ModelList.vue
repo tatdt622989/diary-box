@@ -326,7 +326,7 @@ export default defineComponent({
     overflow: hidden;
     padding: 16px;
     position: relative;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     z-index: 999;
   }
   .function-menu {

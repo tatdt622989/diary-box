@@ -1,6 +1,6 @@
 <template>
   <div id="nav">
-    <img src="@/assets/images/logo.svg" alt="貼生活" @click="$router.push('/')">
+    <img src="@/assets/images/logo.svg" alt="日記盒" @click="$router.push('/')">
     <button @click="menuToggler">
       <span class="material-icons">menu</span>
     </button>

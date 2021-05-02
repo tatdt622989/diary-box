@@ -9,9 +9,9 @@ export default createStore({
     toastMsgList: [] as Array<ToastMSG>,
     modalsName: ['can', 'pan', 'umbrella'] as Array<string>,
     selectedModel: {} as Model,
-    modalData: [{
+    modelData: [{
       name: 'can',
-      id: '123456789',
+      id: '1',
       position: {
         x: 0,
         y: 0,

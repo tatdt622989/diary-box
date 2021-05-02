@@ -27,6 +27,11 @@
           <span class="material-icons">center_focus_strong</span>
         </button>
       </li>
+      <li>
+        <button @click="$router.push('/model-editor')">
+          <span class="material-icons">edit</span>
+        </button>
+      </li>
     </ul>
     <div id="mainScene" ref="mainScene"></div>
     <div class="note-wrap" :class="{ active: isNoteOpen }">
@@ -113,7 +118,7 @@ export default defineComponent({
     const screenShotModal = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
     const datGui = ref(new dat.GUI());
-    const modalData = ref<Array<Model>>(store.state.modalData);
+    const modelData = ref<Array<Model>>(store.state.modelData);
     const isNoteOpen = ref<boolean>(false);
     const lastestNoteData = ref<Array<Note>>([]);
     const selectLastestNodeData = ref<Note>();
@@ -244,27 +249,25 @@ export default defineComponent({
 
       const loader = new GLTFLoader();
 
-      const modelLen = modalData.value.length;
+      const modelLen = modelData.value.length;
       let i = 0;
       while (i < modelLen) {
-        const model = modalData.value[i];
+        const data = modelData.value[i];
         loader.load(
-          `${publicPath.value}model/${model.name}.gltf`,
+          `${publicPath.value}model/${data.name}.gltf`,
           (gltf) => {
-            const can = gltf.scene;
-            can.traverse((object) => {
+            const model = gltf.scene;
+            model.traverse((object) => {
               if (object instanceof THREE.Mesh) {
                 const mesh = object;
                 mesh.castShadow = true;
               }
             });
-            console.log(can);
-            can.castShadow = true;
-            can.position.set(model.position.x, model.position.y, model.position.z);
-            can.receiveShadow = false;
-            scene.add(can);
-            const helper = new THREE.CameraHelper(pointLight.shadow.camera);
-            scene.add(helper);
+            console.log(model);
+            model.castShadow = true;
+            model.position.set(model.position.x, model.position.y, model.position.z);
+            model.receiveShadow = false;
+            scene.add(model);
             render();
           },
           (xhr) => {
@@ -486,13 +489,21 @@ export default defineComponent({
     margin-right: -44px;
   }
   .content {
+    >div {
+      width: 100%;
+    }
     .date {
       font-size: 28px;
       font-weight: bold;
       color: $primary;
+      border: 2px solid $primary;
+      padding: 0 20px;
     }
+    align-items: center;
     background-color: $secondary;
     border-left: 0;
+    display: flex;
+    flex-direction: column;
     height: 100%;
   }
   &.active {
