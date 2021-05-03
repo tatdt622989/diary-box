@@ -6,7 +6,7 @@
       </button>
       <span class="title">編輯模式</span>
     </div>
-    <canvas id="editor"></canvas>
+    <canvas id="editor" @click="getMousePos($event)" @touchstart="getMousePos($event)"></canvas>
   </div>
 </template>
 
@@ -22,8 +22,14 @@ import {
 import * as THREE from 'three';
 import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
+import { Object3D } from 'three';
 
 export default defineComponent({
   name: 'ModelEditor',
@@ -32,27 +38,42 @@ export default defineComponent({
     const publicPath = ref(process.env.BASE_URL);
     const { modelData } = store.state;
     const canvas = ref<HTMLCanvasElement>();
-    const renderer = ref<THREE.WebGLRenderer | null>();
     const camera = ref<THREE.PerspectiveCamera>();
+    const mouse = ref<THREE.Vector2 | null>(null);
+    let outlinePass: OutlinePass | null = null;
+    let renderer: THREE.WebGLRenderer | null = null;
+    let composer: EffectComposer | null = null;
+    let effectFXAA: ShaderPass | null = null;
 
     function resize() {
-      if (renderer.value && camera.value) {
-        renderer.value.setSize(window.innerWidth, window.innerHeight);
+      if (renderer && camera.value && composer) {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
         camera.value.aspect = window.innerWidth / (window.innerHeight);
+        camera.value.updateProjectionMatrix();
         camera.value.updateProjectionMatrix();
       }
     }
 
+    function getMousePos(e: MouseEvent) {
+      mouse.value = new THREE.Vector2();
+      mouse.value.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.value.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      console.log(mouse.value, e.clientX, e.clientY, '按下');
+    }
+
     onMounted(() => {
       canvas.value = document.getElementById('editor') as HTMLCanvasElement;
-      renderer.value = new THREE.WebGLRenderer({
+      renderer = new THREE.WebGLRenderer({
         antialias: true,
         canvas: canvas.value,
       });
-      renderer.value.shadowMap.enabled = true;
-      renderer.value.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.value.setSize(window.innerWidth, window.innerHeight);
-      // const composer = new EffectComposer(renderer);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer = new EffectComposer(renderer);
+      composer.setSize(window.innerWidth, window.innerHeight);
+
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x449966);
 
@@ -105,11 +126,40 @@ export default defineComponent({
       // 霧
       scene.fog = new THREE.Fog(0x449966, 1, 150);
 
+      // 取得滑鼠位置模型
+      const raycaster = new THREE.Raycaster();
+      const renderPass = new RenderPass(scene, camera.value);
+      composer.addPass(renderPass);
+
+      outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth,
+        window.innerHeight), scene, camera.value);
+      composer.addPass(outlinePass);
+
+      effectFXAA = new ShaderPass(FXAAShader);
+      effectFXAA.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
+      composer.addPass(effectFXAA);
+
       function render() {
-        if (renderer.value && camera.value) {
-          controls.update();
+        if (renderer && camera.value) {
           requestAnimationFrame(render);
-          renderer.value.render(scene, camera.value);
+          if (mouse.value && outlinePass) {
+            raycaster.setFromCamera(mouse.value, camera.value);
+            const group = scene.children.filter((obj) => obj.type === 'Group');
+            console.log(group);
+            const intersects = raycaster.intersectObjects(group, true);
+            console.log(intersects, mouse.value, scene);
+            if (intersects.length > 0) {
+              outlinePass.selectedObjects = [intersects[0].object.parent as Object3D];
+            } else {
+              outlinePass.selectedObjects = [];
+            }
+            mouse.value = null;
+          }
+          controls.update();
+          if (composer) {
+            composer.render();
+          }
+          // renderer.render(scene, camera.value);
         }
       }
 
@@ -150,11 +200,12 @@ export default defineComponent({
 
     onUnmounted(() => {
       window.removeEventListener('resize', resize);
-      renderer.value = null;
+      renderer = null;
     });
 
     return {
-
+      getMousePos,
+      mouse,
     };
   },
 });
