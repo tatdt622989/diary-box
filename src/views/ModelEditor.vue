@@ -1,12 +1,47 @@
 <template>
   <div class="model-editor-wrap">
     <div class="header">
-      <button class="btn btn-circle" @click="$router.go(-1)">
-        <span class="material-icons">arrow_back</span>
+      <div>
+        <button class="btn btn-circle" @click="$router.go(-1)">
+          <span class="material-icons">arrow_back</span>
+        </button>
+        <span class="title">編輯模式</span>
+      </div>
+      <button class="btn btn-circle">
+        <span class="material-icons">check</span>
       </button>
-      <span class="title">編輯模式</span>
     </div>
-    <canvas id="editor" @click="getMousePos($event)" @touchstart="getMousePos($event)"></canvas>
+    <div id="directionController">
+      <div>
+        <button class="btn btn-circle" @click="controller('direction', 'behind')">
+          <span class="material-icons">arrow_left</span>
+        </button>
+        <button class="btn btn-circle" @click="controller('direction', 'right')">
+          <span class="material-icons">arrow_left</span>
+        </button>
+      </div>
+      <div>
+        <button class="btn btn-circle" @click="controller('direction', 'left')">
+          <span class="material-icons">arrow_left</span>
+        </button>
+        <button class="btn btn-circle" @click="controller('direction', 'front')">
+          <span class="material-icons">arrow_left</span>
+        </button>
+      </div>
+    </div>
+    <div id="rotateController">
+      <button class="btn btn-circle" @click="controller('rotate', 'left')">
+        <span class="material-icons">rotate_left</span>
+      </button>
+      <button class="btn btn-circle" @click="controller('rotate', 'right')">
+        <span class="material-icons">rotate_right</span>
+      </button>
+    </div>
+    <canvas
+      id="editor"
+      @click="getMousePos($event)"
+      @touchstart="getMousePos($event)"
+    ></canvas>
   </div>
 </template>
 
@@ -40,6 +75,7 @@ export default defineComponent({
     const canvas = ref<HTMLCanvasElement>();
     const camera = ref<THREE.PerspectiveCamera>();
     const mouse = ref<THREE.Vector2 | null>(null);
+    let selectedModel: Object3D | null = null;
     let outlinePass: OutlinePass | null = null;
     let renderer: THREE.WebGLRenderer | null = null;
     let composer: EffectComposer | null = null;
@@ -55,11 +91,56 @@ export default defineComponent({
       }
     }
 
-    function getMousePos(e: MouseEvent) {
+    function getMousePos(e: MouseEvent | TouchEvent) {
       mouse.value = new THREE.Vector2();
-      mouse.value.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.value.y = -(e.clientY / window.innerHeight) * 2 + 1;
-      console.log(mouse.value, e.clientX, e.clientY, '按下');
+      if (e instanceof TouchEvent) {
+        mouse.value.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+        mouse.value.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+        console.log(e.touches[0].clientX, e.touches[0].clientY, '按下');
+      } else {
+        mouse.value.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.value.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        console.log(e, e.clientX, e.clientY, '按下');
+      }
+    }
+
+    function controller(type: string, direction: string) {
+      console.log(selectedModel, direction);
+      const unit = 2;
+      if (!selectedModel) {
+        return;
+      }
+      if (type === 'rotate') {
+        switch (direction) {
+          case 'left':
+            break;
+          case 'right':
+            break;
+          default:
+            break;
+        }
+      } else if (type === 'direction') {
+        switch (direction) {
+          case 'front':
+            selectedModel.position.set(selectedModel.position.x += unit, selectedModel.position.y,
+              selectedModel.position.z);
+            break;
+          case 'behind':
+            selectedModel.position.set(selectedModel.position.x -= unit, selectedModel.position.y,
+              selectedModel.position.z);
+            break;
+          case 'left':
+            selectedModel.position.set(selectedModel.position.x, selectedModel.position.y,
+              selectedModel.position.z += unit);
+            break;
+          case 'right':
+            selectedModel.position.set(selectedModel.position.x, selectedModel.position.y,
+              selectedModel.position.z -= unit);
+            break;
+          default:
+            break;
+        }
+      }
     }
 
     onMounted(() => {
@@ -150,8 +231,10 @@ export default defineComponent({
             console.log(intersects, mouse.value, scene);
             if (intersects.length > 0) {
               outlinePass.selectedObjects = [intersects[0].object.parent as Object3D];
+              selectedModel = intersects[0].object.parent;
             } else {
               outlinePass.selectedObjects = [];
+              selectedModel = null;
             }
             mouse.value = null;
           }
@@ -206,32 +289,81 @@ export default defineComponent({
     return {
       getMousePos,
       mouse,
+      controller,
     };
   },
 });
 </script>
 
 <style lang="scss">
-  .model-editor-wrap {
-    .header {
-      .title {
-        border-radius: 999px;
-        border: 2px solid $secondary;
-        color: $secondary;
-        font-size: 20px;
-        font-weight: bold;
-        height: 52px;
-        line-height: 52px;
-        margin-left: 16px;
-        width: 120px;
-      }
+.model-editor-wrap {
+  .header {
+    >div {
       display: flex;
-      justify-content: flex-start;
-      margin-top: 24px;
-      position: absolute;
+    }
+    .title {
+      border-radius: 999px;
+      border: 2px solid $secondary;
+      color: $secondary;
+      font-size: 20px;
+      font-weight: bold;
+      height: 52px;
+      line-height: 52px;
+      margin-left: 16px;
+      width: 120px;
     }
     display: flex;
-    flex-direction: column;
-    position: relative;
+    justify-content: space-between;
+    margin-top: 24px;
+    position: absolute;
   }
+  #directionController {
+    > div {
+      &:nth-of-type(1) {
+        button {
+          &:nth-of-type(1) {
+            transform: rotate(45deg);
+          }
+          &:nth-of-type(2) {
+            transform: rotate(135deg);
+          }
+        }
+      }
+      &:nth-of-type(2) {
+        button {
+          &:nth-of-type(1) {
+            transform: rotate(-45deg);
+          }
+          &:nth-of-type(2) {
+            transform: rotate(-135deg);
+          }
+        }
+      }
+      button {
+        margin: 8px;
+      }
+      display: flex;
+    }
+    bottom: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    transform: rotate(45deg);
+    position: absolute;
+    right: 32px;
+    width: 136px;
+  }
+  #rotateController {
+    button {
+      margin: 8px;
+    }
+    bottom: 18px;
+    display: flex;
+    left: 16px;
+    position: absolute;
+  }
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
 </style>

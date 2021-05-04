@@ -8,7 +8,7 @@ export default createStore({
     noteData: [] as Array<Note>,
     toastMsgList: [] as Array<ToastMSG>,
     modalsName: ['can', 'pan', 'umbrella'] as Array<string>,
-    selectedModel: {} as Model,
+    previewModel: '',
     modelData: [{
       name: 'can',
       id: '1',
@@ -49,9 +49,6 @@ export default createStore({
       } else {
         state.toastMsgList.splice(0, 1);
       }
-    },
-    selectModel(state, data) {
-      state.selectedModel = data;
     },
   },
   actions: {

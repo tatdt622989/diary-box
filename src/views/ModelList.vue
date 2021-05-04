@@ -252,18 +252,6 @@ export default defineComponent({
       init();
     });
 
-    function selectModel() {
-      if (status.value === 'select-model') {
-        store.state.selectedModel = {
-
-        };
-      } else if (status.value === 'add-model') {
-        store.state.selectedModel = {
-
-        };
-      }
-    }
-
     return {
       selectedMenu,
       models,
@@ -271,7 +259,6 @@ export default defineComponent({
       listMode,
       status,
       title,
-      selectModel,
     };
   },
 });
