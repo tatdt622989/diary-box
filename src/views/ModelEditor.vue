@@ -80,6 +80,7 @@ export default defineComponent({
     let renderer: THREE.WebGLRenderer | null = null;
     let composer: EffectComposer | null = null;
     let effectFXAA: ShaderPass | null = null;
+    const scene: THREE.Scene = new THREE.Scene();
 
     function resize() {
       if (renderer && camera.value && composer) {
@@ -104,17 +105,31 @@ export default defineComponent({
       }
     }
 
+    function getModelOverlapState(target: Object3D) {
+      const targetBox = new THREE.Box3().setFromObject(target as Object3D);
+      console.log(target, targetBox, targetBox.min, targetBox.max);
+      const groups = scene.children.filter((obj) => obj.type === 'Group');
+      console.log(groups);
+    }
+
     function controller(type: string, direction: string) {
       console.log(selectedModel, direction);
-      const unit = 2;
+      const posUnit = 2;
+      const rotateUnit = Math.PI / 8;
       if (!selectedModel) {
         return;
       }
+      getModelOverlapState(selectedModel as Object3D);
+      const axis = new THREE.Vector3(0, 1, 0);
+      console.log(selectedModel.rotation.y);
+      selectedModel.rotation.order = 'YXZ';
       if (type === 'rotate') {
         switch (direction) {
           case 'left':
+            selectedModel.rotateOnWorldAxis(axis, -rotateUnit);
             break;
           case 'right':
+            selectedModel.rotateOnWorldAxis(axis, rotateUnit);
             break;
           default:
             break;
@@ -122,20 +137,22 @@ export default defineComponent({
       } else if (type === 'direction') {
         switch (direction) {
           case 'front':
-            selectedModel.position.set(selectedModel.position.x += unit, selectedModel.position.y,
+            selectedModel.position.set(selectedModel.position.x += posUnit,
+              selectedModel.position.y,
               selectedModel.position.z);
             break;
           case 'behind':
-            selectedModel.position.set(selectedModel.position.x -= unit, selectedModel.position.y,
+            selectedModel.position.set(selectedModel.position.x -= posUnit,
+              selectedModel.position.y,
               selectedModel.position.z);
             break;
           case 'left':
             selectedModel.position.set(selectedModel.position.x, selectedModel.position.y,
-              selectedModel.position.z += unit);
+              selectedModel.position.z += posUnit);
             break;
           case 'right':
             selectedModel.position.set(selectedModel.position.x, selectedModel.position.y,
-              selectedModel.position.z -= unit);
+              selectedModel.position.z -= posUnit);
             break;
           default:
             break;
@@ -155,7 +172,6 @@ export default defineComponent({
       composer = new EffectComposer(renderer);
       composer.setSize(window.innerWidth, window.innerHeight);
 
-      const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x449966);
 
       // 相機
@@ -225,9 +241,9 @@ export default defineComponent({
           requestAnimationFrame(render);
           if (mouse.value && outlinePass) {
             raycaster.setFromCamera(mouse.value, camera.value);
-            const group = scene.children.filter((obj) => obj.type === 'Group');
-            console.log(group);
-            const intersects = raycaster.intersectObjects(group, true);
+            const groups = scene.children.filter((obj) => obj.type === 'Group');
+            console.log(groups);
+            const intersects = raycaster.intersectObjects(groups, true);
             console.log(intersects, mouse.value, scene);
             if (intersects.length > 0) {
               outlinePass.selectedObjects = [intersects[0].object.parent as Object3D];
