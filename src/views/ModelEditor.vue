@@ -106,10 +106,43 @@ export default defineComponent({
     }
 
     function getModelOverlapState(target: Object3D) {
+      console.log(target);
+      const { uuid } = target;
       const targetBox = new THREE.Box3().setFromObject(target as Object3D);
-      console.log(target, targetBox, targetBox.min, targetBox.max);
+      const targetX = {
+        min: targetBox.min.x,
+        max: targetBox.max.x,
+      };
+      const targetZ = {
+        min: targetBox.min.z,
+        max: targetBox.max.z,
+      };
+      let isOverlap = false;
       const groups = scene.children.filter((obj) => obj.type === 'Group');
-      console.log(groups);
+      console.log(groups, uuid);
+      groups.forEach((g) => {
+        if (uuid !== g.uuid) {
+          console.log(g, '其他模型');
+          const currentBox = new THREE.Box3().setFromObject(g as Object3D);
+          const currentBoxX = {
+            min: currentBox.min.x,
+            max: currentBox.max.x,
+          };
+          const currentBoxZ = {
+            min: currentBox.min.z,
+            max: currentBox.max.z,
+          };
+          console.log(currentBoxX.min > targetX.min, currentBoxX.max < targetX.max,
+            currentBoxZ.min > targetZ.min, currentBoxZ.max < targetZ.max);
+          if (!(currentBoxX.min > targetX.min || currentBoxX.max < targetX.max)
+            && !(currentBoxZ.min > targetZ.min || currentBoxZ.max < targetZ.max)) {
+            isOverlap = true;
+          }
+        }
+      });
+      console.log(targetX, targetZ);
+      console.log(isOverlap);
+      return isOverlap;
     }
 
     function controller(type: string, direction: string) {
@@ -119,7 +152,9 @@ export default defineComponent({
       if (!selectedModel) {
         return;
       }
-      getModelOverlapState(selectedModel as Object3D);
+      if (getModelOverlapState(selectedModel as Object3D)) {
+        return;
+      }
       const axis = new THREE.Vector3(0, 1, 0);
       console.log(selectedModel.rotation.y);
       selectedModel.rotation.order = 'YXZ';
@@ -247,11 +282,12 @@ export default defineComponent({
             console.log(intersects, mouse.value, scene);
             if (intersects.length > 0) {
               outlinePass.selectedObjects = [intersects[0].object.parent as Object3D];
-              selectedModel = intersects[0].object.parent;
+              selectedModel = intersects[0].object.parent?.parent!;
             } else {
               outlinePass.selectedObjects = [];
               selectedModel = null;
             }
+            console.log(selectedModel);
             mouse.value = null;
           }
           controls.update();
@@ -272,16 +308,17 @@ export default defineComponent({
           `${publicPath.value}model/${data.name}.gltf`,
           (gltf) => {
             const model = gltf.scene;
+            console.log(model);
             model.traverse((object) => {
               if (object instanceof THREE.Mesh) {
                 const mesh = object;
                 mesh.castShadow = true;
               }
             });
-            console.log(model);
             model.castShadow = true;
-            model.position.set(model.position.x, model.position.y, model.position.z);
+            model.position.set(data.position.x, data.position.y, data.position.z);
             model.receiveShadow = false;
+            console.log(data);
             scene.add(model);
             render();
           },

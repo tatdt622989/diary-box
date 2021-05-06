@@ -17,6 +17,15 @@ export default createStore({
         y: 0,
         z: 0,
       },
+    },
+    {
+      name: 'umbrella',
+      id: '2',
+      position: {
+        x: 0,
+        y: 0,
+        z: 7,
+      },
     }] as Array<Model>,
   },
   mutations: {
