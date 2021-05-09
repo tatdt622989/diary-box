@@ -74,6 +74,7 @@ export default createStore({
       },
     },
     firebase: null,
+    userInfo: {},
   },
   mutations: {
     menuToggler(state, data) {
