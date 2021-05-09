@@ -9,7 +9,6 @@
       <button
         class="btn-circle"
         @click="$router.go(-1)"
-        v-if="listMode === 'using'"
       >
         <span class="material-icons">arrow_back</span>
       </button>
@@ -23,6 +22,7 @@
           :key="i"
         >
           <div class="item-wrap" :class="{ active: i === 0 }" :id="'scene' + i">
+            <img class="corner" src="@/assets/images/corner.svg" v-for="n in 4" :key="n">
             <div>
               <button
                 class="menu-btn btn-circle"
@@ -30,13 +30,12 @@
                 :class="{
                   active: selectedMenu[0] === i && selectedMenu[1] === n,
                 }"
-                v-if="status === 'all-models'"
               >
                 <span class="material-icons">more_vert</span>
               </button>
             </div>
             <div class="model-frame"></div>
-            <span class="item-status" v-if="status === 'all-models'">{{
+            <span class="item-status">{{
               i === 0 ? "使用中" : "未使用"
             }}</span>
             <ul
@@ -94,8 +93,6 @@ export default defineComponent({
     const route = useRoute();
     const models = ref<Array<string | Model>>(['can', 'pan', 'umbrella']);
     const selectedMenu = ref<Array<string>>([]);
-    const listMode = ref<string>('using');
-    const status = ref<string>('');
     const title = ref<string>('所有模型');
     const publicPath = ref(process.env.BASE_URL);
     const modelsName = ref<Array<string>>(['can', 'pan', 'umbrella']);
@@ -126,18 +123,19 @@ export default defineComponent({
           0.1,
           1000,
         );
-        camera.position.set(0, 8, 20);
-        camera.zoom = 1.8;
+        camera.position.set(0, 8, 27);
+        camera.zoom = 2;
         const controls = new OrbitControls(camera, el);
         controls.autoRotate = true;
         controls.autoRotateSpeed = 3;
         controls.enabled = false;
+        controls.target = new THREE.Vector3(0, 1.5, 0);
         controls.update();
 
         // 燈光
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
         scene.add(ambientLight);
-        const pointLight = new THREE.PointLight(0xF8EBCF, 0.8, 10000);
+        const pointLight = new THREE.PointLight(0xF8EBCF, 0.6, 10000);
         pointLight.position.set(0, 7, 5);
         pointLight.castShadow = true;
         pointLight.shadow.radius = 2;
@@ -148,6 +146,9 @@ export default defineComponent({
         scene.add(pointLight);
         const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
         scene.add(pointLightHelper);
+        const directionalLight = new THREE.DirectionalLight(0xF8EBCF, 0.6);
+        directionalLight.position.set(-10, 20, 0);
+        scene.add(directionalLight);
 
         // 霧
         scene.fog = new THREE.Fog(0x449966, 1, 150);
@@ -230,25 +231,6 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      status.value = route.params.status as string;
-      switch (status.value) {
-        case 'all-models':
-          title.value = '所有模型';
-          break;
-        case 'add-model':
-          title.value = '建立新模型';
-          models.value = store.state.modalsName;
-          modelsName.value = models.value as Array<string>;
-          break;
-        case 'select-model':
-          title.value = '選擇模型';
-          break;
-        case 'model-library':
-          title.value = '模型圖鑑';
-          break;
-        default:
-          break;
-      }
       init();
     });
 
@@ -256,8 +238,6 @@ export default defineComponent({
       selectedMenu,
       models,
       height: computed(() => store.state.height),
-      listMode,
-      status,
       title,
     };
   },
@@ -304,16 +284,41 @@ export default defineComponent({
     .model-frame {
       flex-grow: 1;
     }
+    .corner {
+      &:nth-of-type(1) {
+        left: 0;
+        top: 0;
+      }
+      &:nth-of-type(2) {
+        right: 0;
+        top: 0;
+        transform: rotate(90deg);
+      }
+      &:nth-of-type(3) {
+        right: 0;
+        bottom: 0;
+        transform: rotate(180deg);
+      }
+      &:nth-of-type(4) {
+        left: 0;
+        bottom: 0;
+        transform: rotate(270deg);
+      }
+      height: 20px;
+      position: absolute;
+      width: 20px;
+      z-index: 5;
+    }
     background-color: transparent;
     border-radius: 20px;
     display: flex;
     flex-direction: column;
     height: 230px;
     justify-content: space-between;
-    overflow: hidden;
+    margin-bottom: 16px;
     padding: 16px;
     position: relative;
-    margin-bottom: 16px;
+    user-select: none;
     z-index: 999;
   }
   .function-menu {

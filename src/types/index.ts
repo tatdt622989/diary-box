@@ -5,9 +5,9 @@ export interface Note {
   id: string;
   content: string;
   title: string;
-  modelId: string,
-  modelType: string,
-  position: number,
+  modelId: string;
+  modelType: string;
+  position: number;
 }
 
 export interface ToastMSG {
@@ -16,26 +16,30 @@ export interface ToastMSG {
 }
 
 export interface NoteList {
-  date: string,
-  notes: Array<Note>,
-  time: Array<string>,
+  date: string;
+  notes: Array<Note>;
+  time: Array<string>;
 }
 
 export interface Model {
-  name: string,
-  id: string,
+  name: string;
+  id: string;
   position: {
-    x: number,
-    y: number,
-    z: number,
-  }
+    x: number;
+    y: number;
+    z: number;
+  };
+  style: {
+    color: object;
+  },
+  isUsed: boolean;
 }
 
 export interface SceneData {
-  scene: THREE.Scene,
-  camera: THREE.PerspectiveCamera,
-  el: HTMLElement,
-  controls: OrbitControls,
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  el: HTMLElement;
+  controls: OrbitControls;
 }
 
 export interface DefaultModelNum {

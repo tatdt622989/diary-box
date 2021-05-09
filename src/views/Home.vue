@@ -2,7 +2,7 @@
   <div class="main-wrap home-wrap">
     <div class="status">
       <div class="currency">
-        <span>999</span>
+        <span>{{ store.state.currency }}</span>
         <img src="@/assets/images/currency.svg" />
       </div>
     </div>
@@ -28,7 +28,7 @@
         </button>
       </li>
       <li>
-        <button @click="$router.push('/model-editor')">
+        <button @click="$router.push('/scene-editor')">
           <span class="material-icons">edit</span>
         </button>
       </li>
@@ -306,6 +306,7 @@ export default defineComponent({
     }
 
     return {
+      store,
       mainScene,
       screenShotModal,
       isMenuOpen: computed(() => store.state.isMenuOpen),
@@ -419,35 +420,6 @@ export default defineComponent({
   justify-content: space-between;
 }
 #screenShotModal {
-  .modal-content {
-    background: $secondary;
-    border-radius: 20px;
-  }
-  .modal-header {
-    h5 {
-      color: $primary;
-      font-weight: bold;
-      font-size: 20px;
-    }
-    .close {
-      span {
-        color: $primary;
-        font-size: 36px;
-        padding: 0;
-        line-height: 36px;
-      }
-      background: $secondary;
-      border: 0;
-      height: 52px;
-      padding: 8px;
-      position: relative;
-      right: -8px;
-      width: 52px;
-    }
-    border: 0;
-    height: 69px;
-    position: relative;
-  }
   .modal-body {
     .img-frame {
       background-color: #c4c4c4;
@@ -456,18 +428,6 @@ export default defineComponent({
     }
     padding-top: 0;
     padding-bottom: 0;
-  }
-  .modal-footer {
-    button {
-      border-radius: 999px;
-      color: $secondary;
-      font-size: 20px;
-      font-weight: bold;
-      height: 52px;
-      width: 150px;
-    }
-    border: 0;
-    justify-content: space-between;
   }
 }
 .note-wrap {

@@ -1,6 +1,6 @@
 <template>
   <router-view/>
-  <Toast></Toast>
+  <Toast @set-data="setData"></Toast>
 </template>
 
 <script lang="ts">
@@ -15,6 +15,8 @@ import Toast from '@/components/Toast.vue';
 import { useStore } from 'vuex';
 import firebase from 'firebase/app';
 import 'firebase/analytics';
+// Add the Firebase products that you want to use
+import 'firebase/auth';
 
 export default defineComponent({
   name: 'app',
@@ -23,20 +25,7 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-
     onMounted(() => {
-      const firebaseConfig = {
-        apiKey: 'AIzaSyBVfhvIehRON11kf0m3NLb6ctDtcUFP5Uo',
-        authDomain: 'paste-life.firebaseapp.com',
-        projectId: 'paste-life',
-        storageBucket: 'paste-life.appspot.com',
-        messagingSenderId: '300124649542',
-        appId: '1:300124649542:web:2423b74d9012c564ba7247',
-        measurementId: 'G-R6PQS5M49V',
-      };
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      firebase.analytics();
       try {
         if (localStorage.getItem('note-data')) {
           store.commit('getNoteData', JSON.parse(localStorage.getItem('note-data') as string));
@@ -50,6 +39,7 @@ export default defineComponent({
         store.commit('getHeight');
       }, false);
     });
+
     return {
     };
   },

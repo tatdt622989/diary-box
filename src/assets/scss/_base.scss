@@ -152,3 +152,51 @@ ul {
   position: relative;
   overflow: hidden;
 }
+
+button {
+  touch-action: manipulation;
+}
+
+.modal {
+  .modal-header {
+    h5 {
+      color: $primary;
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .close {
+      span {
+        color: $primary;
+        font-size: 36px;
+        padding: 0;
+        line-height: 36px;
+      }
+      background: $secondary;
+      border: 0;
+      height: 52px;
+      padding: 8px;
+      position: relative;
+      right: -8px;
+      width: 52px;
+    }
+    border: 0;
+    height: 69px;
+    position: relative;
+  }
+  .modal-content {
+    background: $secondary;
+    border-radius: 20px;
+  }
+  .modal-footer {
+    button {
+      border-radius: 999px;
+      color: $secondary;
+      font-size: 20px;
+      font-weight: bold;
+      height: 52px;
+      width: 150px;
+    }
+    border: 0;
+    justify-content: space-between;
+  }
+}

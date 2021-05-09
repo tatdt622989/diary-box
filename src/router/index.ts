@@ -6,6 +6,7 @@ import TextEditor from '@/views/TextEditor.vue';
 import ModelList from '@/views/ModelList.vue';
 import Store from '@/views/Store.vue';
 import ModelSelector from '@/views/ModelSelector.vue';
+import SceneEditor from '@/views/SceneEditor.vue';
 import ModelEditor from '@/views/ModelEditor.vue';
 
 const routes: Array<RouteRecordRaw> = [
@@ -43,6 +44,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/model-selector',
     name: 'ModelSelector',
     component: ModelSelector,
+  },
+  {
+    path: '/scene-editor',
+    name: 'SceneEditor',
+    component: SceneEditor,
   },
   {
     path: '/model-editor',

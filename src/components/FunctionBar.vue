@@ -18,9 +18,6 @@
       class="t-base"
       @click="$router.push({
         name: 'ModelList',
-        params: {
-          status: 'all-models',
-        }
       })"
       v-if="mode === 'home'"
     >
