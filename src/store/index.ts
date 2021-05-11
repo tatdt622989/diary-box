@@ -74,7 +74,8 @@ export default createStore({
       },
     },
     firebase: null,
-    userInfo: {},
+    userInfo: null as null | firebase.User,
+    isLogin: null as null|firebase.User,
   },
   mutations: {
     menuToggler(state, data) {
@@ -112,6 +113,9 @@ export default createStore({
         state.modelData.push(data.model);
       }
     },
+    getUserInfo(state, data) {
+      state.userInfo = data;
+    },
   },
   actions: {
     updateToast({ commit }, data) {
@@ -120,7 +124,7 @@ export default createStore({
         commit('removeToast');
       }, 3000);
     },
-    signUp({ commit }, data) {
+    login({ commit }) {
       const provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth()
         .signInWithPopup(provider)
@@ -133,6 +137,17 @@ export default createStore({
           // The signed-in user info.
           const { user } = result;
           console.log(token, user, credential);
+          if (user) {
+            commit('getUserInfo', user);
+            db.ref(`/users/${user.uid}`).once('value', (snapshot) => {
+              const data = snapshot.val();
+              console.log(data);
+              if (!data) {
+                db.ref(`/users/${user.uid}/mail`).set(user.email);
+                db.ref(`/users/${user.uid}/name`).set(user.displayName);
+              }
+            });
+          }
           // ...
         }).catch((error) => {
           // Handle Errors here.
@@ -144,6 +159,9 @@ export default createStore({
           const { credential } = error;
           // ...
         });
+    },
+    buyModel({ commit, state }, data) {
+      db.ref(`/users/${state.userInfo?.uid}/toBuy`).set(data);
     },
     setData({ commit }, data) {
       db.ref('/test').set(data);

@@ -5,16 +5,17 @@
         <span class="material-icons">close</span>
       </button>
       <ul class="menu-list">
-        <li class="t-base">你好，</li>
-        <li class="t-base">
-          <span class="material-icons">assignment_turned_in</span
-          ><button @click="signUp">會員註冊</button>
+        <li class="t-base user-info" v-if="userInfo">
+          <div class="photo">
+            <img :src="userInfo.photoURL">
+          </div>
+          <p>{{ userInfo.displayName }}</p>
         </li>
-        <li class="t-base">
+        <li class="t-base" v-if="!userInfo">
           <span class="material-icons">login</span
           ><button @click="login">會員登入</button>
         </li>
-        <li class="t-base">
+        <li class="t-base" v-if="userInfo">
           <span class="material-icons">logout</span><button>會員登出</button>
         </li>
       </ul>
@@ -72,16 +73,17 @@ export default defineComponent({
       });
     });
 
-    function signUp() {
+    function login() {
       const ts = String(Date.now());
-      store.dispatch('signUp');
+      store.dispatch('login');
     }
 
     return {
       isMenuOpen: computed(() => store.state.isMenuOpen),
       menuToggler: () => store.commit('menuToggler', false),
       height: computed(() => store.state.height),
-      signUp,
+      userInfo: computed(() => store.state.userInfo),
+      login,
     };
   },
 });
@@ -187,9 +189,38 @@ export default defineComponent({
       color: $primary;
     }
     display: flex;
+    justify-content: center;
     width: 100%;
     height: 56px;
-    padding-left: 16px;
+  }
+  .user-info {
+    .photo {
+      img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+      }
+      border-radius: 999px;
+      border: 2px solid $primary;
+      height: 72px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      width: 72px;
+    }
+    p {
+      color: $gray-800;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0;
+      letter-spacing: 1px;
+    }
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: auto;
+    padding: 0;
+    margin-bottom: 20px;
   }
   padding: 0;
 }

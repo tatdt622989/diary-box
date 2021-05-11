@@ -30,7 +30,7 @@
               <div
                 class="w-100 d-flex justify-content-center align-items-center"
               >
-                <button class="price" @click="openModal(val.name)">
+                <button class="price" @click="openModal(key, val.name)">
                   <span>{{ val.price }}</span>
                   <span class="material-icons">monetization_on</span>
                 </button>
@@ -58,7 +58,7 @@
             <h5 class="modal-title" id="confirmPurchaseModalLabel">畫面截圖</h5>
           </div>
           <div class="modal-body">
-            <p>確認購買"{{ buyingModel }}"</p>
+            <p>確認購買"{{ buyingModel? buyingModel.name : '' }}"</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" @click="closeModal">取消</button>
@@ -104,7 +104,14 @@ export default defineComponent({
     const status = ref<string>('');
     const title = ref<string>('所有模型');
     const publicPath = ref(process.env.BASE_URL);
-    const buyingModel = ref<string>('');
+    interface BuyingModel {
+      type: string;
+      name: string;
+    }
+    const buyingModel = ref<BuyingModel>({
+      name: '',
+      type: '',
+    });
 
     async function init() {
       await nextTick();
@@ -244,8 +251,9 @@ export default defineComponent({
       init();
     });
 
-    function openModal(name: string) {
-      buyingModel.value = name;
+    function openModal(type: string, name: string) {
+      buyingModel.value.name = name;
+      buyingModel.value.type = type;
       const modal = new Modal(document.getElementById('confirmPurchaseModal') as HTMLElement);
       modal.show();
     }
@@ -255,8 +263,13 @@ export default defineComponent({
       modal.hide();
     }
 
-    // function purchaseConfirmation() {
-    // }
+    function purchaseConfirmation() {
+      const ts = Date.now();
+      store.dispatch('buyModel', {
+        id: ts,
+        type: buyingModel.value.type,
+      });
+    }
 
     function linkTo() {
       closeModal();
@@ -264,30 +277,31 @@ export default defineComponent({
       if (backdrop) {
         backdrop.remove();
       }
-      const ts = Date.now();
-      const color = store.state.modelFormat[buyingModel.value];
-      store.commit('updateModel', {
-        type: 'add',
-        model: {
-          id: String(ts),
-          name: buyingModel.value,
-          position: {
-            x: 0,
-            y: 0,
-            z: 0,
-          },
-          style: {
-            color,
-          },
-          isUsed: true,
-        } as Model,
-      });
-      router.push({
-        name: 'ModelEditor',
-        params: {
-          ts,
-        },
-      });
+      purchaseConfirmation();
+      // const ts = Date.now();
+      // const color = store.state.modelFormat[buyingModel.value];
+      // store.commit('updateModel', {
+      //   type: 'add',
+      //   model: {
+      //     id: String(ts),
+      //     name: buyingModel.value,
+      //     position: {
+      //       x: 0,
+      //       y: 0,
+      //       z: 0,
+      //     },
+      //     style: {
+      //       color,
+      //     },
+      //     isUsed: true,
+      //   } as Model,
+      // });
+      // router.push({
+      //   name: 'ModelEditor',
+      //   params: {
+      //     ts,
+      //   },
+      // });
     }
 
     return {
