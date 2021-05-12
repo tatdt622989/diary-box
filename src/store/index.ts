@@ -51,7 +51,7 @@ export default createStore({
     currency: 9999,
     modelFormat: null,
     firebase: null,
-    userInfo: null,
+    userInfo: null as null | firebase.User,
     isLogin: null as null|firebase.User,
   },
   mutations: {
@@ -137,12 +137,12 @@ export default createStore({
           console.log(token, user, credential);
           if (user) {
             commit('getUserInfo', user);
-            db.ref(`/user/${user.uid}`).once('value', (snapshot) => {
+            db.ref(`/users/${user.uid}`).once('value', (snapshot) => {
               const data = snapshot.val();
               console.log(data);
               if (!data) {
-                db.ref(`/user/${user.uid}/mail`).set(user.email);
-                db.ref(`/user/${user.uid}/name`).set(user.displayName);
+                db.ref(`/users/${user.uid}/mail`).set(user.email);
+                db.ref(`/users/${user.uid}/name`).set(user.displayName);
               }
             });
           }
@@ -186,6 +186,9 @@ export default createStore({
         }
         // ...
       });
+    },
+    buyModel({ commit, state }, data) {
+      db.ref(`/users/${state.userInfo?.uid}/toBuy`).set(data);
     },
     setData({ commit }, data) {
       db.ref('/test').set(data);

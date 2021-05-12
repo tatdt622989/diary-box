@@ -1,6 +1,6 @@
 <template>
   <router-view/>
-  <Toast @set-data="setData"></Toast>
+  <Toast></Toast>
   <Login></Login>
   <Register></Register>
 </template>
