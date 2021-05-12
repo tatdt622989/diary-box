@@ -16,7 +16,7 @@
         <div class="row">
           <div
             class="item col-6 col-md-4 col-lg-3"
-            v-for="(val, key, i) in modalsName"
+            v-for="(val, key, i) in modelFormat"
             :key="key"
           >
             <div class="item-wrap" :id="'scene' + i">
@@ -105,6 +105,7 @@ export default defineComponent({
     const title = ref<string>('所有模型');
     const publicPath = ref(process.env.BASE_URL);
     const buyingModel = ref<string>('');
+    const { modelFormat } = store.state;
 
     async function init() {
       await nextTick();
@@ -167,8 +168,8 @@ export default defineComponent({
         };
       }
       const loader = new GLTFLoader();
-      const modelLen = Object.values(store.state.modelFormat).length;
-      const modelKey = Object.keys(store.state.modelFormat);
+      const modelLen = modelFormat ? Object.values(modelFormat).length : 0;
+      const modelKey = modelFormat ? Object.keys(modelFormat) : [];
       let i = 0;
       const loadResult: Array<Promise<SceneData>> = [];
       while (i < modelLen) {
@@ -302,6 +303,7 @@ export default defineComponent({
       openModal,
       closeModal,
       linkTo,
+      modelFormat: computed(() => store.state.modelFormat),
     };
   },
 });

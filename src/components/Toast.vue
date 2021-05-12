@@ -72,3 +72,22 @@ export default defineComponent({
   },
 });
 </script>
+
+<style lang="scss" scoped>
+  .toast-container {
+    .toast {
+      border-radius: 20px;
+      overflow: hidden;
+      z-index: 9999;
+    }
+    .toast-header {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .toast-body {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    z-index: 9999;
+  }
+</style>

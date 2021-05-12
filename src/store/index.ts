@@ -1,9 +1,11 @@
 import { Model, Note, ToastMSG } from '@/types';
 import { createStore } from 'vuex';
+import { Modal } from 'bootstrap';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/database';
 import 'firebase/firestore';
+import 'firebase/analytics';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -47,34 +49,10 @@ export default createStore({
       },
     }] as Array<Model>,
     currency: 9999,
-    modelFormat: {
-      can: {
-        name: '鋁罐',
-        price: 25,
-        color: {
-          body: '0xFFA71D',
-          bodyCenter: '0xFFE074',
-        },
-      },
-      pan: {
-        name: '平底鍋',
-        price: 50,
-        color: {
-          body: '0x6F6F6F',
-          handle: '0xE38F54',
-        },
-      },
-      umbrella: {
-        name: '雨傘',
-        price: 100,
-        color: {
-          body1: '0x96FFDB',
-          body2: '0x6D9BD0',
-        },
-      },
-    },
+    modelFormat: null,
     firebase: null,
-    userInfo: {},
+    userInfo: null,
+    isLogin: null as null|firebase.User,
   },
   mutations: {
     menuToggler(state, data) {
@@ -112,6 +90,30 @@ export default createStore({
         state.modelData.push(data.model);
       }
     },
+    getUserInfo(state, data) {
+      state.userInfo = data;
+    },
+    getLoginInfo(state, data) {
+      const user = firebase.auth().currentUser;
+      state.isLogin = user;
+    },
+    openModal(state, data) {
+      let el;
+      switch (data) {
+        case 'register':
+          el = document.getElementById('registerModal');
+          break;
+        case 'login':
+          el = document.getElementById('loginModal');
+          break;
+        default:
+          break;
+      }
+      if (el) {
+        const modal = new Modal(el);
+        modal.show();
+      }
+    },
   },
   actions: {
     updateToast({ commit }, data) {
@@ -120,7 +122,7 @@ export default createStore({
         commit('removeToast');
       }, 3000);
     },
-    signUp({ commit }, data) {
+    login({ commit }) {
       const provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth()
         .signInWithPopup(provider)
@@ -133,6 +135,17 @@ export default createStore({
           // The signed-in user info.
           const { user } = result;
           console.log(token, user, credential);
+          if (user) {
+            commit('getUserInfo', user);
+            db.ref(`/user/${user.uid}`).once('value', (snapshot) => {
+              const data = snapshot.val();
+              console.log(data);
+              if (!data) {
+                db.ref(`/user/${user.uid}/mail`).set(user.email);
+                db.ref(`/user/${user.uid}/name`).set(user.displayName);
+              }
+            });
+          }
           // ...
         }).catch((error) => {
           // Handle Errors here.
@@ -144,6 +157,35 @@ export default createStore({
           const { credential } = error;
           // ...
         });
+    },
+    getModelFormat({ commit, state }) {
+      db.ref('/products').once('value', (snapshot) => {
+        console.log(snapshot.val());
+        state.modelFormat = snapshot.val();
+      });
+    },
+    register({ commit, dispatch }, data) {
+      firebase.auth().createUserWithEmailAndPassword(data.email, data.password).then((result) => {
+        console.log(result);
+      }).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode, errorMessage);
+        if (errorMessage.search('email') > 0) {
+          dispatch('updateToast', {
+            type: 'hint',
+            content: 'email格式錯誤',
+          });
+        }
+        if (errorMessage.search('should be at least 6 characters') > 0) {
+          dispatch('updateToast', {
+            type: 'hint',
+            content: '密碼需至少六個字',
+          });
+        }
+        // ...
+      });
     },
     setData({ commit }, data) {
       db.ref('/test').set(data);

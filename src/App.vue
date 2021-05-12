@@ -1,6 +1,8 @@
 <template>
   <router-view/>
   <Toast @set-data="setData"></Toast>
+  <Login></Login>
+  <Register></Register>
 </template>
 
 <script lang="ts">
@@ -10,21 +12,25 @@ import {
   defineComponent,
   computed,
   onMounted,
+  provide,
 } from 'vue';
-import Toast from '@/components/Toast.vue';
 import { useStore } from 'vuex';
-import firebase from 'firebase/app';
-import 'firebase/analytics';
-// Add the Firebase products that you want to use
-import 'firebase/auth';
+import Toast from '@/components/Toast.vue';
+import Register from '@/components/Register.vue';
+import Login from '@/components/Login.vue';
 
 export default defineComponent({
   name: 'app',
   components: {
     Toast,
+    Login,
+    Register,
   },
   setup() {
     const store = useStore();
+
+    store.dispatch('getModelFormat');
+
     onMounted(() => {
       try {
         if (localStorage.getItem('note-data')) {

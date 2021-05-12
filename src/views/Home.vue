@@ -42,7 +42,7 @@
           </button>
         </div>
         <p class="date">{{ lastestNoteDate }}</p>
-        <div v-html="selectLastestNodeData.content">
+        <div v-html="selectLastestNodeData.content" v-if="selectLastestNodeData">
         </div>
       </div>
       <button class="toggler" @click="isNoteOpen = !isNoteOpen">
@@ -121,7 +121,7 @@ export default defineComponent({
     const modelData = ref<Array<Model>>(store.state.modelData);
     const isNoteOpen = ref<boolean>(false);
     const lastestNoteData = ref<Array<Note>>([]);
-    const selectLastestNodeData = ref<Note>();
+    const selectLastestNodeData = ref<Note | null>(null);
 
     const gui = {
       camera: {
@@ -153,16 +153,18 @@ export default defineComponent({
 
     function getNote() {
       const data = store.state.noteData;
-      const lastestDayTime = data[data.length - 1].id - (data[data.length - 1].id % 100000);
-      console.log(lastestDayTime);
-      let i = 0;
-      while (i < data.length) {
-        if (data[i].id > lastestDayTime) {
-          lastestNoteData.value.splice(0, 0, data[i]);
+      if (data.length > 0) {
+        const lastestDayTime = data[data.length - 1].id - (data[data.length - 1].id % 100000);
+        console.log(lastestDayTime);
+        let i = 0;
+        while (i < data.length) {
+          if (data[i].id > lastestDayTime) {
+            lastestNoteData.value.splice(0, 0, data[i]);
+          }
+          i += 1;
         }
-        i += 1;
+        [selectLastestNodeData.value] = lastestNoteData.value;
       }
-      [selectLastestNodeData.value] = lastestNoteData.value;
     }
 
     watchEffect(() => {
