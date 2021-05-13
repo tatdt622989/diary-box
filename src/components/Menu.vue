@@ -6,7 +6,7 @@
       </button>
       <ul class="menu-list">
         <li class="t-base user-info" v-if="userInfo">
-          <div class="photo">
+          <div class="photo" v-if="userInfo.photoURL">
             <img :src="userInfo.photoURL">
           </div>
           <p>{{ userInfo.displayName }}</p>
@@ -76,8 +76,7 @@ export default defineComponent({
     });
 
     function login() {
-      // const ts = String(Date.now());
-      // store.dispatch('login');
+      store.commit('openModal', 'login');
     }
 
     function register() {

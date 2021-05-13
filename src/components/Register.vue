@@ -48,9 +48,15 @@
               v-model="password"
             />
           </div>
+          <p class="hint">{{ formHint }}</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" @click="register">註冊</button>
+          <hr>
+          <button class="google-login-btn" @click="login">
+              <img src="@/assets/images/google-icon.svg">
+              <span>Google登入</span>
+          </button>
         </div>
       </div>
     </div>
@@ -76,16 +82,10 @@ export default defineComponent({
 
     function register() {
       if (!userName.value || !password.value || !email.value) {
-        return store.dispatch('updateToast', {
-          type: 'hint',
-          content: '欄位不能為空',
-        });
+        store.commit('updateFormHint', '欄位不能為空');
       }
       if (userName.value.search(/\W/g) > 0 || password.value.search(/\W/g) > 0) {
-        return store.dispatch('updateToast', {
-          type: 'hint',
-          content: '不能使用特殊符號',
-        });
+        store.commit('updateFormHint', '不能使用特殊符號');
       }
       store.dispatch('register', {
         userName: userName.value,
@@ -95,11 +95,17 @@ export default defineComponent({
       return false;
     }
 
+    function login() {
+      store.dispatch('login', { type: 'google' });
+    }
+
     return {
+      login,
       register,
       userName,
       email,
       password,
+      formHint: computed(() => store.state.formHint),
     };
   },
 });
@@ -111,6 +117,28 @@ export default defineComponent({
       button {
         width: 100%;
       }
+      hr {
+        &::after{
+          background-color: $secondary;
+          color: $primary;
+          content: "或";
+          font-size: 18px;
+          font-weight: bold;
+          left: 50%;
+          padding: 0 8px;
+          position: absolute;
+          top: 50%;
+          transform: translateX(-50%) translateY(-50%);
+        }
+        background-color: $primary;
+        height: 2px;
+        margin: 18px 0;
+        position: relative;
+        width: 100%;
+        overflow: visible;
+        opacity: 1;
+      }
+      padding-top: 0;
     }
   }
   input {
@@ -125,5 +153,27 @@ export default defineComponent({
     font-size: 20px;
     height: 52px;
     text-indent: 16px;
+  }
+  .hint {
+    color: red;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .google-login-btn {
+    background-color: #fff;
+    border-radius: 999px;
+    span {
+      color: $gray-700;
+      margin-left: 20px;
+      user-select: none;
+    }
+    img {
+      height: 32px;
+      pointer-events: none;
+    }
+    align-items: center;
+    display: flex;
+    height: 52px;
+    justify-content: center;
   }
 </style>

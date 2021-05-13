@@ -52,7 +52,8 @@ export default createStore({
     modelFormat: null,
     firebase: null,
     userInfo: null as null | firebase.User,
-    isLogin: null as null|firebase.User,
+    formHint: '' as string,
+    modal: null as null | Modal,
   },
   mutations: {
     menuToggler(state, data) {
@@ -91,14 +92,12 @@ export default createStore({
       }
     },
     getUserInfo(state, data) {
-      state.userInfo = data;
-    },
-    getLoginInfo(state, data) {
       const user = firebase.auth().currentUser;
-      state.isLogin = user;
+      state.userInfo = data;
     },
     openModal(state, data) {
       let el;
+      state.formHint = '';
       switch (data) {
         case 'register':
           el = document.getElementById('registerModal');
@@ -110,9 +109,12 @@ export default createStore({
           break;
       }
       if (el) {
-        const modal = new Modal(el);
-        modal.show();
+        state.modal = new Modal(el);
+        state.modal.show();
       }
+    },
+    updateFormHint(state, data) {
+      state.formHint = data;
     },
   },
   actions: {
@@ -122,41 +124,74 @@ export default createStore({
         commit('removeToast');
       }, 3000);
     },
-    login({ commit }) {
+    login({ commit, state }, data) {
       const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth()
-        .signInWithPopup(provider)
-        .then((result) => {
-          /** @type {firebase.auth.OAuthCredential} */
-          const { credential } = result;
+      switch (data.type) {
+        case 'google':
+          firebase.auth().signInWithPopup(provider)
+            .then((result) => {
+              /** @type {firebase.auth.OAuthCredential} */
+              const { credential } = result;
 
-          // This gives you a Google Access Token. You can use it to access the Google API.
-          const token = (result as any).credential.accessToken;
-          // The signed-in user info.
-          const { user } = result;
-          console.log(token, user, credential);
-          if (user) {
-            commit('getUserInfo', user);
-            db.ref(`/users/${user.uid}`).once('value', (snapshot) => {
-              const data = snapshot.val();
-              console.log(data);
-              if (!data) {
-                db.ref(`/users/${user.uid}/mail`).set(user.email);
-                db.ref(`/users/${user.uid}/name`).set(user.displayName);
+              // This gives you a Google Access Token. You can use it to access the Google API.
+              const token = (result as any).credential.accessToken;
+              // The signed-in user info.
+              const { user } = result;
+              console.log(token, user, credential);
+              if (user) {
+                state.userInfo = user;
+                db.ref(`/users/${user.uid}`).once('value', (snapshot) => {
+                  const userData = snapshot.val();
+                  console.log(userData);
+                  if (!userData) {
+                    db.ref(`/users/${user.uid}/mail`).set(user.email);
+                    db.ref(`/users/${user.uid}/name`).set(user.displayName);
+                  }
+                });
+              }
+              if (state.modal) {
+                state.modal.hide();
+              }
+            })
+            .catch((error) => {
+              // Handle Errors here.
+              const errorCode = error.code;
+              const errorMessage = error.message;
+              // The email of the user's account used.
+              const { email } = error;
+              // The firebase.auth.AuthCredential type that was used.
+              const { credential } = error;
+              // ...
+            });
+          break;
+        case 'email':
+          firebase.auth().signInWithEmailAndPassword(data.email, data.password)
+            .then((userCredential) => {
+              // Signed in
+              const { user } = userCredential;
+              state.userInfo = user;
+              if (state.modal) {
+                state.modal.hide();
+              }
+            })
+            .catch((error) => {
+              const errorCode = error.code;
+              const errorMessage = error.message;
+              console.log(errorCode, errorMessage);
+              if (errorCode.search('invalid-email') > 0) {
+                state.formHint = '電子郵件格式錯誤';
+              }
+              if (errorCode.search('user-not-found') > 0) {
+                state.formHint = '找不到用戶';
+              }
+              if (errorCode.search('wrong-password') > 0) {
+                state.formHint = '密碼錯誤';
               }
             });
-          }
-          // ...
-        }).catch((error) => {
-          // Handle Errors here.
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          // The email of the user's account used.
-          const { email } = error;
-          // The firebase.auth.AuthCredential type that was used.
-          const { credential } = error;
-          // ...
-        });
+          break;
+        default:
+          break;
+      }
     },
     getModelFormat({ commit, state }) {
       db.ref('/products').once('value', (snapshot) => {
@@ -164,27 +199,32 @@ export default createStore({
         state.modelFormat = snapshot.val();
       });
     },
-    register({ commit, dispatch }, data) {
+    register({ commit, dispatch, state }, data) {
       firebase.auth().createUserWithEmailAndPassword(data.email, data.password).then((result) => {
+        state.formHint = '';
+        dispatch('updateToast', {
+          type: 'success',
+          content: '註冊成功',
+        });
         console.log(result);
+        state.userInfo = result.user;
+        if (state.modal) {
+          state.modal.hide();
+        }
       }).catch((error) => {
         // Handle Errors here.
         const errorCode = error.code;
         const errorMessage = error.message;
         console.log(errorCode, errorMessage);
-        if (errorMessage.search('email') > 0) {
-          dispatch('updateToast', {
-            type: 'hint',
-            content: 'email格式錯誤',
-          });
+        if (errorMessage.search('email-already-in-use') > 0) {
+          state.formHint = '電子郵件已經被使用';
+        }
+        if (errorCode.search('invalid-email') > 0) {
+          state.formHint = '電子郵件格式錯誤';
         }
         if (errorMessage.search('should be at least 6 characters') > 0) {
-          dispatch('updateToast', {
-            type: 'hint',
-            content: '密碼需至少六個字',
-          });
+          state.formHint = '密碼需至少六個字';
         }
-        // ...
       });
     },
     buyModel({ commit, state }, data) {
