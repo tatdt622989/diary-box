@@ -230,6 +230,20 @@ export default createStore({
     buyModel({ commit, state }, data) {
       db.ref(`/users/${state.userInfo?.uid}/toBuy`).set(data);
     },
+    signOut({ dispatch, state }) {
+      firebase.auth().signOut().then(() => {
+        dispatch('updateToast', {
+          type: 'success',
+          content: '登出成功',
+        });
+        state.userInfo = null;
+      }).catch((err) => {
+        dispatch('updateToast', {
+          type: 'error',
+          content: err,
+        });
+      });
+    },
     setData({ commit }, data) {
       db.ref('/test').set(data);
       console.log(1);

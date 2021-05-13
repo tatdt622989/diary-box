@@ -12,15 +12,22 @@
           <p>{{ userInfo.displayName }}</p>
         </li>
         <li class="t-base" v-if="!userInfo">
-          <span class="material-icons">assignment_ind</span
-          ><button @click="register">會員註冊</button>
+          <button @click="register">
+            <span class="material-icons">assignment_ind</span>
+            會員註冊
+          </button>
         </li>
         <li class="t-base" v-if="!userInfo">
-          <span class="material-icons">login</span
-          ><button @click="login">會員登入</button>
+          <button @click="login">
+            <span class="material-icons">login</span>
+            會員登入
+          </button>
         </li>
         <li class="t-base" v-if="userInfo">
-          <span class="material-icons">logout</span><button>會員登出</button>
+          <button @click="signOut">
+            <span class="material-icons">logout</span>
+            會員登出
+          </button>
         </li>
       </ul>
       <div class="about">
@@ -83,6 +90,10 @@ export default defineComponent({
       store.commit('openModal', 'register');
     }
 
+    function signOut() {
+      store.dispatch('signOut');
+    }
+
     return {
       isMenuOpen: computed(() => store.state.isMenuOpen),
       menuToggler: () => store.commit('menuToggler', false),
@@ -90,6 +101,7 @@ export default defineComponent({
       userInfo: computed(() => store.state.userInfo),
       login,
       register,
+      signOut,
     };
   },
 });
@@ -187,12 +199,15 @@ export default defineComponent({
     span {
       line-height: 56px;
       color: $primary;
+      margin-right: 12px;
     }
     button {
       background-color: transparent;
       font-size: 20px;
       font-weight: bold;
       color: $primary;
+      display: flex;
+      align-items: center;
     }
     display: flex;
     justify-content: center;
