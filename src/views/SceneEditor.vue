@@ -185,6 +185,7 @@ export default defineComponent({
         antialias: true,
         canvas: canvas.value,
       });
+      // renderer.setPixelRatio(window.devicePixelRatio);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -228,8 +229,8 @@ export default defineComponent({
       pointLight.position.set(15, 27, 7);
       pointLight.castShadow = true;
       pointLight.shadow.radius = 2;
-      pointLight.shadow.mapSize.width = 2048;
-      pointLight.shadow.mapSize.height = 2048;
+      pointLight.shadow.mapSize.width = 1024;
+      pointLight.shadow.mapSize.height = 1024;
       pointLight.shadow.camera.near = 1;
       pointLight.shadow.camera.far = 10000;
       const directionalLight = new THREE.DirectionalLight(0xF8EBCF, 0.6);

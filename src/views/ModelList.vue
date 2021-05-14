@@ -20,9 +20,10 @@
           class="item col-6 col-md-4 col-lg-3"
           v-for="(item, i) in models"
           :key="i"
+          :class="{ active: i === 0 }"
         >
-          <div class="item-wrap" :class="{ active: i === 0 }" :id="'scene' + i">
-            <img class="corner" src="@/assets/images/corner.svg" v-for="n in 4" :key="n">
+          <div class="item-bg">
+            <div class="item-wrap" :id="'scene' + i">
             <div>
               <button
                 class="menu-btn btn-circle"
@@ -54,6 +55,7 @@
               </li>
             </ul>
           </div>
+          </div>
         </div>
       </div>
     </div>
@@ -70,6 +72,7 @@ import {
   onMounted,
   computed,
   nextTick,
+  onUnmounted,
 } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
@@ -96,21 +99,27 @@ export default defineComponent({
     const title = ref<string>('所有模型');
     const publicPath = ref(process.env.BASE_URL);
     const modelsName = ref<Array<string>>(['can', 'pan', 'umbrella']);
+    let renderer: THREE.WebGLRenderer | null = new THREE.WebGLRenderer({
+      antialias: false,
+      alpha: true,
+    });
+    let animation: number;
+    let allSceneData: Array<SceneData> = [];
 
     async function init() {
       await nextTick();
       console.log('init-start');
-      const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-      });
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.querySelector('.model-list-wrap')!.appendChild(renderer.domElement);
+      if (renderer) {
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.querySelector('.model-list-wrap')!.appendChild(renderer.domElement);
+      }
 
       function createScene(el: HTMLElement) {
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xF8EBCF);
+        scene.background = null;
         // 相機
         const {
           left, right, bottom, top,
@@ -144,8 +153,8 @@ export default defineComponent({
         pointLight.shadow.camera.near = 1;
         pointLight.shadow.camera.far = 10000;
         scene.add(pointLight);
-        const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
-        scene.add(pointLightHelper);
+        // const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
+        // scene.add(pointLightHelper);
         const directionalLight = new THREE.DirectionalLight(0xF8EBCF, 0.6);
         directionalLight.position.set(-10, 20, 0);
         scene.add(directionalLight);
@@ -189,49 +198,77 @@ export default defineComponent({
         i += 1;
       }
       Promise.all(loadResult).then((data: Array<SceneData>) => {
+        allSceneData = data;
         const render = function () {
-          requestAnimationFrame(render);
-          renderer.setClearColor(0x449966);
-          renderer.setScissorTest(false);
-          renderer.clear();
-          renderer.setClearColor(0x449966);
-          renderer.setScissorTest(true);
-          i = 0;
-          while (i < data.length) {
-            const {
-              left, right, bottom, top,
-            } = data[i].el.getBoundingClientRect();
+          if (renderer) {
+            animation = requestAnimationFrame(render);
+            renderer.setClearColor(0x000000, 0);
+            renderer.setScissorTest(false);
+            renderer.clear();
+            renderer.setClearColor(0x000000, 0);
+            renderer.setScissorTest(true);
+            i = 0;
+            while (i < data.length) {
+              const {
+                left, right, bottom, top,
+              } = data[i].el.getBoundingClientRect();
 
-            if (bottom < 0 || top > renderer.domElement.clientHeight
+              if (bottom < 0 || top > renderer.domElement.clientHeight
             || right < 0 || left > renderer.domElement.clientWidth) {
-              return; // it's off screen
+                return; // it's off screen
+              }
+              // set the viewport
+              const width = right - left;
+              const height = bottom - top;
+              const offsetLeft = left;
+              const offsetBottom = renderer.domElement.clientHeight - bottom;
+              renderer.setViewport(offsetLeft, offsetBottom, width, height);
+              renderer.setScissor(offsetLeft, offsetBottom, width, height);
+              renderer.autoClear = true;
+              // eslint-disable-next-line no-param-reassign
+              data[i].camera.aspect = width / height; // not changing in this example
+              data[i].camera.updateProjectionMatrix();
+              data[i].controls.update();
+              renderer.render(data[i].scene as THREE.Scene, data[i].camera);
+              i += 1;
             }
-            // set the viewport
-            const width = right - left;
-            const height = bottom - top;
-            const offsetLeft = left;
-            const offsetBottom = renderer.domElement.clientHeight - bottom;
-            renderer.setViewport(offsetLeft, offsetBottom, width, height);
-            renderer.setScissor(offsetLeft, offsetBottom, width, height);
-            renderer.autoClear = true;
-            // eslint-disable-next-line no-param-reassign
-            data[i].camera.aspect = width / height; // not changing in this example
-            data[i].camera.updateProjectionMatrix();
-            data[i].controls.update();
-            renderer.render(data[i].scene as THREE.Scene, data[i].camera);
-            i += 1;
           }
         };
         render();
       });
       const resize = function () {
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        if (renderer) {
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        }
       };
       window.addEventListener('resize', resize, false);
     }
 
     onMounted(() => {
       init();
+    });
+
+    onUnmounted(() => {
+      allSceneData.forEach((el) => {
+        el.controls.dispose();
+        el.scene.traverse((obj) => {
+          if (obj instanceof THREE.Mesh) {
+            obj.geometry.dispose();
+            obj.material.dispose();
+          }
+        });
+        while (el.scene.children.length > 0) {
+          el.scene.remove(el.scene.children[0]);
+        }
+      });
+      if (renderer) {
+        renderer.dispose();
+        renderer.forceContextLoss();
+        renderer = null;
+      }
+      if (animation) {
+        cancelAnimationFrame(animation);
+      }
     });
 
     return {
@@ -246,10 +283,19 @@ export default defineComponent({
 
 <style lang="scss">
 .model-list-wrap {
-  .item-wrap {
+  .item {
     &.active {
-      background-color: transparent;
+      .item-bg {
+        background-color: $secondary;
+      }
     }
+  }
+  .item-bg {
+    background-color: #c2d2af;
+    border-radius: 20px;
+    background-clip: content-box;
+  }
+  .item-wrap {
     .item-status {
       color: $primary;
       font-size: 20px;
@@ -309,8 +355,6 @@ export default defineComponent({
       width: 20px;
       z-index: 5;
     }
-    background-color: transparent;
-    border-radius: 20px;
     display: flex;
     flex-direction: column;
     height: 230px;
@@ -342,7 +386,9 @@ export default defineComponent({
   canvas {
     position: absolute;
     left: 0;
-    z-index: -1;
+    z-index: 998;
+    top: 0;
+    pointer-events: none;
   }
   display: flex;
   flex-direction: column;

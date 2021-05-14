@@ -93,6 +93,7 @@ import {
   onMounted,
   computed,
   watchEffect,
+  onUnmounted,
 } from 'vue';
 import { Modal } from 'bootstrap';
 import * as dat from 'dat.gui';
@@ -104,6 +105,7 @@ import { useStore } from 'vuex';
 import FunctionBar from '@/components/FunctionBar.vue';
 import Menu from '@/components/Menu.vue';
 import { Model, Note } from '@/types';
+import { Geometry, Object3D } from 'three';
 
 export default defineComponent({
   name: 'Home',
@@ -122,6 +124,12 @@ export default defineComponent({
     const isNoteOpen = ref<boolean>(false);
     const lastestNoteData = ref<Array<Note>>([]);
     const selectLastestNodeData = ref<Note | null>(null);
+    let renderer: THREE.WebGLRenderer | null = new THREE.WebGLRenderer({
+      antialias: false,
+    });
+    const scene = new THREE.Scene();
+    let controls: MapControls;
+    let animation: number;
 
     const gui = {
       camera: {
@@ -173,14 +181,13 @@ export default defineComponent({
 
     onMounted(() => {
       // datGuiInit();
-      const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-      });
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.setSize(window.innerWidth, window.innerHeight - 66);
+      if (renderer) {
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setSize(window.innerWidth, window.innerHeight - 66);
+      }
+
       // const composer = new EffectComposer(renderer);
-      const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x449966);
 
       // 相機
@@ -194,8 +201,7 @@ export default defineComponent({
       camera.zoom = 1;
 
       // 控制器
-      let controls: MapControls;
-      if (mainScene.value) {
+      if (mainScene.value && renderer) {
         // 到這裡mainScene.value就一定不是null就不會報錯
         mainScene.value.appendChild(renderer.domElement);
         controls = new MapControls(camera, mainScene.value);
@@ -245,8 +251,10 @@ export default defineComponent({
         camera.updateProjectionMatrix();
         // camera.position.set(gui.camera.pos.x, gui.camera.pos.y, gui.camera.pos.z);
         // pointLight.position.set(gui.dLight.pos.x, gui.dLight.pos.y, gui.dLight.pos.z);
-        requestAnimationFrame(render);
-        renderer.render(scene, camera);
+        animation = requestAnimationFrame(render);
+        if (renderer) {
+          renderer.render(scene, camera);
+        }
       }
 
       const loader = new GLTFLoader();
@@ -283,12 +291,33 @@ export default defineComponent({
       }
 
       function resize() {
-        renderer.setSize(window.innerWidth, window.innerHeight - 66);
+        (renderer as THREE.WebGLRenderer).setSize(window.innerWidth, window.innerHeight - 66);
         camera.aspect = window.innerWidth / (window.innerHeight - 66);
         camera.updateProjectionMatrix();
       }
 
       window.addEventListener('resize', resize, false);
+    });
+
+    onUnmounted(() => {
+      controls.dispose();
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          obj.geometry.dispose();
+          obj.material.dispose();
+        }
+      });
+      while (scene.children.length > 0) {
+        scene.remove(scene.children[0]);
+      }
+      if (animation) {
+        cancelAnimationFrame(animation);
+      }
+      if (renderer) {
+        renderer.dispose();
+        renderer.forceContextLoss();
+        renderer = null;
+      }
     });
 
     function openModal() {
