@@ -33,6 +33,7 @@ export interface Model {
     color: object;
   },
   isUsed: boolean;
+  passive: boolean;
 }
 
 export interface SceneData {

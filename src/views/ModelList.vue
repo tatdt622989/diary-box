@@ -17,7 +17,7 @@
     </div>
     <div class="w-100 d-flex justify-content-center currency-wrap" v-if="view === 'Store'">
       <div class="currency">
-        <span>999</span>
+        <span>{{ userData.balance ? userData.balabce : 0 }}</span>
         <span class="material-icons">monetization_on</span>
       </div>
     </div>
@@ -28,7 +28,7 @@
             class="item col-6 col-md-4 col-lg-3"
             v-for="(v, i) in models"
             :key="i"
-            :class="{ active: i === 0 }"
+            :class="{ passive: v.passive && view === 'ModelList' }"
           >
             <div class="item-bg">
               <div class="item-wrap">
@@ -45,7 +45,7 @@
               </div>
               <div class="model-frame" :id="'scene' + i"></div>
               <span class="item-status" v-if="view === 'ModelList'">
-                {{ i === 0 ? "使用中" : "未使用" }}
+                {{ v.passive ? "未使用" : "使用中" }}
               </span>
               <div
                 class="w-100 d-flex justify-content-center align-items-center"
@@ -200,13 +200,13 @@ export default defineComponent({
           0.1,
           1000,
         );
-        camera.position.set(0, 8, 20);
+        camera.position.set(0, 10, 19.5);
         camera.zoom = 2;
         const controls = new OrbitControls(camera, el);
         controls.autoRotate = true;
         controls.autoRotateSpeed = 3;
         controls.enabled = false;
-        controls.target = new THREE.Vector3(0, 1.3, 0);
+        controls.target = new THREE.Vector3(0, 1.8, 0);
         controls.update();
 
         // 燈光
@@ -427,6 +427,7 @@ export default defineComponent({
       openModal,
       closeModal,
       buyingModel,
+      userData: computed(() => store.state.userData),
     };
   },
 });
@@ -449,14 +450,14 @@ export default defineComponent({
     overflow: auto;
   }
   .item {
-    &.active {
+    &.passive {
       .item-bg {
-        background-color: $secondary;
+        background-color: #c2d2af;
       }
     }
   }
   .item-bg {
-    background-color: #c2d2af;
+    background-color: $secondary;
     border-radius: 20px;
     background-clip: content-box;
   }

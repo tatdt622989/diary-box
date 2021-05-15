@@ -1,5 +1,5 @@
 import { Model, Note, ToastMSG } from '@/types';
-import { createStore } from 'vuex';
+import { createStore, Store } from 'vuex';
 import { Modal } from 'bootstrap';
 import firebase from 'firebase/app';
 import 'firebase/auth';
@@ -41,6 +41,7 @@ export default createStore({
       style: {
         color: {},
       },
+      passive: false,
     }] as Array<Model>,
     currency: 9999,
     modelsFormat: null,
@@ -48,6 +49,7 @@ export default createStore({
     userInfo: null as null | firebase.User,
     formHint: '' as string,
     modal: null as null | Modal,
+    userData: {} as object,
   },
   mutations: {
     menuToggler(state, data) {
@@ -84,10 +86,6 @@ export default createStore({
       if (data.type === 'add') {
         state.modelsData.push(data.model);
       }
-    },
-    getUserInfo(state, data) {
-      const user = firebase.auth().currentUser;
-      state.userInfo = data;
     },
     openModal(state, data) {
       let el;
@@ -134,13 +132,15 @@ export default createStore({
               firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                   state.userInfo = user;
-                  db.ref(`/users/${user.uid}`).once('value', (snapshot) => {
+                  db.ref(`/users/${user.uid}`).on('value', (snapshot) => {
                     const userData = snapshot.val();
                     console.log(userData);
                     if (!userData) {
                       db.ref(`/users/${user.uid}/mail`).set(user.email);
                       db.ref(`/users/${user.uid}/name`).set(user.displayName);
                       db.ref(`/users/${user.uid}/balance`).set(0);
+                    } else {
+                      state.userData = userData;
                     }
                   });
                 } else {
@@ -172,11 +172,7 @@ export default createStore({
                   db.ref(`/users/${user.uid}`).once('value', (snapshot) => {
                     const userData = snapshot.val();
                     console.log(userData);
-                    if (!userData) {
-                      db.ref(`/users/${user.uid}/mail`).set(user.email);
-                      db.ref(`/users/${user.uid}/name`).set(user.displayName);
-                      db.ref(`/users/${user.uid}/balance`).set(0);
-                    }
+                    state.userData = userData;
                   });
                 } else {
                   state.userInfo = null;
@@ -275,6 +271,13 @@ export default createStore({
         });
       });
     },
+    // getUserData(state, data) {
+    //   db.ref(`/users/${user.uid}`).once('value', (snapshot) => {
+    //     const userData = snapshot.val();
+    //     console.log(userData);
+    //     state.userData = userData;
+    //   });
+    // }
   },
   modules: {
   },

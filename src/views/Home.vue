@@ -120,7 +120,7 @@ export default defineComponent({
     const screenShotModal = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
     const datGui = ref(new dat.GUI());
-    const modelData = ref<Array<Model>>(store.state.modelData);
+    const modelsData = ref<Array<Model>>(store.state.modelsData);
     const isNoteOpen = ref<boolean>(false);
     const lastestNoteData = ref<Array<Note>>([]);
     const selectLastestNodeData = ref<Note | null>(null);
@@ -259,10 +259,10 @@ export default defineComponent({
 
       const loader = new GLTFLoader();
 
-      const modelLen = modelData.value.length;
+      const modelLen = modelsData.value.length;
       let i = 0;
       while (i < modelLen) {
-        const data = modelData.value[i];
+        const data = modelsData.value[i];
         loader.load(
           `${publicPath.value}model/${data.name}.gltf`,
           (gltf) => {
