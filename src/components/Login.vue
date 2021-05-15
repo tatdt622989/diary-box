@@ -21,24 +21,26 @@
           </button>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
-            <input
-              type="email"
-              class="form-control"
-              id="userInput"
-              placeholder="請輸入電子郵件"
-              v-model="email"
-            />
-          </div>
-          <div class="mb-3">
-            <input
-              type="password"
-              class="form-control"
-              id="userPasswordInput"
-              placeholder="請輸入密碼"
-              v-model="password"
-            />
-          </div>
+          <form action="">
+            <div class="mb-3">
+              <input
+                type="email"
+                class="form-control"
+                placeholder="請輸入電子郵件"
+                v-model="email"
+                autocomplete="on"
+              />
+            </div>
+            <div class="mb-3">
+              <input
+                type="password"
+                class="form-control"
+                placeholder="請輸入密碼"
+                v-model="password"
+                autocomplete="on"
+              />
+            </div>
+          </form>
           <p class="hint">{{ formHint }}</p>
         </div>
         <div class="modal-footer">

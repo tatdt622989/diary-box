@@ -1,13 +1,13 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
-import Home from '@/views/Home.vue';
-import Welcome from '@/views/Welcome.vue';
-import NoteList from '@/views/NoteList.vue';
-import TextEditor from '@/views/TextEditor.vue';
-import ModelList from '@/views/ModelList.vue';
-import Store from '@/views/Store.vue';
-import ModelSelector from '@/views/ModelSelector.vue';
-import SceneEditor from '@/views/SceneEditor.vue';
-import ModelEditor from '@/views/ModelEditor.vue';
+
+const Home = () => import('@/views/Home.vue');
+const Welcome = () => import('@/views/Welcome.vue');
+const NoteList = () => import('@/views/NoteList.vue');
+const TextEditor = () => import('@/views/TextEditor.vue');
+const ModelList = () => import('@/views/ModelList.vue');
+const ModelSelector = () => import('@/views/ModelSelector.vue');
+const SceneEditor = () => import('@/views/SceneEditor.vue');
+const ModelEditor = () => import('@/views/ModelEditor.vue');
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -38,7 +38,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/store',
     name: 'Store',
-    component: Store,
+    component: ModelList,
   },
   {
     path: '/model-selector',

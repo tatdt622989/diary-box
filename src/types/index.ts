@@ -48,3 +48,10 @@ export interface DefaultModelNum {
   y: number;
   z: number;
 }
+
+export interface Product {
+  name: string;
+  color: object;
+  displayName: string;
+  price: number;
+}

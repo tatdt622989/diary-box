@@ -1,5 +1,5 @@
 <template>
-  <div class="main-wrap node-list-wrap" :style="{ height }" @click="selectedMenu = []">
+  <div class="main-wrap node-list-wrap menu-layout" :style="{ height }" @click="selectedMenu = []">
     <Navbar></Navbar>
     <div class="header">
       <button class="btn-circle" @click="$router.push('/')">

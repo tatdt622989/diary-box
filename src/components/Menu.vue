@@ -6,10 +6,13 @@
       </button>
       <ul class="menu-list">
         <li class="t-base user-info" v-if="userInfo">
-          <div class="photo" v-if="userInfo.photoURL">
-            <img :src="userInfo.photoURL">
+          <div class="photo">
+            <span class="material-icons" v-if="!userInfo.photoURL">account_circle</span>
+            <img :src="userInfo.photoURL" v-if="userInfo.photoURL">
           </div>
-          <p>{{ userInfo.displayName }}</p>
+          <p class="w-100 px-2 text-center user-text">
+            {{ userInfo.displayName }}
+          </p>
         </li>
         <li class="t-base" v-if="!userInfo">
           <button @click="register">
@@ -116,6 +119,11 @@ export default defineComponent({
     }
     width: 100vw;
   }
+  .user-text {
+    span {
+      font-size: 16px;
+    }
+  }
   .content {
     .close-btn {
       &:hover,
@@ -184,7 +192,7 @@ export default defineComponent({
   right: 0;
   top: 0;
   height: 100vh;
-  z-index: 999;
+  z-index: 1001;
 }
 
 .menu-list {
@@ -215,14 +223,27 @@ export default defineComponent({
     height: 56px;
   }
   .user-info {
+    &:hover {
+      span {
+        color: $primary;
+      }
+      background-color: transparent;
+    }
     .photo {
+      >span {
+        margin: 0;
+        font-size: 72px;
+      }
       img {
         height: 100%;
         width: 100%;
         object-fit: cover;
       }
+      align-items: center;
+      justify-content: center;
       border-radius: 999px;
       border: 2px solid $primary;
+      display: flex;
       height: 72px;
       margin-bottom: 12px;
       overflow: hidden;

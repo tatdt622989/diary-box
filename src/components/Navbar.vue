@@ -62,7 +62,9 @@ export default defineComponent({
   height: 66px;
   justify-content: space-between;
   padding: 0 20px;
-  position: relative;
+  position: fixed;
+  top: 0;
   width: 100%;
+  z-index: 1001;
 }
 </style>

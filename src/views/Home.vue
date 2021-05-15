@@ -183,7 +183,7 @@ export default defineComponent({
       // datGuiInit();
       if (renderer) {
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.type = THREE.BasicShadowMap;
         renderer.setSize(window.innerWidth, window.innerHeight - 66);
       }
 
@@ -206,7 +206,7 @@ export default defineComponent({
         mainScene.value.appendChild(renderer.domElement);
         controls = new MapControls(camera, mainScene.value);
         controls.target = new THREE.Vector3(0, 5, 0);
-        controls.dampingFactor = 0.05;
+        controls.dampingFactor = 0.1;
         controls.enableDamping = true;
         controls.screenSpacePanning = false;
         controls.minDistance = 10;
