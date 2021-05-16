@@ -3,21 +3,21 @@
     class="main-wrap model-list-wrap all menu-layout"
     @click="selectedMenu = []"
     :style="{ height: height + 'px' }"
-    :class="{store : view === 'Store'}"
+    :class="{ store: view === 'Store' }"
   >
     <Navbar></Navbar>
     <div class="header">
-      <button
-        class="btn-circle"
-        @click="$router.go(-1)"
-      >
+      <button class="btn-circle" @click="$router.go(-1)">
         <span class="material-icons">arrow_back</span>
       </button>
-      <p>{{ view === 'ModelList' ? '所有模型' : '購買模型' }}</p>
+      <p>{{ view === "ModelList" ? "所有模型" : "購買模型" }}</p>
     </div>
-    <div class="w-100 d-flex justify-content-center currency-wrap" v-if="view === 'Store'">
+    <div
+      class="w-100 d-flex justify-content-center currency-wrap"
+      v-if="view === 'Store'"
+    >
       <div class="currency">
-        <span>{{ userData.balance ? userData.balabce : 0 }}</span>
+        <span>{{ userData? userData.balance : 0 }}</span>
         <span class="material-icons">monetization_on</span>
       </div>
     </div>
@@ -32,46 +32,56 @@
           >
             <div class="item-bg">
               <div class="item-wrap">
-              <div v-if="view === 'ModelList'" class="position-absolute start-0 top-0">
-                <button
-                  class="menu-btn btn-circle"
-                  @click.stop="selectedMenu = [i, n]"
-                  :class="{
-                    active: selectedMenu[0] === i && selectedMenu[1] === n,
-                  }"
+                <div
+                  v-if="view === 'ModelList'"
+                  class="position-absolute start-0 top-0"
                 >
-                  <span class="material-icons">more_vert</span>
-                </button>
+                  <button
+                    class="menu-btn btn-circle"
+                    @click.stop="selectedMenu = [i, n]"
+                    :class="{
+                      active: selectedMenu[0] === i && selectedMenu[1] === n,
+                    }"
+                  >
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="model-frame" :id="'scene' + i"></div>
+                <span class="item-status" v-if="view === 'ModelList'">
+                  {{ v.passive ? "未使用" : "使用中" }}
+                </span>
+                <div
+                  class="w-100 d-flex justify-content-center align-items-center"
+                  v-if="view === 'Store'"
+                >
+                  <button
+                    class="price"
+                    @click="openModal(v.name, v.displayName, v.price)"
+                  >
+                    <span>{{ v.price }}</span>
+                    <span class="material-icons">monetization_on</span>
+                  </button>
+                </div>
+                <ul
+                  class="function-menu"
+                  @click.stop
+                  v-if="
+                    selectedMenu[0] === i &&
+                    selectedMenu[1] === n &&
+                    view === 'ModelList'
+                  "
+                >
+                  <li>
+                    <button>預覽</button>
+                  </li>
+                  <li>
+                    <button>切換為未使用</button>
+                  </li>
+                  <li>
+                    <button>刪除</button>
+                  </li>
+                </ul>
               </div>
-              <div class="model-frame" :id="'scene' + i"></div>
-              <span class="item-status" v-if="view === 'ModelList'">
-                {{ v.passive ? "未使用" : "使用中" }}
-              </span>
-              <div
-                class="w-100 d-flex justify-content-center align-items-center"
-                v-if="view === 'Store'"
-              >
-                <button class="price" @click="openModal(key, v.displayName)">
-                  <span>{{ v.price }}</span>
-                  <span class="material-icons">monetization_on</span>
-                </button>
-              </div>
-              <ul
-                class="function-menu"
-                @click.stop
-                v-if="selectedMenu[0] === i && selectedMenu[1] === n && view === 'ModelList'"
-              >
-                <li>
-                  <button>預覽</button>
-                </li>
-                <li>
-                  <button>切換為未使用</button>
-                </li>
-                <li>
-                  <button>刪除</button>
-                </li>
-              </ul>
-            </div>
             </div>
           </div>
         </div>
@@ -85,19 +95,27 @@
       aria-hidden="true"
       ref="confirmPurchaseModal"
     >
-      <div
-        class="modal-dialog modal-dialog-centered"
-      >
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="confirmPurchaseModalLabel">畫面截圖</h5>
           </div>
           <div class="modal-body">
-            <p>確認購買"{{ buyingModel? buyingModel.name : '' }}"</p>
+            <p class="modal-info">
+              確定要花&nbsp;{{ buyingModel ? buyingModel.price : "" }}
+              <span class="material-icons">monetization_on</span>
+              <br>購買&nbsp;"{{
+                buyingModel ? buyingModel.name : ""
+              }}"&nbsp;嗎?
+            </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="closeModal">取消</button>
-            <button type="button" class="btn btn-primary" @click="linkTo">購買</button>
+            <button type="button" class="btn btn-primary" @click="closeModal">
+              取消
+            </button>
+            <button type="button" class="btn btn-primary" @click="buyModel">
+              購買
+            </button>
           </div>
         </div>
       </div>
@@ -149,28 +167,31 @@ export default defineComponent({
     interface BuyingModel {
       type: string;
       name: string;
+      price: number;
     }
     const buyingModel = ref<BuyingModel>({
       name: '',
       type: '',
+      price: 0,
     });
     let firstLoad = true;
     const loadedModel = [];
-    const modelsFormat = computed(() => store.state.modelsFormat);
-    const modelsData = computed(() => store.state.modelsData);
+    const modelFormat = computed(() => store.state.modelFormat);
+    const modelData = computed(() => store.state.modelData);
+    let modal: Modal;
 
     function getModels() {
-      if (view.value === 'Store' && store.state.modelsFormat) {
+      if (view.value === 'Store' && store.state.modelFormat) {
         const result: Array<Product> = [];
-        const keys = Object.keys(store.state.modelsFormat);
+        const keys = Object.keys(store.state.modelFormat);
         keys.forEach((key) => {
-          const obj = JSON.parse(JSON.stringify(store.state.modelsFormat[key]));
+          const obj = JSON.parse(JSON.stringify(store.state.modelFormat[key]));
           obj.name = key;
           result.push(obj as Product);
         });
         models.value = result;
-      } else if (view.value === 'ModelList' && store.state.modelsData) {
-        models.value = store.state.modelsData;
+      } else if (view.value === 'ModelList' && store.state.modelData) {
+        models.value = store.state.modelData;
       }
       console.log(models.value);
     }
@@ -334,14 +355,16 @@ export default defineComponent({
       clearCanvas();
       firstLoad = true;
       view.value = newVal as string;
-      getModels();
-      if (models.value.length > 0) {
-        init();
-        firstLoad = false;
+      if (newVal === 'Store' || newVal === 'ModelList') {
+        getModels();
+        if (models.value.length > 0) {
+          init();
+          firstLoad = false;
+        }
       }
     });
 
-    watch(modelsFormat, (newVal) => {
+    watch(modelFormat, (newVal) => {
       console.log('模型監聽器', newVal, allSceneData.length);
       if (newVal && view.value === 'Store' && firstLoad) {
         if (allSceneData.length > 0) {
@@ -355,7 +378,7 @@ export default defineComponent({
       }
     });
 
-    watch(modelsData, (newVal) => {
+    watch(modelData, (newVal) => {
       console.log('模型監聽器', newVal);
       if (newVal && view.value === 'ModelList' && firstLoad) {
         if (allSceneData.length > 0) {
@@ -370,6 +393,7 @@ export default defineComponent({
     });
 
     onMounted(() => {
+      modal = new Modal(document.getElementById('confirmPurchaseModal') as HTMLElement);
       canvas = document.querySelector('#modelList') as HTMLCanvasElement;
       renderer = new THREE.WebGLRenderer({
         canvas,
@@ -406,16 +430,26 @@ export default defineComponent({
       }
     });
 
-    function openModal(type: string, name: string) {
+    function openModal(type: string, name: string, price: number) {
       buyingModel.value.name = name;
       buyingModel.value.type = type;
-      const modal = new Modal(document.getElementById('confirmPurchaseModal') as HTMLElement);
+      buyingModel.value.price = price;
       modal.show();
     }
 
     function closeModal() {
-      const modal = new Modal(document.getElementById('confirmPurchaseModal') as HTMLElement);
+      console.log('cancel', document.getElementById('confirmPurchaseModal'));
       modal.hide();
+    }
+
+    function buyModel() {
+      if (store.state.userInfo) {
+        store.dispatch('buyModel', buyingModel.value).then(() => {
+          modal.hide();
+        });
+      } else {
+        console.log('請先登入');
+      }
     }
 
     return {
@@ -423,10 +457,11 @@ export default defineComponent({
       models,
       height: computed(() => store.state.height),
       view,
-      modelsFormat: computed(() => store.state.modelsFormat),
+      modelFormat: computed(() => store.state.modelFormat),
       openModal,
       closeModal,
       buyingModel,
+      buyModel,
       userData: computed(() => store.state.userData),
     };
   },
@@ -639,6 +674,19 @@ canvas {
 }
 #confirmPurchaseModal {
   .modal-body {
+    .modal-info {
+      span {
+        font-size: 24px;
+        line-height: 32px;
+        vertical-align: top;
+      }
+      display: inline-block;
+      line-height: 32px;
+      font-size: 24px;
+      width: 100%;
+      word-wrap: break-word;
+      text-align: center;
+    }
     font-size: 20px;
     font-weight: bold;
     color: $primary;

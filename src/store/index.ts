@@ -6,6 +6,7 @@ import 'firebase/auth';
 import 'firebase/database';
 import 'firebase/firestore';
 import 'firebase/analytics';
+import 'firebase/functions';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -30,7 +31,7 @@ export default createStore({
     noteData: [] as Array<Note>,
     toastMsgList: [] as Array<ToastMSG>,
     previewModel: '',
-    modelsData: [{
+    modelData: [{
       name: 'can',
       id: '1',
       position: {
@@ -39,17 +40,16 @@ export default createStore({
         z: 0,
       },
       style: {
-        color: {},
+        color: null,
       },
       passive: false,
     }] as Array<Model>,
-    currency: 9999,
-    modelsFormat: null,
+    modelFormat: null,
     firebase: null,
     userInfo: null as null | firebase.User,
     formHint: '' as string,
     modal: null as null | Modal,
-    userData: {} as object,
+    userData: null as null | object,
   },
   mutations: {
     menuToggler(state, data) {
@@ -84,7 +84,7 @@ export default createStore({
     },
     updateModel(state, data) {
       if (data.type === 'add') {
-        state.modelsData.push(data.model);
+        state.modelData.push(data.model);
       }
     },
     openModal(state, data) {
@@ -116,7 +116,21 @@ export default createStore({
         commit('removeToast');
       }, 3000);
     },
-    login({ commit, state }, data) {
+    updateUserInfo({ state, commit, dispatch }) {
+      firebase.auth().onAuthStateChanged((user) => {
+        console.log('登入狀態改變', user);
+        if (user) {
+          state.userInfo = user;
+          dispatch('getUserData');
+        } else {
+          state.userInfo = null;
+        }
+        if (state.modal) {
+          state.modal.hide();
+        }
+      });
+    },
+    login({ dispatch, commit, state }, data) {
       const provider = new firebase.auth.GoogleAuthProvider();
       switch (data.type) {
         case 'google':
@@ -129,27 +143,7 @@ export default createStore({
               // The signed-in user info.
               // const { user } = result;
               // console.log(token, user, credential);
-              firebase.auth().onAuthStateChanged((user) => {
-                if (user) {
-                  state.userInfo = user;
-                  db.ref(`/users/${user.uid}`).on('value', (snapshot) => {
-                    const userData = snapshot.val();
-                    console.log(userData);
-                    if (!userData) {
-                      db.ref(`/users/${user.uid}/mail`).set(user.email);
-                      db.ref(`/users/${user.uid}/name`).set(user.displayName);
-                      db.ref(`/users/${user.uid}/balance`).set(0);
-                    } else {
-                      state.userData = userData;
-                    }
-                  });
-                } else {
-                  state.userInfo = null;
-                }
-                if (state.modal) {
-                  state.modal.hide();
-                }
-              });
+              dispatch('updateUserInfo');
             })
             .catch((error) => {
               // Handle Errors here.
@@ -159,31 +153,13 @@ export default createStore({
               const { email } = error;
               // The firebase.auth.AuthCredential type that was used.
               const { credential } = error;
-              // ...
             });
           break;
         case 'email':
           firebase.auth().signInWithEmailAndPassword(data.email, data.password)
             .then((userCredential) => {
               // Signed in
-              firebase.auth().onAuthStateChanged((user) => {
-                if (user) {
-                  state.userInfo = user;
-                  db.ref(`/users/${user.uid}`).once('value', (snapshot) => {
-                    const userData = snapshot.val();
-                    console.log(userData);
-                    state.userData = userData;
-                  });
-                } else {
-                  state.userInfo = null;
-                }
-                if (state.modal) {
-                  state.modal.hide();
-                }
-              });
-              if (state.modal) {
-                state.modal.hide();
-              }
+              dispatch('updateUserInfo');
             })
             .catch((error) => {
               const errorCode = error.code;
@@ -204,13 +180,13 @@ export default createStore({
           break;
       }
     },
-    getModelsFormat({ commit, state }) {
+    getModelFormat({ commit, state }) {
       db.ref('/products').once('value', (snapshot) => {
         console.log(snapshot.val());
-        state.modelsFormat = snapshot.val();
+        state.modelFormat = snapshot.val();
       });
     },
-    register({ commit, dispatch, state }, data) {
+    async register({ commit, dispatch, state }, data) {
       firebase.auth().createUserWithEmailAndPassword(data.email, data.password).then((result) => {
         state.formHint = '';
         dispatch('updateToast', {
@@ -222,20 +198,7 @@ export default createStore({
           result.user.updateProfile({
             displayName: data.userName,
           }).then(() => {
-            firebase.auth().onAuthStateChanged((user) => {
-              if (user) {
-                state.userInfo = user;
-                console.log('使用者資訊更新', user);
-                db.ref(`/users/${user.uid}/mail`).set(user.email);
-                db.ref(`/users/${user.uid}/name`).set(user.displayName);
-                db.ref(`/users/${user.uid}/balance`).set(0);
-                if (state.modal) {
-                  state.modal.hide();
-                }
-              } else {
-                state.userInfo = null;
-              }
-            });
+            dispatch('updateUserInfo');
           });
         }
       }).catch((error) => {
@@ -254,8 +217,12 @@ export default createStore({
         }
       });
     },
-    buyModel({ commit, state }, data) {
-      db.ref(`/users/${state.userInfo?.uid}/toBuy`).set(data);
+    async buyModel({ dispatch, commit, state }, data) {
+      const buyModel = firebase.functions().httpsCallable('buyModel');
+      buyModel({ buyingModel: data })
+        .then((result) => {
+          console.log(result);
+        });
     },
     signOut({ dispatch, state }) {
       firebase.auth().signOut().then(() => {
@@ -271,13 +238,22 @@ export default createStore({
         });
       });
     },
-    // getUserData(state, data) {
-    //   db.ref(`/users/${user.uid}`).once('value', (snapshot) => {
-    //     const userData = snapshot.val();
-    //     console.log(userData);
-    //     state.userData = userData;
-    //   });
-    // }
+    async getUserData({ dispatch, commit, state }) {
+      if (state.userInfo) {
+        const newUserFormat = firebase.functions().httpsCallable('newUserFormat');
+        newUserFormat({ displayName: state.userInfo.displayName }).then((res) => {
+          console.log('資料取得完畢', res);
+          if (res.data.userData) {
+            state.userData = res.data.userData;
+            dispatch('updateToast', {
+              type: 'success',
+              content: '登入成功',
+            });
+            commit('menuToggler', false);
+          }
+        });
+      }
+    },
   },
   modules: {
   },

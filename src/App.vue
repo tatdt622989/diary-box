@@ -29,7 +29,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    store.dispatch('getModelsFormat');
+    store.dispatch('getModelFormat');
 
     onMounted(() => {
       try {

@@ -2,7 +2,7 @@
   <div class="main-wrap home-wrap">
     <div class="status">
       <div class="currency">
-        <span>{{ store.state.currency }}</span>
+        <span>{{ store.state.userData ? store.state.userData.balance : 0 }}</span>
         <img src="@/assets/images/currency.svg" />
       </div>
     </div>
@@ -120,7 +120,7 @@ export default defineComponent({
     const screenShotModal = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
     const datGui = ref(new dat.GUI());
-    const modelsData = ref<Array<Model>>(store.state.modelsData);
+    const modelData = ref<Array<Model>>(store.state.modelData);
     const isNoteOpen = ref<boolean>(false);
     const lastestNoteData = ref<Array<Note>>([]);
     const selectLastestNodeData = ref<Note | null>(null);
@@ -259,10 +259,10 @@ export default defineComponent({
 
       const loader = new GLTFLoader();
 
-      const modelLen = modelsData.value.length;
+      const modelLen = modelData.value.length;
       let i = 0;
       while (i < modelLen) {
-        const data = modelsData.value[i];
+        const data = modelData.value[i];
         loader.load(
           `${publicPath.value}model/${data.name}.gltf`,
           (gltf) => {

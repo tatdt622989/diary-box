@@ -137,7 +137,7 @@ export default defineComponent({
         }
         background-color: $primary;
         height: 2px;
-        margin: 18px 0;
+        margin: 20px 0;
         position: relative;
         width: 100%;
         overflow: visible;

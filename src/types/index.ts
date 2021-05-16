@@ -30,7 +30,7 @@ export interface Model {
     z: number;
   };
   style: {
-    color: object;
+    color: object | null;
   },
   isUsed: boolean;
   passive: boolean;

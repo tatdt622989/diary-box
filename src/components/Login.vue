@@ -44,7 +44,10 @@
           <p class="hint">{{ formHint }}</p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" @click="login('email')">登入</button>
+          <div class="btn-group">
+            <button class="btn btn-primary" @click="openRegisterModel">註冊</button>
+            <button type="button" class="btn btn-primary" @click="login('email')">登入</button>
+          </div>
           <hr>
           <button class="google-login-btn" @click="login('google')">
               <img src="@/assets/images/google-icon.svg">
@@ -97,11 +100,19 @@ export default defineComponent({
       return false;
     }
 
+    function openRegisterModel() {
+      if (store.state.modal) {
+        store.state.modal.hide();
+      }
+      store.commit('openModal', 'register');
+    }
+
     return {
       login,
       userName,
       email,
       password,
+      openRegisterModel,
       formHint: computed(() => store.state.formHint),
     };
   },
@@ -111,6 +122,18 @@ export default defineComponent({
 <style lang="scss" scoped>
   #loginModal {
     .modal-footer {
+      .btn-group {
+        button {
+          border-radius: 999px;
+          width: calc(50% - 8px);
+          flex-grow: 0;
+          flex-shrink: 0;
+        }
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin: 0;
+      }
       button {
         width: 100%;
       }
@@ -129,7 +152,7 @@ export default defineComponent({
         }
         background-color: $primary;
         height: 2px;
-        margin: 18px 0;
+        margin: 20px 0;
         position: relative;
         width: 100%;
         overflow: visible;
