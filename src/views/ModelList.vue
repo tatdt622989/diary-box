@@ -56,7 +56,7 @@
                 >
                   <button
                     class="price"
-                    @click="openModal(v.name, v.displayName, v.price)"
+                    @click="openBuyModal(v.name, v.displayName, v.price)"
                   >
                     <span>{{ v.price }}</span>
                     <span class="material-icons">monetization_on</span>
@@ -110,7 +110,7 @@
             </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="closeModal">
+            <button type="button" class="btn btn-primary" @click="closeBuyModal">
               取消
             </button>
             <button type="button" class="btn btn-primary" @click="buyModel">
@@ -430,14 +430,18 @@ export default defineComponent({
       }
     });
 
-    function openModal(type: string, name: string, price: number) {
+    function openBuyModal(type: string, name: string, price: number) {
       buyingModel.value.name = name;
       buyingModel.value.type = type;
       buyingModel.value.price = price;
       modal.show();
     }
 
-    function closeModal() {
+    function openLoginModal() {
+      store.commit('openModal', 'login');
+    }
+
+    function closeBuyModal() {
       console.log('cancel', document.getElementById('confirmPurchaseModal'));
       modal.hide();
     }
@@ -448,7 +452,12 @@ export default defineComponent({
           modal.hide();
         });
       } else {
-        console.log('請先登入');
+        closeBuyModal();
+        store.dispatch('updateToast', {
+          type: 'hint',
+          content: '請先登入',
+        });
+        openLoginModal();
       }
     }
 
@@ -458,8 +467,8 @@ export default defineComponent({
       height: computed(() => store.state.height),
       view,
       modelFormat: computed(() => store.state.modelFormat),
-      openModal,
-      closeModal,
+      openBuyModal,
+      closeBuyModal,
       buyingModel,
       buyModel,
       userData: computed(() => store.state.userData),

@@ -122,6 +122,10 @@ export default createStore({
         if (user) {
           state.userInfo = user;
           dispatch('getUserData');
+          dispatch('updateToast', {
+            type: 'success',
+            content: '登入成功',
+          });
         } else {
           state.userInfo = null;
         }
@@ -222,6 +226,11 @@ export default createStore({
       buyModel({ buyingModel: data })
         .then((result) => {
           console.log(result);
+          dispatch('getUserData');
+          dispatch('updateToast', {
+            type: 'success',
+            content: result.data.msg,
+          });
         });
     },
     signOut({ dispatch, state }) {
@@ -240,18 +249,21 @@ export default createStore({
     },
     async getUserData({ dispatch, commit, state }) {
       if (state.userInfo) {
-        const newUserFormat = firebase.functions().httpsCallable('newUserFormat');
-        newUserFormat({ displayName: state.userInfo.displayName }).then((res) => {
-          console.log('資料取得完畢', res);
-          if (res.data.userData) {
-            state.userData = res.data.userData;
-            dispatch('updateToast', {
-              type: 'success',
-              content: '登入成功',
+        await db.ref(`/users/${state.userInfo.uid}`).once('value', async (snapshot) => {
+          const userData = snapshot.val();
+          if (userData) {
+            state.userData = userData;
+          } else {
+            const newUserFormat = firebase.functions().httpsCallable('newUserFormat');
+            await newUserFormat({ displayName: state.userInfo?.displayName }).then((res) => {
+              console.log('資料取得完畢', res);
+              if (res.data.userData) {
+                state.userData = res.data.userData;
+              }
             });
-            commit('menuToggler', false);
           }
         });
+        commit('menuToggler', false);
       }
     },
   },
