@@ -1,4 +1,9 @@
-import { Model, Note, ToastMSG } from '@/types';
+import {
+  Model,
+  Note,
+  ToastMSG,
+  UserData,
+} from '@/types';
 import { createStore, Store } from 'vuex';
 import { Modal } from 'bootstrap';
 import firebase from 'firebase/app';
@@ -49,7 +54,7 @@ export default createStore({
     userInfo: null as null | firebase.User,
     formHint: '' as string,
     modal: null as null | Modal,
-    userData: null as null | object,
+    userData: null as null | UserData,
   },
   mutations: {
     menuToggler(state, data) {
@@ -233,13 +238,15 @@ export default createStore({
           });
         });
     },
-    signOut({ dispatch, state }) {
+    signOut({ commit, dispatch, state }) {
       firebase.auth().signOut().then(() => {
         dispatch('updateToast', {
           type: 'success',
           content: '登出成功',
         });
         state.userInfo = null;
+        state.userData = null;
+        commit('menuToggler', false);
       }).catch((err) => {
         dispatch('updateToast', {
           type: 'error',

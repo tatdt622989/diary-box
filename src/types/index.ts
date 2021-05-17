@@ -56,3 +56,10 @@ export interface Product {
   displayName: string;
   price: number;
 }
+
+export interface UserData {
+  balance: number;
+  mail: string;
+  name: string;
+  modelData: Array<Model>;
+}

@@ -156,6 +156,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const route = useRoute();
+    const router = useRouter();
     const models = ref<Array<Product | Model>>([]);
     const selectedMenu = ref<Array<string>>([]);
     const publicPath = ref(process.env.BASE_URL);
@@ -200,8 +201,6 @@ export default defineComponent({
       await nextTick();
       console.log('init-start');
       if (renderer) {
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
       }
@@ -236,11 +235,6 @@ export default defineComponent({
         const pointLight = new THREE.PointLight(0xF8EBCF, 0.6, 10000);
         pointLight.position.set(0, 7, 5);
         pointLight.castShadow = true;
-        pointLight.shadow.radius = 2;
-        pointLight.shadow.mapSize.width = 2048;
-        pointLight.shadow.mapSize.height = 2048;
-        pointLight.shadow.camera.near = 1;
-        pointLight.shadow.camera.far = 10000;
         scene.add(pointLight);
         // const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
         // scene.add(pointLightHelper);
@@ -450,6 +444,12 @@ export default defineComponent({
       if (store.state.userInfo) {
         store.dispatch('buyModel', buyingModel.value).then(() => {
           modal.hide();
+          router.push({
+            name: 'ModelEditor',
+            params: {
+              status: 'new',
+            },
+          });
         });
       } else {
         closeBuyModal();
