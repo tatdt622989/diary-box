@@ -178,7 +178,6 @@ export default defineComponent({
     let firstLoad = true;
     const loadedModel = [];
     const modelFormat = computed(() => store.state.modelFormat);
-    const modelData = computed(() => store.state.modelData);
     let modal: Modal;
 
     function getModels() {
@@ -191,8 +190,12 @@ export default defineComponent({
           result.push(obj as Product);
         });
         models.value = result;
-      } else if (view.value === 'ModelList' && store.state.modelData) {
-        models.value = store.state.modelData;
+      } else if (view.value === 'ModelList') {
+        if (store.state.userData) {
+          models.value = store.state.userData.models;
+        } else {
+          models.value = [store.state.defaultModelData];
+        }
       }
       console.log(models.value);
     }
@@ -361,20 +364,6 @@ export default defineComponent({
     watch(modelFormat, (newVal) => {
       console.log('模型監聽器', newVal, allSceneData.length);
       if (newVal && view.value === 'Store' && firstLoad) {
-        if (allSceneData.length > 0) {
-          clearCanvas();
-        }
-        getModels();
-        if (models.value.length > 0) {
-          init();
-          firstLoad = false;
-        }
-      }
-    });
-
-    watch(modelData, (newVal) => {
-      console.log('模型監聽器', newVal);
-      if (newVal && view.value === 'ModelList' && firstLoad) {
         if (allSceneData.length > 0) {
           clearCanvas();
         }

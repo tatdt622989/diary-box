@@ -57,6 +57,7 @@ export default defineComponent({
     if (!route.params.status) {
       router.push('/');
     }
+    const { status } = route.params;
 
     onMounted(() => {
       canvas = document.getElementById('modelPreviewer') as HTMLCanvasElement;
@@ -103,9 +104,15 @@ export default defineComponent({
       const loader = new GLTFLoader();
       if (store.state.userData) {
         const { modelData } = store.state.userData;
+        let index: number;
         const len = modelData.length;
+        if (status === 'new') {
+          index = len - 1;
+        } else {
+          index = 0;
+        }
         loader.load(
-          `${publicPath.value}model/${modelData[len - 1].name}.gltf`,
+          `${publicPath.value}model/${modelData[index].name}.gltf`,
           (gltf) => {
             const model = gltf.scene;
             console.log(model);

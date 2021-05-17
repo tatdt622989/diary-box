@@ -36,7 +36,7 @@ export default createStore({
     noteData: [] as Array<Note>,
     toastMsgList: [] as Array<ToastMSG>,
     previewModel: '',
-    modelData: [{
+    defaultModelData: {
       name: 'can',
       id: '1',
       position: {
@@ -48,7 +48,7 @@ export default createStore({
         color: null,
       },
       passive: false,
-    }] as Array<Model>,
+    } as Model,
     modelFormat: null,
     firebase: null,
     userInfo: null as null | firebase.User,
@@ -88,9 +88,9 @@ export default createStore({
       }
     },
     updateModel(state, data) {
-      if (data.type === 'add') {
-        state.modelData.push(data.model);
-      }
+      // if (data.type === 'add') {
+      //   state.modelData.push(data.model);
+      // }
     },
     openModal(state, data) {
       let el;

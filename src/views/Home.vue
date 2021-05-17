@@ -120,7 +120,8 @@ export default defineComponent({
     const screenShotModal = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
     const datGui = ref(new dat.GUI());
-    const modelData = ref<Array<Model>>(store.state.modelData);
+    const modelData = ref<Array<Model>>(store.state.userData
+      ? store.state.userData.modelData : [store.state.defaultModelData]);
     const isNoteOpen = ref<boolean>(false);
     const lastestNoteData = ref<Array<Note>>([]);
     const selectLastestNodeData = ref<Note | null>(null);
