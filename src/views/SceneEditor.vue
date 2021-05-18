@@ -71,7 +71,8 @@ export default defineComponent({
   setup(props) {
     const store = useStore();
     const publicPath = ref(process.env.BASE_URL);
-    const { modelData } = store.state;
+    const modelData = store.state.userData
+      ? store.state.userData.modelData : [store.state.defaultModelData];
     const canvas = ref<HTMLCanvasElement>();
     const camera = ref<THREE.PerspectiveCamera>();
     const mouse = ref<THREE.Vector2 | null>(null);

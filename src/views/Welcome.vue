@@ -1,5 +1,7 @@
 <template>
   <div class="welcome-wrap" :style="{ height }">
+    <img src="@/assets/images/logo.svg" alt="logo">
+    <p>記錄生活，打造屬於你的日記盒</p>
   </div>
 </template>
 

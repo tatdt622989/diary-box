@@ -54,9 +54,9 @@ export default defineComponent({
     let controls: OrbitControls;
 
     console.log(route.params);
-    if (!route.params.status) {
-      router.push('/');
-    }
+    // if (!route.params.status) {
+    //   router.push('/');
+    // }
     const { status } = route.params;
 
     onMounted(() => {
@@ -101,6 +101,15 @@ export default defineComponent({
       // 霧
       scene.fog = new THREE.Fog(0x449966, 1, 150);
 
+      function render() {
+        if (renderer) {
+          requestAnimationFrame(render);
+          controls.update();
+          camera.updateProjectionMatrix();
+          renderer.render(scene, camera);
+        }
+      }
+
       const loader = new GLTFLoader();
       if (store.state.userData) {
         const { modelData } = store.state.userData;
@@ -128,7 +137,7 @@ export default defineComponent({
             model.receiveShadow = false;
             console.log(model);
             scene.add(model);
-            // render();
+            render();
           },
           (xhr) => {
             console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
@@ -148,4 +157,12 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+.tool-bar {
+  li {
+    margin-bottom: 12px;
+  }
+  position: absolute;
+  right: 16px;
+  top: 24px;
+}
 </style>
