@@ -2,7 +2,9 @@
   <div class="main-wrap home-wrap">
     <div class="status">
       <div class="currency">
-        <span>{{ store.state.userData ? store.state.userData.balance : 0 }}</span>
+        <span>{{
+          store.state.userData ? store.state.userData.balance : 0
+        }}</span>
         <img src="@/assets/images/currency.svg" />
       </div>
     </div>
@@ -33,7 +35,7 @@
         </button>
       </li>
     </ul>
-    <div id="mainScene" ref="mainScene"></div>
+    <canvas id="mainScene" ref="mainScene"></canvas>
     <div class="note-wrap" :class="{ active: isNoteOpen }">
       <div class="content">
         <div class="d-flex justify-content-end">
@@ -42,8 +44,10 @@
           </button>
         </div>
         <p class="date">{{ lastestNoteDate }}</p>
-        <div v-html="selectLastestNodeData.content" v-if="selectLastestNodeData">
-        </div>
+        <div
+          v-html="selectLastestNodeData.content"
+          v-if="selectLastestNodeData"
+        ></div>
       </div>
       <button class="toggler" @click="isNoteOpen = !isNoteOpen">
         近期日記
@@ -73,11 +77,17 @@
             </button>
           </div>
           <div class="modal-body">
-            <div class="img-frame"></div>
+            <div class="img-frame" id="screenShotFrame">
+              <img :src="img" alt="截圖" />
+            </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary">分享</button>
-            <button type="button" class="btn btn-primary">下載</button>
+            <button type="button" class="btn btn-primary" @click="shareImg">
+              分享
+            </button>
+            <button type="button" class="btn btn-primary" @click="downloadImg">
+              下載
+            </button>
           </div>
         </div>
       </div>
@@ -116,7 +126,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
-    const mainScene = ref<HTMLElement | null>(null);
+    let canvas: HTMLCanvasElement;
     const screenShotModal = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
     const datGui = ref(new dat.GUI());
@@ -125,12 +135,13 @@ export default defineComponent({
     const isNoteOpen = ref<boolean>(false);
     const lastestNoteData = ref<Array<Note>>([]);
     const selectLastestNodeData = ref<Note | null>(null);
-    let renderer: THREE.WebGLRenderer | null = new THREE.WebGLRenderer({
-      antialias: false,
-    });
+    const img = ref('');
+    let renderer: THREE.WebGLRenderer | null;
     const scene = new THREE.Scene();
     let controls: MapControls;
     let animation: number;
+    let takeScreenShot = false;
+    let base64: string | null;
 
     const gui = {
       camera: {
@@ -181,12 +192,14 @@ export default defineComponent({
     });
 
     onMounted(() => {
-      // datGuiInit();
-      if (renderer) {
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.BasicShadowMap;
-        renderer.setSize(window.innerWidth, window.innerHeight - 66);
-      }
+      canvas = document.getElementById('mainScene') as HTMLCanvasElement;
+      renderer = new THREE.WebGLRenderer({
+        antialias: false,
+        canvas,
+      });
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.BasicShadowMap;
+      renderer.setSize(window.innerWidth, window.innerHeight - 66);
 
       // const composer = new EffectComposer(renderer);
       scene.background = new THREE.Color(0x449966);
@@ -202,19 +215,15 @@ export default defineComponent({
       camera.zoom = 1;
 
       // 控制器
-      if (mainScene.value && renderer) {
-        // 到這裡mainScene.value就一定不是null就不會報錯
-        mainScene.value.appendChild(renderer.domElement);
-        controls = new MapControls(camera, mainScene.value);
-        controls.target = new THREE.Vector3(0, 5, 0);
-        controls.dampingFactor = 0.1;
-        controls.enableDamping = true;
-        controls.screenSpacePanning = false;
-        controls.minDistance = 10;
-        controls.maxDistance = 500;
-        controls.minPolarAngle = 0;
-        controls.maxPolarAngle = Math.PI / 2.5;
-      }
+      controls = new MapControls(camera, canvas);
+      controls.target = new THREE.Vector3(0, 5, 0);
+      controls.dampingFactor = 0.1;
+      controls.enableDamping = true;
+      controls.screenSpacePanning = false;
+      controls.minDistance = 10;
+      controls.maxDistance = 500;
+      controls.minPolarAngle = 0;
+      controls.maxPolarAngle = Math.PI / 2.5;
 
       // 地板
       const planeGeometry = new THREE.PlaneGeometry(250, 250, 32);
@@ -255,6 +264,10 @@ export default defineComponent({
         animation = requestAnimationFrame(render);
         if (renderer) {
           renderer.render(scene, camera);
+          if (takeScreenShot) {
+            takeScreenShot = false;
+            base64 = renderer.domElement.toDataURL('image/jpeg', 1.0);
+          }
         }
       }
 
@@ -292,9 +305,11 @@ export default defineComponent({
       }
 
       function resize() {
-        (renderer as THREE.WebGLRenderer).setSize(window.innerWidth, window.innerHeight - 66);
-        camera.aspect = window.innerWidth / (window.innerHeight - 66);
-        camera.updateProjectionMatrix();
+        if (renderer) {
+          renderer.setSize(window.innerWidth, window.innerHeight - 66);
+          camera.aspect = window.innerWidth / (window.innerHeight - 66);
+          camera.updateProjectionMatrix();
+        }
       }
 
       window.addEventListener('resize', resize, false);
@@ -321,9 +336,21 @@ export default defineComponent({
       }
     });
 
+    function screenShot() {
+      takeScreenShot = true;
+      console.log(base64);
+      base64 = null;
+      setTimeout(() => {
+        if (base64) {
+          img.value = base64;
+        }
+      }, 100);
+    }
+
     function openModal() {
       console.log(screenShotModal.value);
       if (screenShotModal.value) {
+        screenShot();
         const modal = new Modal(screenShotModal.value);
         modal.show();
       }
@@ -337,9 +364,24 @@ export default defineComponent({
       });
     }
 
+    function downloadImg() {
+      const link = document.createElement('a');
+      const ts = Date.now();
+      if (base64) {
+        link.download = `screenshot-${ts}`;
+        link.href = base64;
+        link.click();
+      }
+    }
+
+    function shareImg() {
+      // if (base64) {
+      //   window.navigator.share(base64);
+      // }
+    }
+
     return {
       store,
-      mainScene,
       screenShotModal,
       isMenuOpen: computed(() => store.state.isMenuOpen),
       lastestNoteDate: computed(() => {
@@ -355,13 +397,20 @@ export default defineComponent({
       openModal,
       createNote,
       isNoteOpen,
+      downloadImg,
+      shareImg,
       menuToggler: () => store.commit('menuToggler', true),
+      img,
     };
   },
 });
 </script>
 
 <style lang="scss" socped>
+.home-wrap {
+  display: flex;
+  flex-direction: column;
+}
 .status {
   .currency {
     span {
@@ -454,9 +503,15 @@ export default defineComponent({
 #screenShotModal {
   .modal-body {
     .img-frame {
+      img {
+        object-fit: cover;
+        height: 100%;
+        width: 100%;
+      }
       background-color: #c4c4c4;
       height: 338px;
       width: 100%;
+      overflow: hidden;
     }
     padding-top: 0;
     padding-bottom: 0;
@@ -481,7 +536,7 @@ export default defineComponent({
     margin-right: -44px;
   }
   .content {
-    >div {
+    > div {
       width: 100%;
     }
     .date {
