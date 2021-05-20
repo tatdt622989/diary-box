@@ -22,20 +22,22 @@
         </div>
         <div class="modal-body">
           <form action="">
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
+              <span class="material-icons">mail</span>
               <input
                 type="email"
                 class="form-control"
-                placeholder="請輸入電子郵件"
+                placeholder="電子郵件"
                 v-model="email"
                 autocomplete="on"
               />
             </div>
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
+              <span class="material-icons">lock</span>
               <input
                 type="password"
                 class="form-control"
-                placeholder="請輸入密碼"
+                placeholder="密碼"
                 v-model="password"
                 autocomplete="on"
               />
@@ -121,6 +123,15 @@ export default defineComponent({
 
 <style lang="scss" scoped>
   #loginModal {
+    .modal-body {
+      span.material-icons {
+        color: $primary;
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
     .modal-footer {
       .btn-group {
         button {
@@ -173,6 +184,7 @@ export default defineComponent({
     font-size: 20px;
     height: 52px;
     text-indent: 16px;
+    padding-left: 38px;
   }
   .hint {
     color: red;
