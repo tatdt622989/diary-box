@@ -5,6 +5,7 @@
       <img src="@/assets/images/logo-no-text.svg" alt="logo">
     </div>
     <p class="title">Diary Box</p>
+    <p class="text">記錄生活，打造屬於你的日記盒</p>
     <form action="">
       <div class="mb-3 position-relative">
         <span class="material-icons">mail</span>
@@ -37,8 +38,8 @@
           <img src="@/assets/images/google-icon.svg">
           <span>Google登入</span>
       </button>
+      <button class="sign-later-btn btn btn-primary" @click="router.push('/home')">稍後註冊</button>
     </div>
-    <p>記錄生活，打造屬於你的日記盒</p>
   </div>
 </template>
 
@@ -64,6 +65,7 @@ export default defineComponent({
 
     return {
       height: computed(() => store.state.height),
+      router,
     };
   },
 });
@@ -88,7 +90,9 @@ export default defineComponent({
     color: $secondary;
     font-size: 36px;
     font-weight: bold;
-    margin: 16px 0;
+    margin-top: 8px;
+    margin-bottom: 0;
+    letter-spacing: 2px;
   }
   form {
     span.material-icons {
@@ -99,6 +103,10 @@ export default defineComponent({
       transform: translateY(-50%);
     }
     input {
+      &::placeholder {
+        color: $secondary;
+        opacity: 0.5;
+      }
       &:focus {
         background-color: transparent;
         color: $secondary;
@@ -117,11 +125,16 @@ export default defineComponent({
   }
   .login-group {
       .btn-group {
-        button {
+        button.btn {
+          color: $primary;
+          height: 52px;
           border-radius: 999px;
           width: calc(50% - 8px);
           flex-grow: 0;
           flex-shrink: 0;
+          background-color: $secondary;
+          font-size: 20px;
+          font-weight: bold;
         }
         display: flex;
         justify-content: space-between;
@@ -133,8 +146,8 @@ export default defineComponent({
       }
       hr {
         &::after{
-          background-color: $secondary;
-          color: $primary;
+          background-color: $primary;
+          color: $secondary;
           content: "或";
           font-size: 18px;
           font-weight: bold;
@@ -144,13 +157,13 @@ export default defineComponent({
           top: 50%;
           transform: translateX(-50%) translateY(-50%);
         }
-        background-color: $primary;
+        background-color: $secondary;
         height: 2px;
         margin: 20px 0;
+        opacity: 1;
+        overflow: visible;
         position: relative;
         width: 100%;
-        overflow: visible;
-        opacity: 1;
       }
       .google-login-btn {
         background-color: #fff;
@@ -166,11 +179,31 @@ export default defineComponent({
         }
         align-items: center;
         display: flex;
+        font-size: 20px;
+        font-weight: bold;
         height: 52px;
         justify-content: center;
+        margin-bottom: 16px;
+      }
+      .sign-later-btn {
+        border-radius: 999px;
+        color: $secondary;
+        font-size: 20px;
+        font-weight: bold;
+        height: 52px;
+        border: 2px solid $secondary;
+        margin-bottom: 16px;
       }
       padding-top: 0;
-    }
+      width: 100%;
+      max-width: 320px;
+  }
+  .text {
+    color: $secondary;
+    font-size: 16px;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+  }
   display: flex;
   align-items: center;
   justify-content: center;

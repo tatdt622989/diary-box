@@ -229,24 +229,24 @@ export default defineComponent({
         controls.autoRotate = true;
         controls.autoRotateSpeed = 3;
         controls.enabled = false;
-        controls.target = new THREE.Vector3(0, 1.8, 0);
+        controls.target = new THREE.Vector3(0, 2.2, 0);
         controls.update();
 
         // 燈光
         const ambientLight = new THREE.AmbientLight(0xffffff, 1);
         scene.add(ambientLight);
-        const pointLight = new THREE.PointLight(0xF8EBCF, 0.6, 10000);
+        const pointLight = new THREE.PointLight(0xffffff, 0.4, 10000);
         pointLight.position.set(0, 7, 5);
         pointLight.castShadow = true;
         scene.add(pointLight);
         // const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
         // scene.add(pointLightHelper);
-        const directionalLight = new THREE.DirectionalLight(0xF8EBCF, 0.6);
+        const directionalLight = new THREE.DirectionalLight(0xcff3f8, 0.7);
         directionalLight.position.set(-10, 20, 0);
         scene.add(directionalLight);
 
         // 霧
-        scene.fog = new THREE.Fog(0x449966, 1, 150);
+        scene.fog = new THREE.Fog(0xffffff, 1, 150);
         return {
           scene, camera, el, controls,
         };
@@ -301,10 +301,6 @@ export default defineComponent({
                 left, right, bottom, top,
               } = data[i].el.getBoundingClientRect();
 
-              if (bottom < 0 || top > canvas.clientHeight
-            || right < 0 || left > canvas.clientWidth) {
-                return; // it's off screen
-              }
               // set the viewport
               const width = right - left;
               const height = bottom - top;

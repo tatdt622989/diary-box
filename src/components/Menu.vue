@@ -32,6 +32,12 @@
             會員登出
           </button>
         </li>
+        <li class="t-base">
+          <button>
+            <span class="material-icons">settings</span>
+            畫質設定
+          </button>
+        </li>
       </ul>
       <div class="about">
         <p>關於作者</p>

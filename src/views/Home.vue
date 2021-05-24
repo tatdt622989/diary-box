@@ -15,7 +15,7 @@
         </button>
       </li>
       <li>
-        <button>
+        <button @click="enterFullScreen">
           <span class="material-icons">fullscreen</span>
         </button>
       </li>
@@ -116,6 +116,7 @@ import FunctionBar from '@/components/FunctionBar.vue';
 import Menu from '@/components/Menu.vue';
 import { Model, Note } from '@/types';
 import { Geometry, Object3D } from 'three';
+import screenfull from 'screenfull/dist/screenfull';
 
 export default defineComponent({
   name: 'Home',
@@ -129,7 +130,7 @@ export default defineComponent({
     let canvas: HTMLCanvasElement;
     const screenShotModal = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
-    const datGui = ref(new dat.GUI());
+    // const datGui = ref(new dat.GUI());
     const modelData = ref<Array<Model>>(store.state.userData
       ? store.state.userData.modelData : [store.state.defaultModelData]);
     const isNoteOpen = ref<boolean>(false);
@@ -161,14 +162,14 @@ export default defineComponent({
     };
 
     function datGuiInit() {
-      const dLightFolder = datGui.value.addFolder('dLight');
-      dLightFolder.add(gui.dLight.pos, 'x', 0, 50);
-      dLightFolder.add(gui.dLight.pos, 'y', 0, 50);
-      dLightFolder.add(gui.dLight.pos, 'z', 0, 50);
-      const camera = datGui.value.addFolder('camera');
-      camera.add(gui.camera.pos, 'x', -20, 50);
-      camera.add(gui.camera.pos, 'y', -20, 50);
-      camera.add(gui.camera.pos, 'z', -20, 50);
+      // const dLightFolder = datGui.value.addFolder('dLight');
+      // dLightFolder.add(gui.dLight.pos, 'x', 0, 50);
+      // dLightFolder.add(gui.dLight.pos, 'y', 0, 50);
+      // dLightFolder.add(gui.dLight.pos, 'z', 0, 50);
+      // const camera = datGui.value.addFolder('camera');
+      // camera.add(gui.camera.pos, 'x', -20, 50);
+      // camera.add(gui.camera.pos, 'y', -20, 50);
+      // camera.add(gui.camera.pos, 'z', -20, 50);
     }
 
     function getNote() {
@@ -380,6 +381,12 @@ export default defineComponent({
       // }
     }
 
+    function enterFullScreen() {
+      if (screenfull.isEnabled) {
+        screenfull.request(canvas);
+      }
+    }
+
     return {
       store,
       screenShotModal,
@@ -401,6 +408,7 @@ export default defineComponent({
       shareImg,
       menuToggler: () => store.commit('menuToggler', true),
       img,
+      enterFullScreen,
     };
   },
 });

@@ -11,14 +11,19 @@ const ModelEditor = () => import('@/views/ModelEditor.vue');
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/',
-    name: 'Home',
-    component: Home,
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: Welcome,
   },
   {
-    path: '/welcome',
+    path: '/',
     name: 'Welcome',
     component: Welcome,
+  },
+  {
+    path: '/home',
+    name: 'Home',
+    component: Home,
   },
   {
     path: '/note-list',

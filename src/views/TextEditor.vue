@@ -208,6 +208,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   height: 100vh;
+  padding-top: 66px;
 }
 .ql-editor {
   font-size: 20px;
