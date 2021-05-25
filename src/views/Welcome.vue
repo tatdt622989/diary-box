@@ -17,7 +17,7 @@
           autocomplete="on"
         />
       </div>
-      <div class="mb-3 position-relative">
+      <div class="mb-2 position-relative">
         <span class="material-icons">lock</span>
         <input
           type="password"
@@ -27,6 +27,7 @@
           autocomplete="on"
         />
       </div>
+      <p class="hint">{{ formHint }}</p>
     </form>
     <div class="login-group">
       <div class="btn-group">
@@ -60,12 +61,50 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const router = useRouter();
+    const email = ref('');
+    const password = ref('');
     // onMounted(() => {
     // });
 
+    function login(type: string) {
+      switch (type) {
+        case 'email':
+          if (!password.value || !email.value) {
+            return store.commit('updateFormHint', '欄位不能為空');
+          }
+          if (password.value.search(/\W/g) > 0) {
+            return store.commit('updateFormHint', '不能使用特殊符號');
+          }
+          store.dispatch('login', {
+            type,
+            email: email.value,
+            password: password.value,
+          });
+          break;
+        case 'google':
+          store.dispatch('login', { type });
+          break;
+        default:
+          break;
+      }
+      return false;
+    }
+
+    function openRegisterModel() {
+      if (store.state.modal) {
+        store.state.modal.hide();
+      }
+      store.commit('openModal', 'register');
+    }
+
     return {
       height: computed(() => store.state.height),
+      formHint: computed(() => store.state.formHint),
       router,
+      email,
+      login,
+      openRegisterModel,
+      password,
     };
   },
 });
@@ -82,9 +121,9 @@ export default defineComponent({
     background-color: $secondary;
     border-radius: 999px;
     display: flex;
-    height: 120px;
+    height: 110px;
     justify-content: center;
-    width: 120px;
+    width: 110px;
   }
   .title {
     color: $secondary;
@@ -121,6 +160,10 @@ export default defineComponent({
       text-indent: 16px;
       padding-left: 38px;
       min-width: 320px;
+    }
+    .hint {
+      color: #fff;
+      letter-spacing: 4px;
     }
   }
   .login-group {
