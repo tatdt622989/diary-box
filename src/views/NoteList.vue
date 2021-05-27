@@ -10,7 +10,7 @@
         <span class="material-icons">filter_alt</span>
       </button>
     </div>
-    <div class="content" @click="isFilterOpen = false">
+    <div class="content scroll-bar" @click="isFilterOpen = false">
       <div class="data-group" v-for="(item, i) in noteList" :key="i">
         <div class="date-wrap">
           <span>{{ item.date }}</span>
@@ -211,7 +211,7 @@ export default defineComponent({
     padding: 0 16px;
     width: 100%;
   }
-  .content {
+  >.content {
     flex-grow: 1;
     padding: 0px 16px 0px 16px;
     margin-top: 28px;

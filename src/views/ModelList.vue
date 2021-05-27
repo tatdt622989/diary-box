@@ -22,7 +22,7 @@
       </div>
     </div>
     <div class="content">
-      <div class="models container-fluid">
+      <div class="models container-fluid scroll-bar">
         <div class="row">
           <div
             class="item col-6 col-md-4 col-lg-3"
@@ -637,11 +637,14 @@ export default defineComponent({
   z-index: 1000;
 }
 .content {
+  .models {
+    padding: 0 16px;
+  }
   align-items: center;
   padding: 0;
   flex-grow: 1;
   overflow-y: auto;
-  padding: 0 10px;
+  padding: 0;
   padding-top: 92px;
 }
 .header {
