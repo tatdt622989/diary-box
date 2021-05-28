@@ -2,7 +2,7 @@
   <div class="welcome-wrap" :style="{ height }">
     <div></div>
     <div class="logo">
-      <img src="@/assets/images/logo-no-text.svg" alt="logo">
+      <img src="@/assets/images/logo-no-text.svg" alt="logo" />
     </div>
     <p class="title">Diary Box</p>
     <p class="text">記錄生活，打造屬於你的日記盒</p>
@@ -30,16 +30,31 @@
       <p class="hint">{{ formHint }}</p>
     </form>
     <div class="login-group">
-      <div class="btn-group">
-        <button class="btn btn-primary" @click="openRegisterModel">註冊</button>
-        <button type="button" class="btn btn-primary" @click="login('email')">登入</button>
-      </div>
-      <hr>
-      <button class="google-login-btn" @click="login('google')">
-          <img src="@/assets/images/google-icon.svg">
-          <span>Google登入</span>
+      <button
+        type="button"
+        class="login-btn btn btn-primary"
+        @click="login('email')"
+      >
+        登入
       </button>
-      <button class="sign-later-btn btn btn-primary" @click="router.push('/home')">稍後註冊</button>
+      <p class="register-text">
+        沒有日記盒的帳戶嗎?{{'\xa0\xa0'}}<span @click="openRegisterModel"
+          >立即註冊</span
+        >
+      </p>
+      <!-- <hr> -->
+      <div class="btn-group">
+        <button class="google-login-btn" @click="login('google')">
+          <img src="@/assets/images/google-icon.svg" />
+          <span>Google</span>
+        </button>
+        <button
+          class="sign-later-btn btn btn-primary"
+          @click="router.push('/home')"
+        >
+          訪客登入
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -52,6 +67,7 @@ import {
   onMounted,
   computed,
   nextTick,
+  watch,
 } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
@@ -63,8 +79,16 @@ export default defineComponent({
     const router = useRouter();
     const email = ref('');
     const password = ref('');
+    const userInfo = computed(() => store.state.userInfo);
     // onMounted(() => {
     // });
+
+    watch(userInfo, (newVal, oldVal) => {
+      console.log('監測到登入狀態改變');
+      if (newVal) {
+        router.push('/home');
+      }
+    });
 
     function login(type: string) {
       switch (type) {
@@ -163,89 +187,100 @@ export default defineComponent({
     }
     .hint {
       color: #fff;
-      letter-spacing: 4px;
     }
   }
   .login-group {
-      .btn-group {
-        button.btn {
-          color: $primary;
-          height: 52px;
-          border-radius: 999px;
-          width: calc(50% - 8px);
-          flex-grow: 0;
-          flex-shrink: 0;
-          background-color: $secondary;
-          font-size: 20px;
-          font-weight: bold;
-        }
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        margin: 0;
-      }
-      button {
-        width: 100%;
-      }
-      hr {
-        &::after{
-          background-color: $primary;
-          color: $secondary;
-          content: "或";
-          font-size: 18px;
-          font-weight: bold;
-          left: 50%;
-          padding: 0 8px;
-          position: absolute;
-          top: 50%;
-          transform: translateX(-50%) translateY(-50%);
-        }
-        background-color: $secondary;
-        height: 2px;
-        margin: 20px 0;
-        opacity: 1;
-        overflow: visible;
-        position: relative;
-        width: 100%;
-      }
-      .google-login-btn {
-        background-color: #fff;
-        border-radius: 999px;
-        span {
-          color: $gray-700;
-          margin-left: 20px;
-          user-select: none;
-        }
-        img {
-          height: 32px;
-          pointer-events: none;
-        }
-        align-items: center;
-        display: flex;
-        font-size: 20px;
-        font-weight: bold;
-        height: 52px;
-        justify-content: center;
-        margin-bottom: 16px;
-      }
-      .sign-later-btn {
-        border-radius: 999px;
-        color: $secondary;
-        font-size: 20px;
-        font-weight: bold;
-        height: 52px;
-        border: 2px solid $secondary;
-        margin-bottom: 16px;
-      }
-      padding-top: 0;
+    button.login-btn {
+      color: $primary;
+      height: 52px;
+      border-radius: 999px;
       width: 100%;
-      max-width: 320px;
+      flex-grow: 0;
+      flex-shrink: 0;
+      background-color: $secondary;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    button {
+      width: 100%;
+    }
+    hr {
+      &::after {
+        background-color: $primary;
+        color: $secondary;
+        content: "或";
+        font-size: 18px;
+        font-weight: bold;
+        left: 50%;
+        padding: 0 8px;
+        position: absolute;
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
+      }
+      background-color: $secondary;
+      height: 2px;
+      margin: 20px 0;
+      opacity: 1;
+      overflow: visible;
+      position: relative;
+      width: 100%;
+    }
+    .google-login-btn {
+      background-color: #fff;
+      border-radius: 999px;
+      span {
+        color: $gray-700;
+        margin-left: 14px;
+        user-select: none;
+      }
+      img {
+        height: 32px;
+        pointer-events: none;
+      }
+      align-items: center;
+      display: flex;
+      font-size: 20px;
+      font-weight: bold;
+      height: 52px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    button.sign-later-btn {
+      border-radius: 999px;
+      color: $secondary;
+      font-size: 20px;
+      font-weight: bold;
+      height: 52px;
+      border: 2px solid $secondary;
+      margin-bottom: 16px;
+    }
+    padding-top: 0;
+    width: 100%;
+    max-width: 320px;
   }
   .text {
     color: $secondary;
     font-size: 16px;
     letter-spacing: 4px;
     margin-bottom: 20px;
+  }
+  .register-text {
+    span {
+      color: $secondary;
+    }
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    margin: 16px 0;
+  }
+  .btn-group {
+    button {
+      width: calc(50% - 8px);
+      flex-shrink: 0;
+      flex-grow: 0;
+    }
+    display: flex;
+    justify-content: space-between;
   }
   display: flex;
   align-items: center;

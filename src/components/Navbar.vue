@@ -1,6 +1,6 @@
 <template>
   <div id="nav">
-    <img src="@/assets/images/logo.svg" alt="日記盒" @click="$router.push('/')">
+    <img src="@/assets/images/logo.svg" alt="日記盒" @click="linkTo">
     <button @click="menuToggler">
       <span class="material-icons">menu</span>
     </button>
@@ -18,6 +18,7 @@ import {
 } from 'vue';
 import { useStore } from 'vuex';
 import Menu from '@/components/Menu.vue';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   components: {
@@ -25,8 +26,19 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const router = useRouter();
+
+    function linkTo() {
+      if (store.state.userInfo) {
+        router.push('/home');
+      } else {
+        router.push('/');
+      }
+    }
+
     return {
       menuToggler: () => store.commit('menuToggler', true),
+      linkTo,
     };
   },
 });

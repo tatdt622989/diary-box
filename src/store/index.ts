@@ -185,6 +185,17 @@ export default createStore({
               }
             });
           break;
+        case 'anonymous':
+          firebase.auth().signInAnonymously()
+            .then(() => {
+              // Signed in..
+              dispatch('updateUserInfo');
+            })
+            .catch((error) => {
+              const errorCode = error.code;
+              const errorMessage = error.message;
+            });
+          break;
         default:
           break;
       }
