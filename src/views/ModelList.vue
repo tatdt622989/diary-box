@@ -191,8 +191,9 @@ export default defineComponent({
         });
         models.value = result;
       } else if (view.value === 'ModelList') {
+        console.log(store.state.userData);
         if (store.state.userData) {
-          models.value = store.state.userData.models;
+          models.value = store.state.userData.modelData;
         } else {
           models.value = [store.state.defaultModelData];
         }

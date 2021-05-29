@@ -1,11 +1,11 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
+import store from '../store';
 
 const Home = () => import('@/views/Home.vue');
 const Welcome = () => import('@/views/Welcome.vue');
 const NoteList = () => import('@/views/NoteList.vue');
 const TextEditor = () => import('@/views/TextEditor.vue');
 const ModelList = () => import('@/views/ModelList.vue');
-const ModelSelector = () => import('@/views/ModelSelector.vue');
 const SceneEditor = () => import('@/views/SceneEditor.vue');
 const ModelEditor = () => import('@/views/ModelEditor.vue');
 
@@ -46,11 +46,6 @@ const routes: Array<RouteRecordRaw> = [
     component: ModelList,
   },
   {
-    path: '/model-selector',
-    name: 'ModelSelector',
-    component: ModelSelector,
-  },
-  {
     path: '/scene-editor',
     name: 'SceneEditor',
     component: SceneEditor,
@@ -65,6 +60,18 @@ const routes: Array<RouteRecordRaw> = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+});
+
+// 導航守衛
+router.beforeEach((to, from, next) => {
+  console.log(to, from);
+  if (to.name !== 'Welcome' && !store.state.userInfo) {
+    next({
+      path: '/',
+    });
+  } else {
+    next();
+  }
 });
 
 export default router;

@@ -11,21 +11,21 @@
             <img :src="userInfo.photoURL" v-if="userInfo.photoURL">
           </div>
           <p class="w-100 px-2 text-center user-text">
-            {{ userInfo.displayName }}
+            {{ userInfo.displayName || (userData && userData.name) }}
           </p>
         </li>
-        <li class="t-base" v-if="!userInfo">
+        <!-- <li class="t-base" v-if="!userInfo">
           <button @click="register">
             <span class="material-icons">assignment_ind</span>
             會員註冊
           </button>
-        </li>
-        <li class="t-base" v-if="!userInfo">
+        </li> -->
+        <!-- <li class="t-base" v-if="!userInfo">
           <button @click="login">
             <span class="material-icons">login</span>
             會員登入
           </button>
-        </li>
+        </li> -->
         <li class="t-base" v-if="userInfo">
           <button @click="signOut">
             <span class="material-icons">logout</span>
@@ -62,6 +62,7 @@
 </template>
 
 <script lang="ts">
+import router from '@/router';
 import {
   ref,
   reactive,
@@ -101,6 +102,7 @@ export default defineComponent({
 
     function signOut() {
       store.dispatch('signOut');
+      router.push('/');
     }
 
     return {
@@ -108,6 +110,7 @@ export default defineComponent({
       menuToggler: () => store.commit('menuToggler', false),
       height: computed(() => store.state.height),
       userInfo: computed(() => store.state.userInfo),
+      userData: computed(() => store.state.userData),
       login,
       register,
       signOut,

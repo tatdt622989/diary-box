@@ -272,8 +272,14 @@ export default createStore({
           if (userData) {
             state.userData = userData;
           } else {
+            let displayName;
+            if (state.userInfo?.isAnonymous) {
+              displayName = '訪客';
+            } else {
+              displayName = state.userInfo?.displayName;
+            }
             const newUserFormat = firebase.functions().httpsCallable('newUserFormat');
-            await newUserFormat({ displayName: state.userInfo?.displayName }).then((res) => {
+            await newUserFormat({ displayName }).then((res) => {
               console.log('資料取得完畢', res);
               if (res.data.userData) {
                 state.userData = res.data.userData;
@@ -283,6 +289,12 @@ export default createStore({
         });
         commit('menuToggler', false);
       }
+    },
+    getPoint({ commit, state }) {
+      const getPoint = firebase.functions().httpsCallable('getPoint');
+      getPoint().then((res) => {
+        console.log(res);
+      });
     },
   },
   modules: {

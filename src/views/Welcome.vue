@@ -27,9 +27,9 @@
           autocomplete="on"
         />
       </div>
-      <p class="hint">{{ formHint }}</p>
+      <p class="hint" v-if="formHint">{{ formHint }}</p>
     </form>
-    <div class="login-group">
+    <div class="login-group mt-2">
       <button
         type="button"
         class="login-btn btn btn-primary"
@@ -37,10 +37,8 @@
       >
         登入
       </button>
-      <p class="register-text">
-        沒有日記盒的帳戶嗎?{{'\xa0\xa0'}}<span @click="openRegisterModel"
-          >立即註冊</span
-        >
+      <p class="register-text" @click="openRegisterModel">
+        沒有日記盒的帳戶嗎?{{ "\xa0\xa0" }}<span>立即註冊</span>
       </p>
       <!-- <hr> -->
       <div class="btn-group">
@@ -50,7 +48,7 @@
         </button>
         <button
           class="sign-later-btn btn btn-primary"
-          @click="router.push('/home')"
+          @click="login('anonymous')"
         >
           訪客登入
         </button>
@@ -106,6 +104,9 @@ export default defineComponent({
           });
           break;
         case 'google':
+          store.dispatch('login', { type });
+          break;
+        case 'anonymous':
           store.dispatch('login', { type });
           break;
         default:
@@ -187,6 +188,7 @@ export default defineComponent({
     }
     .hint {
       color: #fff;
+      margin: 0;
     }
   }
   .login-group {
@@ -262,12 +264,13 @@ export default defineComponent({
     color: $secondary;
     font-size: 16px;
     letter-spacing: 4px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
   }
   .register-text {
     span {
       color: $secondary;
     }
+    cursor: pointer;
     font-size: 16px;
     font-weight: bold;
     color: #fff;

@@ -1,18 +1,22 @@
 <template>
-  <div class="main-wrap text-editor-wrap" :style="{ height }" @click="activeTool = ''">
+  <div
+    class="main-wrap text-editor-wrap"
+    :style="{ height }"
+    @click="activeTool = ''"
+  >
     <Navbar></Navbar>
     <div class="header">
       <button class="btn-circle" @click="$router.push('/note-list')">
         <span class="material-icons">arrow_back</span>
       </button>
-      <p>{{ status === 'note-add' ? '新增筆記' : '編輯筆記' }}</p>
+      <p>{{ status === "note-add" ? "新增筆記" : "編輯筆記" }}</p>
       <button class="btn-circle" @click="saveData">
         <span class="material-icons">check</span>
       </button>
     </div>
     <div class="content container-fluid">
       <div id="editorHeader">
-        <input type="text" placeholder="請輸入標題" v-model="title"/>
+        <input type="text" placeholder="請輸入標題" v-model="title" />
       </div>
       <div class="editor-wrap" ref="editor">
         <div class="toolbar" id="toolbar">
@@ -58,11 +62,7 @@
             </select>
           </div>
         </div>
-        <div
-          id="editorContent"
-          class="editor"
-          spellcheck="false"
-        ></div>
+        <div id="editorContent" class="editor" spellcheck="false"></div>
       </div>
     </div>
   </div>
@@ -176,7 +176,7 @@ export default defineComponent({
             type: 'success',
             content: '成功新增',
           });
-          router.push('/model-selector');
+          store.dispatch('getPoint');
         }
         store.commit('updateNote', data);
       }
@@ -225,7 +225,8 @@ export default defineComponent({
       &:hover {
         background: $tertiary;
       }
-      &:focus, &:active {
+      &:focus,
+      &:active {
         border: 0;
         outline: 0;
       }
@@ -259,7 +260,8 @@ export default defineComponent({
         margin: 0;
       }
       .ql-picker-label {
-        &:active, &:focus {
+        &:active,
+        &:focus {
           border: 0;
         }
         font-size: 20px;
@@ -279,7 +281,8 @@ export default defineComponent({
       width: 28px;
     }
     .ql-picker-label {
-      &:focus, &:active {
+      &:focus,
+      &:active {
         border: 0;
         outline: 0;
       }
@@ -310,7 +313,8 @@ export default defineComponent({
       }
     }
     .ql-picker-options {
-      &:focus, &:active {
+      &:focus,
+      &:active {
         border: 0;
         outline: 0;
       }
@@ -335,7 +339,8 @@ export default defineComponent({
       padding: 0;
       right: 0;
     }
-    .ql-color, .ql-background {
+    .ql-color,
+    .ql-background {
       .ql-picker-label {
         border: 0;
       }
@@ -476,12 +481,12 @@ export default defineComponent({
   font-family: Arial;
 }
 .ql-font-noto-serif-tc {
-  font-family: 'Noto Serif TC';
+  font-family: "Noto Serif TC";
 }
 .ql-font-noto-sans-tc {
-  font-family: 'Noto Sans TC';
+  font-family: "Noto Sans TC";
 }
 .ql-font-jhengHei {
-  font-family: 'Microsoft JhengHei';
+  font-family: "Microsoft JhengHei";
 }
 </style>

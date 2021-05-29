@@ -1,11 +1,18 @@
 <template>
-  <div class="main-wrap node-list-wrap menu-layout" :style="{ height }" @click="selectedMenu = []">
+  <div
+    class="main-wrap node-list-wrap menu-layout"
+    :style="{ height }"
+    @click="selectedMenu = []"
+  >
     <Navbar></Navbar>
     <div class="header">
-      <button class="btn-circle" @click="$router.push('/')">
-        <span class="material-icons">home</span>
-      </button>
-      <p>筆記一覽</p>
+      <div>
+        <p>筆記一覽</p>
+        <div class="hint">
+          每天前十筆隨機獲得10~50
+          <img src="@/assets/images/currency-reverse.svg" alt="" />
+        </div>
+      </div>
       <button class="btn-circle" @click="openFilter">
         <span class="material-icons">filter_alt</span>
       </button>
@@ -52,6 +59,12 @@
             </ul>
           </li>
         </ul>
+      </div>
+      <div class="default" v-if="noteList.length === 0">
+        <span class="material-icons">
+          playlist_add
+        </span>
+        還沒有日記喔！
       </div>
     </div>
     <button class="add-btn" @click="createNote">
@@ -197,24 +210,41 @@ export default defineComponent({
     position: fixed;
     right: 20px;
   }
+  .hint {
+    font-size: 16px;
+    color: $secondary;
+    letter-spacing: 2px;
+    height: 35px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .header {
+    img {
+      height: 22px;
+      width: 22px;
+      margin-left: 8px;
+    }
     p {
       color: $secondary;
       font-size: 24px;
       font-weight: bold;
       margin: 0;
+      text-align: left;
     }
-    align-items: center;
+    align-items: flex-start;
     display: flex;
     justify-content: space-between;
-    margin-top: 12px;
+    margin-top: 16px;
     padding: 0 16px;
     width: 100%;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
   }
-  >.content {
+  > .content {
     flex-grow: 1;
     padding: 0px 16px 0px 16px;
-    margin-top: 28px;
     width: 100%;
     overflow-y: auto;
   }
@@ -224,6 +254,22 @@ export default defineComponent({
   height: 100vh;
   justify-content: flex-start;
   width: 100%;
+}
+.default {
+  span {
+    color: $secondary;
+    font-size: 90px;
+    margin-bottom: 20px;
+  }
+  color: $secondary;
+  font-size: 24px;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 .data-group {
   .date-wrap {
@@ -240,7 +286,8 @@ export default defineComponent({
     > li {
       > button {
         &:hover,
-        &:active, &.active {
+        &:active,
+        &.active {
           span {
             color: $primary;
           }
