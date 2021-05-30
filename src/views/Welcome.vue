@@ -54,6 +54,7 @@
         </button>
       </div>
     </div>
+    <Register></Register>
   </div>
 </template>
 
@@ -69,22 +70,27 @@ import {
 } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
+import Register from '@/components/Register.vue';
 
 export default defineComponent({
   name: 'Welcome',
+  components: {
+    Register,
+  },
   setup() {
     const store = useStore();
     const router = useRouter();
     const email = ref('');
     const password = ref('');
-    const userInfo = computed(() => store.state.userInfo);
+    const dataLoaded = computed(() => store.state.dataLoaded);
     // onMounted(() => {
     // });
 
-    watch(userInfo, (newVal, oldVal) => {
-      console.log('監測到登入狀態改變');
+    watch(dataLoaded, (newVal, oldVal) => {
+      console.log('資料載入狀態變更');
       if (newVal) {
         router.push('/home');
+        store.commit('updateDataLoadStatus', false);
       }
     });
 

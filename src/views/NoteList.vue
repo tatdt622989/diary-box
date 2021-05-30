@@ -7,7 +7,7 @@
     <Navbar></Navbar>
     <div class="header">
       <div>
-        <p>筆記一覽</p>
+        <p>日記一覽</p>
         <div class="hint">
           每天前十筆隨機獲得10~50
           <img src="@/assets/images/currency-reverse.svg" alt="" />
@@ -51,9 +51,6 @@
                 <button>預覽</button>
               </li>
               <li>
-                <button>編輯位置</button>
-              </li>
-              <li>
                 <button>刪除</button>
               </li>
             </ul>
@@ -69,7 +66,7 @@
     </div>
     <button class="add-btn" @click="createNote">
       <span class="material-icons">add</span>
-      <span>新增筆記</span>
+      <span>新增日記</span>
     </button>
     <div class="filter-wrap" :class="{ active: isFilterOpen }">
       <p>搜尋</p>
@@ -105,6 +102,7 @@ import {
   defineComponent,
   onMounted,
   computed,
+  watch,
 } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
@@ -122,35 +120,38 @@ export default defineComponent({
     const isFilterOpen = ref<boolean>(false);
     const noteList = ref<Array<NoteList>>([]);
     const selectedMenu = ref<Array<string>>([]);
-    const noteData = computed(() => store.state.noteData);
+    const noteData = computed(() => store.state.userData.noteData);
+
+    function getNotelist(data: Array<Note>) {
+      console.log('取得日記顯示列表');
+      const dateList: Array<string> = [];
+      data.forEach((el: Note) => {
+        console.log(el.id);
+        const date = new Date(parseInt(el.id, 10));
+        const dateStr = `${date.getFullYear()} / ${date.getMonth() + 1 > 10 ? date.getMonth() + 1 : `0${date.getMonth() + 1}`} / ${date.getDate() > 10 ? date.getDate() : `0${date.getDate()}`}`;
+        console.log(dateStr);
+        const timeStr = `${date.getHours() > 10 ? date.getHours() : `0${date.getHours()}`} : ${date.getMinutes() > 10 ? date.getMinutes() : `0${date.getMinutes()}`}`;
+        const index = dateList.indexOf(dateStr);
+        if (index === -1) {
+          noteList.value.push({
+            date: dateStr,
+            notes: [el],
+            time: [timeStr],
+          });
+          dateList.push(dateStr);
+        } else {
+          noteList.value[index].notes.push(el);
+          noteList.value[index].time.push(timeStr);
+        }
+      });
+    }
 
     onMounted(() => {
-      const dateList: Array<string> = [];
-      try {
-        if (localStorage.getItem('note-data')) {
-          noteData.value.forEach((el: Note) => {
-            console.log(el.id);
-            const date = new Date(parseInt(el.id, 10));
-            const dateStr = `${date.getFullYear()} / ${date.getMonth() + 1 > 10 ? date.getMonth() + 1 : `0${date.getMonth() + 1}`} / ${date.getDate() > 10 ? date.getDate() : `0${date.getDate()}`}`;
-            console.log(dateStr);
-            const timeStr = `${date.getHours() > 10 ? date.getHours() : `0${date.getHours()}`} : ${date.getMinutes() > 10 ? date.getMinutes() : `0${date.getMinutes()}`}`;
-            const index = dateList.indexOf(dateStr);
-            if (index === -1) {
-              noteList.value.push({
-                date: dateStr,
-                notes: [el],
-                time: [timeStr],
-              });
-              dateList.push(dateStr);
-            } else {
-              noteList.value[index].notes.push(el);
-              noteList.value[index].time.push(timeStr);
-            }
-          });
-        }
-      } catch (e) {
-        noteList.value = [];
-      }
+      getNotelist(noteData.value);
+    });
+
+    watch(noteData, (newVal, oldVal) => {
+      getNotelist(noteData.value);
     });
 
     function openFilter() {
@@ -235,12 +236,12 @@ export default defineComponent({
     }
     align-items: flex-start;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
+    margin-bottom: 24px;
     margin-top: 16px;
     padding: 0 16px;
     width: 100%;
-    flex-wrap: wrap;
-    margin-bottom: 24px;
   }
   > .content {
     flex-grow: 1;
@@ -274,13 +275,15 @@ export default defineComponent({
 .data-group {
   .date-wrap {
     span {
-      color: $secondary;
+      color: $primary;
       font-size: 22px;
       font-weight: bold;
     }
-    border: 1px solid $secondary;
-    width: 156px;
+    // border: 1px solid $secondary;
+    background-color: $secondary;
+    border-radius: 6px;
     margin-bottom: 12px;
+    padding: 4px 16px;
   }
   .note-list {
     > li {

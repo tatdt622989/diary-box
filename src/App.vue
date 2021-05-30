@@ -1,8 +1,8 @@
 <template>
   <router-view/>
   <Toast></Toast>
-  <Login></Login>
-  <Register></Register>
+  <PointNotification></PointNotification>
+  <Loading></Loading>
 </template>
 
 <script lang="ts">
@@ -16,15 +16,15 @@ import {
 } from 'vue';
 import { useStore } from 'vuex';
 import Toast from '@/components/Toast.vue';
-import Register from '@/components/Register.vue';
-import Login from '@/components/Login.vue';
+import PointNotification from '@/components/PointNotification.vue';
+import Loading from '@/components/Loading.vue';
 
 export default defineComponent({
   name: 'app',
   components: {
     Toast,
-    Login,
-    Register,
+    PointNotification,
+    Loading,
   },
   setup() {
     const store = useStore();
@@ -32,14 +32,6 @@ export default defineComponent({
     store.dispatch('getModelFormat');
 
     onMounted(() => {
-      try {
-        if (localStorage.getItem('note-data')) {
-          store.commit('getNoteData', JSON.parse(localStorage.getItem('note-data') as string));
-        }
-      } catch (e) {
-        localStorage.settItem('note-data', []);
-        store.commit('getNoteData', []);
-      }
       store.commit('getHeight');
       window.addEventListener('resize', () => {
         store.commit('getHeight');

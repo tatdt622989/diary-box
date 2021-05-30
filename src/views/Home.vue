@@ -3,7 +3,7 @@
     <div class="status">
       <div class="currency">
         <span>{{
-          store.state.userData ? store.state.userData.balance : 0
+          store.state.userData.pointInfo.balance
         }}</span>
         <img src="@/assets/images/currency.svg" />
       </div>
@@ -102,7 +102,7 @@ import {
   defineComponent,
   onMounted,
   computed,
-  watchEffect,
+  watch,
   onUnmounted,
 } from 'vue';
 import { Modal } from 'bootstrap';
@@ -137,6 +137,8 @@ export default defineComponent({
     const lastestNoteData = ref<Array<Note>>([]);
     const selectLastestNodeData = ref<Note | null>(null);
     const img = ref('');
+    const noteData = computed(() => store.state.userData.noteData);
+    const userData = computed(() => store.state.userData);
     let renderer: THREE.WebGLRenderer | null;
     const scene = new THREE.Scene();
     let controls: MapControls;
@@ -173,14 +175,15 @@ export default defineComponent({
     }
 
     function getNote() {
-      const data = store.state.noteData;
-      if (data.length > 0) {
-        const lastestDayTime = data[data.length - 1].id - (data[data.length - 1].id % 100000);
+      console.log(noteData.value, 'get note');
+      if (noteData.value.length > 0) {
+        const lastestDayTime = noteData.value[noteData.value.length - 1].id
+          - (noteData.value[noteData.value.length - 1].id % 100000);
         console.log(lastestDayTime);
         let i = 0;
-        while (i < data.length) {
-          if (data[i].id > lastestDayTime) {
-            lastestNoteData.value.splice(0, 0, data[i]);
+        while (i < noteData.value.length) {
+          if (noteData.value[i].id > lastestDayTime) {
+            lastestNoteData.value.splice(0, 0, noteData.value[i]);
           }
           i += 1;
         }
@@ -188,9 +191,12 @@ export default defineComponent({
       }
     }
 
-    watchEffect(() => {
-      getNote();
-    });
+    watch(
+      noteData,
+      (newVal, oldVal) => {
+        getNote();
+      },
+    );
 
     onMounted(() => {
       canvas = document.getElementById('mainScene') as HTMLCanvasElement;
@@ -392,9 +398,9 @@ export default defineComponent({
       screenShotModal,
       isMenuOpen: computed(() => store.state.isMenuOpen),
       lastestNoteDate: computed(() => {
-        const len = store.state.noteData.length;
+        const len = noteData.value.length;
         const date = len > 0
-          ? new Date(Number(store.state.noteData[len - 1].id)) : null;
+          ? new Date(Number(noteData.value[len - 1].id)) : null;
         if (date) {
           return `${date.getFullYear()} - ${date.getMonth() + 1} - ${date.getDate()}`;
         }
@@ -406,6 +412,7 @@ export default defineComponent({
       isNoteOpen,
       downloadImg,
       shareImg,
+      userData,
       menuToggler: () => store.commit('menuToggler', true),
       img,
       enterFullScreen,

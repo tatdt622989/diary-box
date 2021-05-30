@@ -33,7 +33,6 @@ export default createStore({
   state: {
     isMenuOpen: false as boolean,
     height: '' as string,
-    noteData: [] as Array<Note>,
     toastMsgList: [] as Array<ToastMSG>,
     previewModel: '',
     defaultModelData: {
@@ -54,7 +53,18 @@ export default createStore({
     userInfo: null as null | firebase.User,
     formHint: '' as string,
     modal: null as null | Modal,
-    userData: null as null | UserData,
+    userData: {
+      modelData: [],
+      noteData: [] as Array<Note>,
+      name: '',
+      pointInfo: {
+        balance: 0,
+      },
+      email: '',
+    } as UserData,
+    dataLoaded: false,
+    getPoint: null,
+    loadingStr: '',
   },
   mutations: {
     menuToggler(state, data) {
@@ -63,20 +73,8 @@ export default createStore({
     getHeight(state) {
       state.height = `${window.innerHeight}px`;
     },
-    getNoteData(state, data) {
-      state.noteData = data;
-    },
-    updateNote(state, data) {
-      const idList = state.noteData.map((el) => el.id);
-      const idIndex: number = idList.indexOf(data.id);
-      if (idIndex === -1) {
-        state.noteData.push(data);
-        localStorage.setItem('note-data', JSON.stringify(state.noteData));
-      } else {
-        state.noteData[idIndex] = data;
-        localStorage.setItem('note-data', JSON.stringify(state.noteData));
-      }
-    },
+    // updateNote(state, data) {
+    // },
     addToast(state, data) {
       state.toastMsgList.push(data);
     },
@@ -102,6 +100,9 @@ export default createStore({
         case 'login':
           el = document.getElementById('loginModal');
           break;
+        case 'pointNotification':
+          el = document.getElementById('pointNotificationModal');
+          break;
         default:
           break;
       }
@@ -113,25 +114,42 @@ export default createStore({
     updateFormHint(state, data) {
       state.formHint = data;
     },
+    resetUserData(state) {
+      state.userData = {
+        modelData: [],
+        noteData: [],
+        name: '',
+        pointInfo: {},
+        email: '',
+      };
+    },
+    updateDataLoadStatus(state, data) {
+      state.dataLoaded = data;
+    },
+    updateNoteData(state, data) {
+      state.userData.noteData = data;
+    },
+    updateGetPoint(state, data) {
+      state.getPoint = data;
+    },
   },
   actions: {
-    updateToast({ commit }, data) {
+    updateToast({ commit, state }, data) {
       commit('addToast', data);
       setTimeout(() => {
         commit('removeToast');
       }, 3000);
     },
-    updateUserInfo({ state, commit, dispatch }) {
+    async updateUserInfo({ state, commit, dispatch }) {
       firebase.auth().onAuthStateChanged((user) => {
         console.log('登入狀態改變', user);
         if (user) {
           state.userInfo = user;
-          dispatch('getUserData');
-          dispatch('updateToast', {
-            type: 'success',
-            content: '登入成功',
+          dispatch('getUserData').then(() => {
+            state.dataLoaded = true;
           });
         } else {
+          commit('resetUserData');
           state.userInfo = null;
         }
         if (state.modal) {
@@ -145,23 +163,15 @@ export default createStore({
         case 'google':
           firebase.auth().signInWithPopup(provider)
             .then((result) => {
-              /** @type {firebase.auth.OAuthCredential} */
-              const { credential } = result;
-              // This gives you a Google Access Token. You can use it to access the Google API.
-              const token = (result as any).credential.accessToken;
-              // The signed-in user info.
-              // const { user } = result;
-              // console.log(token, user, credential);
               dispatch('updateUserInfo');
             })
             .catch((error) => {
               // Handle Errors here.
-              const errorCode = error.code;
               const errorMessage = error.message;
-              // The email of the user's account used.
-              const { email } = error;
-              // The firebase.auth.AuthCredential type that was used.
-              const { credential } = error;
+              dispatch('updateToast', {
+                type: 'error',
+                content: errorMessage,
+              });
             });
           break;
         case 'email':
@@ -192,8 +202,11 @@ export default createStore({
               dispatch('updateUserInfo');
             })
             .catch((error) => {
-              const errorCode = error.code;
               const errorMessage = error.message;
+              dispatch('updateToast', {
+                type: 'error',
+                content: errorMessage,
+              });
             });
           break;
         default:
@@ -255,8 +268,8 @@ export default createStore({
           type: 'success',
           content: '登出成功',
         });
+        commit('resetUserData');
         state.userInfo = null;
-        state.userData = null;
         commit('menuToggler', false);
       }).catch((err) => {
         dispatch('updateToast', {
@@ -266,12 +279,11 @@ export default createStore({
       });
     },
     async getUserData({ dispatch, commit, state }) {
+      console.log('取得使用者資料');
       if (state.userInfo) {
         await db.ref(`/users/${state.userInfo.uid}`).once('value', async (snapshot) => {
-          const userData = snapshot.val();
-          if (userData) {
-            state.userData = userData;
-          } else {
+          let userData = snapshot.val();
+          if (!userData) {
             let displayName;
             if (state.userInfo?.isAnonymous) {
               displayName = '訪客';
@@ -282,19 +294,43 @@ export default createStore({
             await newUserFormat({ displayName }).then((res) => {
               console.log('資料取得完畢', res);
               if (res.data.userData) {
-                state.userData = res.data.userData;
+                userData = res.data.userData;
               }
             });
           }
+          state.userData.modelData = userData.modelData;
+          state.userData.name = userData.name;
+          state.userData.pointInfo = userData.pointInfo;
+          state.userData.email = userData.email;
+          state.userData.noteData = userData.noteData ? userData.noteData : [];
         });
         commit('menuToggler', false);
       }
+      return false;
     },
-    getPoint({ commit, state }) {
+    getPoint({ dispatch, commit, state }) {
       const getPoint = firebase.functions().httpsCallable('getPoint');
       getPoint().then((res) => {
         console.log(res);
+        if (res.data && res.data.status === 'ok') {
+          commit('openModal', 'pointNotification');
+          commit('updateGetPoint', res.data.point);
+        }
       });
+    },
+    async updateNoteData({ commit, state, dispatch }, data) {
+      const noteData = [...state.userData.noteData];
+      if (state.userInfo) {
+        switch (data.type) {
+          case 'add':
+            noteData.push(data.data);
+            break;
+          default:
+            break;
+        }
+        await db.ref(`/users/${state.userInfo.uid}/noteData`).set(noteData);
+        commit('updateNoteData', noteData);
+      }
     },
   },
   modules: {

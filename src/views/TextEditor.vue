@@ -9,7 +9,7 @@
       <button class="btn-circle" @click="$router.push('/note-list')">
         <span class="material-icons">arrow_back</span>
       </button>
-      <p>{{ status === "note-add" ? "新增筆記" : "編輯筆記" }}</p>
+      <p>{{ status === "note-add" ? "新增日記" : "編輯日記" }}</p>
       <button class="btn-circle" @click="saveData">
         <span class="material-icons">check</span>
       </button>
@@ -101,7 +101,7 @@ export default defineComponent({
     const sizeList = ref<Array<string>>([]);
     const title = ref<string>('');
     const status = ref<string | null>(null);
-    const noteData = computed(() => store.state.noteData);
+    const noteData = computed(() => store.state.userData.noteData);
     let qlEditor: HTMLElement | null = null;
     let noteId: string | null = null;
 
@@ -172,13 +172,14 @@ export default defineComponent({
           });
           router.push('/note-list');
         } else if (status.value === 'note-add') {
-          store.dispatch('updateToast', {
-            type: 'success',
-            content: '成功新增',
+          store.dispatch('updateNoteData', {
+            type: 'add',
+            data,
           });
+          router.push('/note-list');
           store.dispatch('getPoint');
         }
-        store.commit('updateNote', data);
+        // store.commit('updateNote', data);
       }
     }
 

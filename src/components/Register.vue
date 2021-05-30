@@ -22,17 +22,19 @@
         </div>
         <div class="modal-body">
           <form action="">
-            <div class="mb-3">
-            <input
-              type="text"
-              class="form-control"
-              id="userNameInput"
-              placeholder="請輸入名稱"
-              v-model="userName"
-              autocomplete="on"
-            />
+            <div class="mb-3 position-relative">
+              <span class="material-icons">account_circle</span>
+              <input
+                type="text"
+                class="form-control"
+                id="userNameInput"
+                placeholder="請輸入名稱"
+                v-model="userName"
+                autocomplete="on"
+              />
             </div>
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
+              <span class="material-icons">email</span>
               <input
                 type="email"
                 class="form-control"
@@ -42,7 +44,8 @@
                 autocomplete="on"
               />
             </div>
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
+              <span class="material-icons">lock</span>
               <input
                 type="password"
                 class="form-control"
@@ -56,11 +59,8 @@
           <p class="hint">{{ formHint }}</p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" @click="register">註冊</button>
-          <hr>
-          <button class="google-login-btn" @click="login">
-              <img src="@/assets/images/google-icon.svg">
-              <span>Google登入</span>
+          <button type="button" class="btn btn-primary" @click="register">
+            註冊
           </button>
         </div>
       </div>
@@ -100,12 +100,7 @@ export default defineComponent({
       return false;
     }
 
-    function login() {
-      store.dispatch('login', { type: 'google' });
-    }
-
     return {
-      login,
       register,
       userName,
       email,
@@ -117,36 +112,38 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-  #registerModal {
-    .modal-footer {
-      button {
-        width: 100%;
-      }
-      hr {
-        &::after{
-          background-color: $secondary;
-          color: $primary;
-          content: "或";
-          font-size: 18px;
-          font-weight: bold;
-          left: 50%;
-          padding: 0 8px;
-          position: absolute;
-          top: 50%;
-          transform: translateX(-50%) translateY(-50%);
-        }
-        background-color: $primary;
-        height: 2px;
-        margin: 20px 0;
-        position: relative;
-        width: 100%;
-        overflow: visible;
-        opacity: 1;
-      }
-      padding-top: 0;
+#registerModal.modal {
+  .modal-footer {
+    button {
+      width: 100%;
     }
+    hr {
+      &::after {
+        background-color: $secondary;
+        color: $primary;
+        content: "或";
+        font-size: 18px;
+        font-weight: bold;
+        left: 50%;
+        padding: 0 8px;
+        position: absolute;
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
+      }
+      background-color: $primary;
+      height: 2px;
+      margin: 20px 0;
+      position: relative;
+      width: 100%;
+      overflow: visible;
+      opacity: 1;
+    }
+    padding-top: 0;
   }
   input {
+    &::placeholder {
+      color: $primary;
+    }
     &:focus {
       background-color: transparent;
       color: $primary;
@@ -158,6 +155,10 @@ export default defineComponent({
     font-size: 20px;
     height: 52px;
     text-indent: 16px;
+  }
+  span.material-icons {
+    color: $primary;
+    font-size: 24px;
   }
   .hint {
     color: red;
@@ -181,4 +182,5 @@ export default defineComponent({
     height: 52px;
     justify-content: center;
   }
+}
 </style>

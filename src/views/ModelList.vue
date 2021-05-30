@@ -17,7 +17,7 @@
       v-if="view === 'Store'"
     >
       <div class="currency">
-        <span>{{ userData? userData.balance : 0 }}</span>
+        <span>{{ userData? userData.pointInfo.balance : 0 }}</span>
         <span class="material-icons">monetization_on</span>
       </div>
     </div>

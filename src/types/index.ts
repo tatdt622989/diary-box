@@ -58,8 +58,9 @@ export interface Product {
 }
 
 export interface UserData {
-  balance: number;
-  mail: string;
+  pointInfo: object;
+  email: string;
   name: string;
   modelData: Array<Model>;
+  noteData: Array<Note>;
 }
