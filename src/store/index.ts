@@ -1,6 +1,7 @@
 import {
   Model,
   Note,
+  Products,
   ToastMSG,
   UserData,
 } from '@/types';
@@ -43,12 +44,10 @@ export default createStore({
         y: 0,
         z: 0,
       },
-      style: {
-        color: null,
-      },
+      color: null,
       passive: false,
     } as Model,
-    modelFormat: null,
+    modelFormat: null as null | Products,
     firebase: null,
     userInfo: null as null | firebase.User,
     formHint: '' as string,
@@ -75,8 +74,6 @@ export default createStore({
     getHeight(state) {
       state.height = `${window.innerHeight}px`;
     },
-    // updateNote(state, data) {
-    // },
     addToast(state, data) {
       state.toastMsgList.push(data);
     },
@@ -377,6 +374,7 @@ export default createStore({
           default:
             break;
         }
+        console.log('日記存入資料庫前', noteData);
         await db.ref(`/users/${state.userInfo.uid}/noteData`).set(noteData);
         await dispatch('getNoteData');
         if (data.type === 'edit') {

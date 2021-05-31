@@ -94,29 +94,35 @@ export default defineComponent({
       }
     });
 
+    let lastTs: null | number = null;
     function login(type: string) {
-      switch (type) {
-        case 'email':
-          if (!password.value || !email.value) {
-            return store.commit('updateFormHint', '欄位不能為空');
-          }
-          if (password.value.search(/\W/g) > 0) {
-            return store.commit('updateFormHint', '不能使用特殊符號');
-          }
-          store.dispatch('login', {
-            type,
-            email: email.value,
-            password: password.value,
-          });
-          break;
-        case 'google':
-          store.dispatch('login', { type });
-          break;
-        case 'anonymous':
-          store.dispatch('login', { type });
-          break;
-        default:
-          break;
+      const ts = Date.now();
+      if (!lastTs || ts - lastTs > 5000) {
+        console.log('登入觸發');
+        switch (type) {
+          case 'email':
+            if (!password.value || !email.value) {
+              return store.commit('updateFormHint', '欄位不能為空');
+            }
+            if (password.value.search(/\W/g) > 0) {
+              return store.commit('updateFormHint', '不能使用特殊符號');
+            }
+            store.dispatch('login', {
+              type,
+              email: email.value,
+              password: password.value,
+            });
+            break;
+          case 'google':
+            store.dispatch('login', { type });
+            break;
+          case 'anonymous':
+            store.dispatch('login', { type });
+            break;
+          default:
+            break;
+        }
+        lastTs = Date.now();
       }
       return false;
     }

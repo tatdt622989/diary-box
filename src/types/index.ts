@@ -26,9 +26,7 @@ export interface Model {
     y: number;
     z: number;
   };
-  style: {
-    color: object | null;
-  },
+  color: object | null;
   isUsed: boolean;
   passive: boolean;
 }
@@ -52,6 +50,10 @@ export interface Product {
   color: object;
   displayName: string;
   price: number;
+}
+
+export interface Products {
+  [key: string]: Product;
 }
 
 export interface UserData {

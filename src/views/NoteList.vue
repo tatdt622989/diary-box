@@ -175,7 +175,8 @@ export default defineComponent({
     });
 
     watch(noteData, (newVal, oldVal) => {
-      filterKeyword.value = '';
+      console.log('日記更新');
+      getNotelist(newVal);
     });
 
     function openFilter() {
@@ -231,7 +232,7 @@ export default defineComponent({
 
     watch(isFilterOpen, (newVal) => {
       if (!newVal) {
-        filterReset();
+        filterKeyword.value = '';
       }
     });
 
