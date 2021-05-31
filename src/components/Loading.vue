@@ -6,16 +6,8 @@
     aria-labelledby="loadingModalLabel"
     aria-hidden="true"
   >
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header">
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
         <div class="modal-body">
           <img src="@/assets/images/loading.svg" alt="載入動畫" />
           <p>{{ $store.state.loadingStr }}</p>
@@ -43,4 +35,16 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+.modal-body {
+  img {
+    height: 180px;
+    margin-bottom: 20px;
+    width: 180px;
+  }
+  p {
+    color: $primary;
+    font-weight: bold;
+    font-size: 24px;
+  }
+}
 </style>

@@ -5,9 +5,6 @@ export interface Note {
   id: string;
   content: string;
   title: string;
-  modelId: string;
-  modelType: string;
-  position: number;
 }
 
 export interface ToastMSG {
@@ -58,9 +55,15 @@ export interface Product {
 }
 
 export interface UserData {
-  pointInfo: object;
+  pointInfo: PointInfo;
   email: string;
   name: string;
   modelData: Array<Model>;
   noteData: Array<Note>;
+}
+
+export interface PointInfo {
+  balance: number;
+  lastGet: string;
+  pointCounter: number;
 }

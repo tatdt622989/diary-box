@@ -59,6 +59,8 @@ export default createStore({
       name: '',
       pointInfo: {
         balance: 0,
+        lastGet: '',
+        pointCounter: 0,
       },
       email: '',
     } as UserData,
@@ -85,43 +87,38 @@ export default createStore({
         state.toastMsgList.splice(0, 1);
       }
     },
-    updateModel(state, data) {
-      // if (data.type === 'add') {
-      //   state.modelData.push(data.model);
-      // }
-    },
     openModal(state, data) {
-      let el;
       state.formHint = '';
-      switch (data) {
-        case 'register':
-          el = document.getElementById('registerModal');
-          break;
-        case 'login':
-          el = document.getElementById('loginModal');
-          break;
-        case 'pointNotification':
-          el = document.getElementById('pointNotificationModal');
-          break;
-        default:
-          break;
+      const el = document.getElementById(`${data}Modal`);
+      let backdrop: boolean | 'static' | undefined = true;
+      if (data === 'loading') {
+        backdrop = 'static';
       }
       if (el) {
-        state.modal = new Modal(el);
+        state.modal = new Modal(el, {
+          backdrop,
+        });
         state.modal.show();
       }
-    },
-    updateFormHint(state, data) {
-      state.formHint = data;
     },
     resetUserData(state) {
       state.userData = {
         modelData: [],
         noteData: [],
         name: '',
-        pointInfo: {},
+        pointInfo: {
+          balance: 0,
+          lastGet: '',
+          pointCounter: 0,
+        },
         email: '',
       };
+    },
+    updateLoadingStr(state, data) {
+      state.loadingStr = data;
+    },
+    updateFormHint(state, data) {
+      state.formHint = data;
     },
     updateDataLoadStatus(state, data) {
       state.dataLoaded = data;
@@ -129,12 +126,25 @@ export default createStore({
     updateNoteData(state, data) {
       state.userData.noteData = data;
     },
+    updateModelData(state, data) {
+      state.userData.modelData = data;
+    },
+    updateBalance(state, data) {
+      state.userData.pointInfo.balance = data;
+    },
     updateGetPoint(state, data) {
       state.getPoint = data;
     },
+    updateUserData(state, data) {
+      state.userData.modelData = data.modelData;
+      state.userData.name = data.name;
+      state.userData.pointInfo = data.pointInfo;
+      state.userData.email = data.email;
+      state.userData.noteData = data.noteData ? data.noteData : [];
+    },
   },
   actions: {
-    updateToast({ commit, state }, data) {
+    updateToast({ commit }, data) {
       commit('addToast', data);
       setTimeout(() => {
         commit('removeToast');
@@ -157,7 +167,7 @@ export default createStore({
         }
       });
     },
-    login({ dispatch, commit, state }, data) {
+    login({ dispatch, state }, data) {
       const provider = new firebase.auth.GoogleAuthProvider();
       switch (data.type) {
         case 'google':
@@ -213,13 +223,13 @@ export default createStore({
           break;
       }
     },
-    getModelFormat({ commit, state }) {
+    getModelFormat({ state }) {
       db.ref('/products').once('value', (snapshot) => {
         console.log(snapshot.val());
         state.modelFormat = snapshot.val();
       });
     },
-    async register({ commit, dispatch, state }, data) {
+    async register({ dispatch, state }, data) {
       firebase.auth().createUserWithEmailAndPassword(data.email, data.password).then((result) => {
         state.formHint = '';
         dispatch('updateToast', {
@@ -251,16 +261,32 @@ export default createStore({
       });
     },
     async buyModel({ dispatch, commit, state }, data) {
+      commit('updateLoadingStr', '購買中');
+      commit('openModal', 'loading');
       const buyModel = firebase.functions().httpsCallable('buyModel');
-      buyModel({ buyingModel: data })
-        .then((result) => {
-          console.log(result);
-          dispatch('getUserData');
-          dispatch('updateToast', {
-            type: 'success',
-            content: result.data.msg,
-          });
+      const result = await buyModel({ buyingModel: data })
+        .then((res) => {
+          console.log(res);
+          return res;
         });
+      if (result.data.status === 'ok') {
+        if (result.data.msg === '購買成功') {
+          await dispatch('getModelData');
+          await dispatch('getBalance');
+        }
+        if (state.modal) {
+          state.modal.hide();
+        }
+        dispatch('updateToast', {
+          type: 'success',
+          content: result.data.msg,
+        });
+      } else {
+        dispatch('updateToast', {
+          type: 'error',
+          content: result.data.msg,
+        });
+      }
     },
     signOut({ commit, dispatch, state }) {
       firebase.auth().signOut().then(() => {
@@ -281,29 +307,23 @@ export default createStore({
     async getUserData({ dispatch, commit, state }) {
       console.log('取得使用者資料');
       if (state.userInfo) {
-        await db.ref(`/users/${state.userInfo.uid}`).once('value', async (snapshot) => {
-          let userData = snapshot.val();
-          if (!userData) {
-            let displayName;
-            if (state.userInfo?.isAnonymous) {
-              displayName = '訪客';
-            } else {
-              displayName = state.userInfo?.displayName;
-            }
-            const newUserFormat = firebase.functions().httpsCallable('newUserFormat');
-            await newUserFormat({ displayName }).then((res) => {
-              console.log('資料取得完畢', res);
-              if (res.data.userData) {
-                userData = res.data.userData;
-              }
-            });
+        let userData = await db.ref(`/users/${state.userInfo.uid}`).once('value').then((snapshot) => snapshot.val());
+        if (!userData) {
+          let displayName;
+          if (state.userInfo?.isAnonymous) {
+            displayName = '訪客';
+          } else {
+            displayName = state.userInfo?.displayName;
           }
-          state.userData.modelData = userData.modelData;
-          state.userData.name = userData.name;
-          state.userData.pointInfo = userData.pointInfo;
-          state.userData.email = userData.email;
-          state.userData.noteData = userData.noteData ? userData.noteData : [];
-        });
+          const newUserFormat = firebase.functions().httpsCallable('newUserFormat');
+          await newUserFormat({ displayName }).then((res) => {
+            console.log('資料取得完畢', res);
+            if (res.data.userData) {
+              userData = res.data.userData;
+            }
+          });
+        }
+        commit('updateUserData', userData);
         commit('menuToggler', false);
       }
       return false;
@@ -311,24 +331,82 @@ export default createStore({
     getPoint({ dispatch, commit, state }) {
       const getPoint = firebase.functions().httpsCallable('getPoint');
       getPoint().then((res) => {
+        if (state.modal) {
+          state.modal.hide();
+        }
         console.log(res);
         if (res.data && res.data.status === 'ok') {
-          commit('openModal', 'pointNotification');
-          commit('updateGetPoint', res.data.point);
+          if (res.data.point > 0) {
+            commit('openModal', 'pointNotification');
+            commit('updateGetPoint', res.data.point);
+            dispatch('getBalance');
+          } else {
+            dispatch('updateToast', {
+              type: 'error',
+              content: res.data.msg,
+            });
+          }
         }
+      }).catch((err) => {
+        dispatch('updateToast', {
+          type: 'error',
+          content: err,
+        });
       });
     },
     async updateNoteData({ commit, state, dispatch }, data) {
-      const noteData = [...state.userData.noteData];
+      let { noteData } = state.userData;
+      console.log('note 更新', data, noteData);
       if (state.userInfo) {
         switch (data.type) {
           case 'add':
+            commit('openModal', 'loading');
+            commit('updateLoadingStr', '資料上傳中');
             noteData.push(data.data);
+            break;
+          case 'edit':
+            noteData.forEach((el: Note, i: number) => {
+              if (el.id === data.data.id) {
+                noteData[i] = data.data;
+              }
+            });
+            break;
+          case 'delete':
+            noteData = noteData.filter((el: Note) => el.id !== data.id);
             break;
           default:
             break;
         }
         await db.ref(`/users/${state.userInfo.uid}/noteData`).set(noteData);
+        await dispatch('getNoteData');
+        if (data.type === 'edit') {
+          dispatch('updateToast', {
+            type: 'success',
+            content: '編輯成功',
+          });
+        } else if (data.type === 'delete') {
+          dispatch('updateToast', {
+            type: 'success',
+            content: '刪除成功',
+          });
+        }
+      }
+    },
+    async getBalance({ commit, state }) {
+      if (state.userInfo) {
+        const balance = await db.ref(`/users/${state.userInfo.uid}/pointInfo/balance`).once('value').then((snap) => snap.val());
+        commit('updateBalance', balance);
+      }
+    },
+    async getNoteData({ commit, state }) {
+      if (state.userInfo) {
+        const noteData = await db.ref(`/users/${state.userInfo.uid}/noteData`).once('value').then((snap) => snap.val());
+        commit('updateNoteData', noteData);
+      }
+    },
+    async getModelData({ commit, state }) {
+      if (state.userInfo) {
+        const noteData = await db.ref(`/users/${state.userInfo.uid}/modelData`).once('value').then((snap) => snap.val());
         commit('updateNoteData', noteData);
       }
     },

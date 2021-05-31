@@ -11,17 +11,19 @@
         <div class="modal-header">
           <button
             type="button"
-            class="btn-close"
+            class="btn btn-circle close"
             data-bs-dismiss="modal"
             aria-label="Close"
-          ></button>
+          >
+            <span class="material-icons">close</span>
+          </button>
         </div>
         <div class="modal-body">
           <img src="@/assets/images/currency.svg">
           <span
             >獲得{{ $store.state.getPoint }}日記幣！</span
           >
-          <span class="">持續保持寫日記的習慣獲得更多日記幣！</span>
+          <span class="">保持寫日記的習慣獲得更多日記幣！</span>
         </div>
       </div>
     </div>
@@ -44,6 +46,10 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+.modal-header {
+  display: flex;
+  justify-content: flex-end;
+}
 .modal-body {
   img {
     height: 90px;
@@ -61,7 +67,6 @@ export default defineComponent({
   }
   span {
     &:last-child {
-      font-weight: normal;
       font-size: 20px;
     }
     color: $primary;

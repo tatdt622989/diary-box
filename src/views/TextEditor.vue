@@ -166,9 +166,9 @@ export default defineComponent({
           title: title.value,
         };
         if (status.value === 'note-edit') {
-          store.dispatch('updateToast', {
-            type: 'success',
-            content: '成功編輯',
+          store.dispatch('updateNoteData', {
+            type: 'edit',
+            data,
           });
           router.push('/note-list');
         } else if (status.value === 'note-add') {

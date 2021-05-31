@@ -2,7 +2,10 @@
   <div
     class="main-wrap node-list-wrap menu-layout"
     :style="{ height }"
-    @click="selectedMenu = []"
+    @click="
+      selectedMenu = [];
+      isFilterOpen = false;
+    "
   >
     <Navbar></Navbar>
     <div class="header">
@@ -13,11 +16,19 @@
           <img src="@/assets/images/currency-reverse.svg" alt="" />
         </div>
       </div>
-      <button class="btn-circle" @click="openFilter">
+      <button class="btn-circle" @click.stop="openFilter">
         <span class="material-icons">filter_alt</span>
       </button>
     </div>
     <div class="content scroll-bar" @click="isFilterOpen = false">
+      <div v-if="searchingWord">
+        <p class="search-result">
+          搜尋"&nbsp;&nbsp;<span>{{ searchingWord }}</span>&nbsp;&nbsp;"結果
+        </p>
+        <button>
+          <span class="materail-icons">close</span>
+        </button>
+      </div>
       <div class="data-group" v-for="(item, i) in noteList" :key="i">
         <div class="date-wrap">
           <span>{{ item.date }}</span>
@@ -45,22 +56,20 @@
               v-if="selectedMenu[0] === i && selectedMenu[1] === n"
             >
               <li>
-                <button @click="editNote(item)">查看</button>
+                <button @click="editNote(item)">編輯</button>
               </li>
               <li>
                 <button>預覽</button>
               </li>
               <li>
-                <button>刪除</button>
+                <button @click="deleteNote(item.id)">刪除</button>
               </li>
             </ul>
           </li>
         </ul>
       </div>
       <div class="default" v-if="noteList.length === 0">
-        <span class="material-icons">
-          playlist_add
-        </span>
+        <span class="material-icons"> playlist_add </span>
         還沒有日記喔！
       </div>
     </div>
@@ -68,28 +77,38 @@
       <span class="material-icons">add</span>
       <span>新增日記</span>
     </button>
-    <div class="filter-wrap" :class="{ active: isFilterOpen }">
+    <div class="filter-wrap" :class="{ active: isFilterOpen }" @click.stop>
       <p>搜尋</p>
       <button class="close-btn" @click="isFilterOpen = false">
         <span class="material-icons">close</span>
       </button>
-      <input type="search" />
-      <hr />
-      <p>類型</p>
-      <div class="btn-group">
-        <button class="btn-rectangle">建立日期</button>
-        <button class="btn-rectangle">修改日期</button>
-      </div>
+      <input type="search" v-model="filterKeyword" />
       <hr />
       <p>排序</p>
       <div class="btn-group">
-        <button class="btn-rectangle">新到舊</button>
-        <button class="btn-rectangle">舊到新</button>
+        <button
+          class="btn-rectangle"
+          :class="{ active: filterSort === 'new->old' }"
+          @click="filterSort = 'new->old'"
+        >
+          新到舊
+        </button>
+        <button
+          class="btn-rectangle"
+          :class="{ active: filterSort === 'old->new' }"
+          @click="filterSort = 'old->new'"
+        >
+          舊到新
+        </button>
       </div>
       <hr />
       <div class="btn-group status-group">
-        <button class="btn-rectangle cancel-btn">取消</button>
-        <button class="btn-rectangle apply-btn">套用</button>
+        <button class="btn-rectangle cancel-btn" @click="filterReset">
+          取消
+        </button>
+        <button class="btn-rectangle apply-btn" @click="filterApply">
+          套用
+        </button>
       </div>
     </div>
   </div>
@@ -121,16 +140,21 @@ export default defineComponent({
     const noteList = ref<Array<NoteList>>([]);
     const selectedMenu = ref<Array<string>>([]);
     const noteData = computed(() => store.state.userData.noteData);
+    const filterSort = ref('new->old');
+    const tempFilterSort = ref('new->old');
+    const filterKeyword = ref<string>('');
+    const searchingWord = ref<string>('');
 
     function getNotelist(data: Array<Note>) {
+      noteList.value = [];
       console.log('取得日記顯示列表');
       const dateList: Array<string> = [];
       data.forEach((el: Note) => {
         console.log(el.id);
         const date = new Date(parseInt(el.id, 10));
-        const dateStr = `${date.getFullYear()} / ${date.getMonth() + 1 > 10 ? date.getMonth() + 1 : `0${date.getMonth() + 1}`} / ${date.getDate() > 10 ? date.getDate() : `0${date.getDate()}`}`;
+        const dateStr = `${date.getFullYear()} / ${date.getMonth() + 1 >= 10 ? date.getMonth() + 1 : `0${date.getMonth() + 1}`} / ${date.getDate() >= 10 ? date.getDate() : `0${date.getDate()}`}`;
         console.log(dateStr);
-        const timeStr = `${date.getHours() > 10 ? date.getHours() : `0${date.getHours()}`} : ${date.getMinutes() > 10 ? date.getMinutes() : `0${date.getMinutes()}`}`;
+        const timeStr = `${date.getHours() >= 10 ? date.getHours() : `0${date.getHours()}`} : ${date.getMinutes() >= 10 ? date.getMinutes() : `0${date.getMinutes()}`}`;
         const index = dateList.indexOf(dateStr);
         if (index === -1) {
           noteList.value.push({
@@ -151,7 +175,7 @@ export default defineComponent({
     });
 
     watch(noteData, (newVal, oldVal) => {
-      getNotelist(noteData.value);
+      filterKeyword.value = '';
     });
 
     function openFilter() {
@@ -174,14 +198,57 @@ export default defineComponent({
       });
     }
 
+    function deleteNote(id: string) {
+      store.dispatch('updateNoteData', {
+        type: 'delete',
+        id,
+      });
+      selectedMenu.value = [];
+    }
+
+    function filterApply() {
+      let filteredNoteData = JSON.parse(JSON.stringify(noteData.value));
+      if (filterKeyword.value !== '') {
+        filteredNoteData = filteredNoteData.filter((note: Note) => note.title.search(
+          filterKeyword.value,
+        ) >= 0);
+      }
+      if (filterSort.value === 'old->new') {
+        filteredNoteData = filteredNoteData.reverse();
+      }
+      console.log(filteredNoteData, filterKeyword.value);
+      getNotelist(filteredNoteData);
+      tempFilterSort.value = filterSort.value;
+      searchingWord.value = filterKeyword.value;
+      isFilterOpen.value = false;
+    }
+
+    function filterReset() {
+      tempFilterSort.value = filterSort.value;
+      filterKeyword.value = '';
+      isFilterOpen.value = false;
+    }
+
+    watch(isFilterOpen, (newVal) => {
+      if (!newVal) {
+        filterReset();
+      }
+    });
+
     return {
       createNote,
+      deleteNote,
       editNote,
+      filterApply,
+      filterKeyword,
+      filterReset,
+      filterSort,
       height: computed(() => store.state.height),
       isFilterOpen,
       noteList,
       openFilter,
       selectedMenu,
+      searchingWord,
     };
   },
 });
@@ -248,6 +315,16 @@ export default defineComponent({
     padding: 0px 16px 0px 16px;
     width: 100%;
     overflow-y: auto;
+  }
+  .search-result {
+    span {
+      font-weight: bold;
+    }
+    color: $secondary;
+    font-size: 20px;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 20px;
   }
   align-items: center;
   display: flex;
@@ -375,6 +452,10 @@ export default defineComponent({
   }
   .btn-group {
     button {
+      &.active {
+        background: $primary;
+        color: $secondary;
+      }
       &:first-child {
         margin-right: 20px;
       }
@@ -420,8 +501,8 @@ export default defineComponent({
   }
   background-color: $secondary;
   border-radius: 20px 20px 0 0;
-  bottom: -540px;
-  height: 540px;
+  bottom: -400px;
+  height: 400px;
   padding: 24px 28px 25px 28px;
   position: absolute;
   text-align: left;

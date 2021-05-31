@@ -165,6 +165,9 @@ button {
       font-size: 20px;
     }
     .close {
+      &:hover {
+        background: $tertiary;
+      }
       span {
         color: $primary;
         font-size: 36px;
@@ -178,6 +181,7 @@ button {
       position: relative;
       right: -8px;
       width: 52px;
+      transition: $t-base;
     }
     border: 0;
     height: 69px;

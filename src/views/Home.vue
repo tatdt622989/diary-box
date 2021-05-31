@@ -43,10 +43,10 @@
             <span class="material-icons">close</span>
           </button>
         </div>
-        <p class="date">{{ lastestNoteDate }}</p>
+        <p class="date">{{ noteDate }}</p>
         <div
-          v-html="selectLastestNodeData.content"
-          v-if="selectLastestNodeData"
+          v-html="lastestNoteData.length > 0 ? lastestNoteData[0].content : ''"
+          v-if="lastestNoteData"
         ></div>
       </div>
       <button class="toggler" @click="isNoteOpen = !isNoteOpen">
@@ -135,7 +135,6 @@ export default defineComponent({
       ? store.state.userData.modelData : [store.state.defaultModelData]);
     const isNoteOpen = ref<boolean>(false);
     const lastestNoteData = ref<Array<Note>>([]);
-    const selectLastestNodeData = ref<Note | null>(null);
     const img = ref('');
     const noteData = computed(() => store.state.userData.noteData);
     const userData = computed(() => store.state.userData);
@@ -177,17 +176,12 @@ export default defineComponent({
     function getNote() {
       console.log(noteData.value, 'get note');
       if (noteData.value.length > 0) {
-        const lastestDayTime = noteData.value[noteData.value.length - 1].id
-          - (noteData.value[noteData.value.length - 1].id % 100000);
-        console.log(lastestDayTime);
-        let i = 0;
-        while (i < noteData.value.length) {
-          if (noteData.value[i].id > lastestDayTime) {
-            lastestNoteData.value.splice(0, 0, noteData.value[i]);
-          }
-          i += 1;
-        }
-        [selectLastestNodeData.value] = lastestNoteData.value;
+        const lastestDateTs = noteData.value[noteData.value.length - 1].id;
+        const lastestDayStartTs = lastestDateTs - (lastestDateTs % 100000);
+        console.log(lastestDayStartTs, lastestDateTs);
+        lastestNoteData.value = noteData.value.filter(
+          (note: Note) => Number(note.id) > lastestDayStartTs,
+        );
       }
     }
 
@@ -199,6 +193,7 @@ export default defineComponent({
     );
 
     onMounted(() => {
+      getNote();
       canvas = document.getElementById('mainScene') as HTMLCanvasElement;
       renderer = new THREE.WebGLRenderer({
         antialias: false,
@@ -397,7 +392,8 @@ export default defineComponent({
       store,
       screenShotModal,
       isMenuOpen: computed(() => store.state.isMenuOpen),
-      lastestNoteDate: computed(() => {
+      lastestNoteData,
+      noteDate: computed(() => {
         const len = noteData.value.length;
         const date = len > 0
           ? new Date(Number(noteData.value[len - 1].id)) : null;
@@ -406,7 +402,6 @@ export default defineComponent({
         }
         return '';
       }),
-      selectLastestNodeData,
       openModal,
       createNote,
       isNoteOpen,
@@ -560,6 +555,7 @@ export default defineComponent({
       color: $primary;
       border: 2px solid $primary;
       padding: 0 20px;
+      margin-bottom: 32px;
     }
     align-items: center;
     background-color: $secondary;
