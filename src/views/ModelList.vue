@@ -147,7 +147,13 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Navbar from '@/components/Navbar.vue';
 import FunctionBar from '@/components/FunctionBar.vue';
-import { SceneData, Model, Product } from '@/types';
+import {
+  SceneData,
+  Model,
+  Product,
+  ModelColor,
+  LoadedModel,
+} from '@/types';
 import { Modal } from 'bootstrap';
 
 export default defineComponent({
@@ -179,7 +185,6 @@ export default defineComponent({
       price: 0,
     });
     let firstLoad = true;
-    const loadedModel = [];
     const modelFormat = computed(() => store.state.modelFormat);
     let modal: Modal;
 
@@ -260,31 +265,62 @@ export default defineComponent({
       console.log(modelLen);
       let i = 0;
       const loadResult: Array<Promise<SceneData>> = [];
+      const loadedModel: LoadedModel = {};
+      /**
+       * 模型樣式載入
+       */
+      function modelStyling(obj: THREE.Object3D,
+        color: ModelColor | null, colorKeys: Array<string> | null) {
+        const model = obj;
+        model.traverse((object) => {
+          if (object instanceof THREE.Mesh) {
+            const mesh = object;
+            mesh.castShadow = true;
+            if (color && colorKeys) {
+              if (colorKeys.indexOf(object.name) >= 0) {
+                mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
+              }
+            }
+          }
+        });
+        console.log(model);
+        model.castShadow = true;
+        model.position.set(model.position.x, model.position.y, model.position.z);
+        model.receiveShadow = false;
+      }
       while (i < modelLen) {
         const el = document.getElementById(`scene${i}`) as HTMLElement;
         console.log(el);
         const sceneData: SceneData = createScene(el);
-        loadedModel.push();
         const { name } = models.value[i];
+        const { color } = models.value[i];
+        let colorKeys: Array<string> | null = null;
+        if (color) {
+          colorKeys = Object.keys(color);
+        }
         const asyncLoad = (index: number) => new Promise<SceneData>((resolve) => {
-          loader.load(
-            `${publicPath.value}model/${name}.gltf`,
-            (gltf) => {
-              const model = gltf.scene.children[0];
-              console.log(model);
-              model.castShadow = true;
-              model.position.set(0, 0, 0);
-              model.receiveShadow = false;
-              sceneData.scene.add(model);
-              resolve(sceneData);
-            },
-            (xhr) => {
-              console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
-            },
-            (error) => {
-              console.log('An error happened');
-            },
-          );
+          if (!loadedModel[name]) {
+            loader.load(
+              `${publicPath.value}model/${name}.gltf`,
+              (gltf) => {
+                const model = gltf.scene.children[0];
+                console.log(model);
+                modelStyling(model, (color as ModelColor | null), colorKeys);
+                sceneData.scene.add(model);
+                resolve(sceneData);
+              },
+              (xhr) => {
+                console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
+              },
+              (error) => {
+                console.log('An error happened');
+              },
+            );
+          } else {
+            const model = loadedModel[name].clone();
+            modelStyling(model, (color as ModelColor | null), colorKeys);
+            sceneData.scene.add(model);
+          }
         });
         loadResult.push(asyncLoad(i));
         i += 1;
@@ -455,7 +491,7 @@ export default defineComponent({
         name: 'ModelEditor',
         params: {
           index,
-          status: 'edit',
+          status: 'old',
         },
       });
     }

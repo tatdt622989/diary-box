@@ -65,6 +65,7 @@ import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { Object3D, Vector3 } from 'three';
+import getModelPostion from '@/utils/getModelPosition';
 
 export default defineComponent({
   name: 'ModelEditor',
@@ -305,7 +306,13 @@ export default defineComponent({
               }
             });
             model.castShadow = true;
-            model.position.set(data.position.x, data.position.y, data.position.z);
+            if (modelLen > 1) {
+              const groups = scene.children.filter((obj) => obj.type === 'Group');
+              const pos = getModelPostion(model, groups);
+              model.position.set(pos.x, pos.y, pos.z);
+            } else {
+              model.position.set(data.position.x, data.position.y, data.position.z);
+            }
             model.receiveShadow = false;
             console.log(data);
             scene.add(model);

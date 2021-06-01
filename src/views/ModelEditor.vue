@@ -76,7 +76,7 @@ export default defineComponent({
       const len = modelData.value.length;
       if (status === 'new') {
         index = len - 1;
-      } else if (status === 'edit') {
+      } else if (status === 'old') {
         index = Number(route.params.index);
       } else {
         index = 0;
@@ -144,10 +144,20 @@ export default defineComponent({
         `${publicPath.value}model/${selectedModel.value.name}.gltf`,
         (gltf) => {
           model = gltf.scene;
+          const { color } = selectedModel.value!;
+          let colorKeys: Array<string> | null = null;
+          if (color) {
+            colorKeys = Object.keys(color);
+          }
           console.log(model);
           model.traverse((object) => {
             if (object instanceof THREE.Mesh) {
               const mesh = object;
+              if (color && colorKeys) {
+                if (colorKeys.indexOf(object.name) >= 0) {
+                  mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
+                }
+              }
               mesh.castShadow = true;
             }
           });
@@ -198,7 +208,16 @@ export default defineComponent({
               type: 'success',
               content: '編輯成功',
             });
-            router.push('/model-list');
+            if (status === 'new' && selectedModel.value) {
+              router.push({
+                name: 'SceneEditor',
+                params: {
+                  target: selectedModel.value.id,
+                },
+              });
+            } else if (status === 'old') {
+              router.push('/model-list');
+            }
           }
         });
       }

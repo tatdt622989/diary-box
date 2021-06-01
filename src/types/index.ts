@@ -26,7 +26,7 @@ export interface Model {
     y: number;
     z: number;
   };
-  color: object | null;
+  color: ModelColor;
   isUsed: boolean;
   passive: boolean;
 }

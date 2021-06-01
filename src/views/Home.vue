@@ -197,7 +197,7 @@ export default defineComponent({
       },
     );
 
-    onMounted(() => {
+    onMounted(async () => {
       getNote();
       canvas = document.getElementById('mainScene') as HTMLCanvasElement;
       renderer = new THREE.WebGLRenderer({
@@ -274,12 +274,11 @@ export default defineComponent({
           }
         }
       }
-
       const loader = new GLTFLoader();
+
       const loadedModel: LoadedModel = {};
-
       const modelLen = modelData.value.length;
-
+      let onOriginalPosTimes = 0;
       /**
        * 模型樣式載入
        */
@@ -299,39 +298,58 @@ export default defineComponent({
         });
         console.log(model);
         model.castShadow = true;
+        if (model.position.x === 0 && model.position.y === 0 && model.position.z === 0) {
+          onOriginalPosTimes += 1;
+        }
         model.position.set(model.position.x, model.position.y, model.position.z);
         model.receiveShadow = false;
       }
 
-      let i = 0;
-      while (i < modelLen) {
+      async function ModelLoad(i: number) {
         const data = modelData.value[i];
+        if (onOriginalPosTimes > 1) {
+          return;
+        }
         const { color } = modelData.value[i];
         let colorKeys: Array<string> | null = null;
+        let model;
         if (color) {
           colorKeys = Object.keys(color);
         }
         if (!loadedModel[data.name]) {
-          loader.load(
-            `${publicPath.value}model/${data.name}.gltf`,
-            (gltf) => {
-              const model = gltf.scene;
-              modelStyling(model, (color as ModelColor | null), colorKeys);
-              scene.add(model);
-              render();
-            },
-            (xhr) => {
-              console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
-            },
-            (error) => {
-              console.log('An error happened');
-            },
-          );
+          model = await new Promise((resolve, reject) => {
+            loader.load(
+              `${publicPath.value}model/${data.name}.gltf`,
+              (gltf) => {
+                model = gltf.scene;
+                modelStyling(model, (color as ModelColor | null), colorKeys);
+                resolve(model);
+              },
+              (xhr) => {
+                console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
+              },
+              (error) => {
+                console.log('An error happened');
+              },
+            );
+          });
         } else {
-          modelStyling(loadedModel[data.name].clone(), (color as ModelColor | null), colorKeys);
+          model = loadedModel[data.name].clone();
+          modelStyling(model, (color as ModelColor | null), colorKeys);
         }
+        scene.add(model as Object3D);
+      }
+
+      const result = [];
+      let i = 0;
+      while (i < modelLen) {
+        result.push(ModelLoad(i));
         i += 1;
       }
+
+      Promise.all(result).then(() => {
+        render();
+      });
 
       function resize() {
         if (renderer) {

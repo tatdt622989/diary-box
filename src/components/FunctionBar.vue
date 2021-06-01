@@ -61,6 +61,7 @@
   height: 66px;
   min-height: 66px;
   width: 100%;
+  padding: 0 20px;
 }
 </style>
 

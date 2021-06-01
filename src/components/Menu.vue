@@ -26,7 +26,7 @@
             會員登入
           </button>
         </li> -->
-        <li class="t-base" v-if="userInfo">
+        <li class="t-base" v-if="userInfo && userInfo.email">
           <button @click="signOut">
             <span class="material-icons">logout</span>
             會員登出

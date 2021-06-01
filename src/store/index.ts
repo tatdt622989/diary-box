@@ -44,7 +44,7 @@ export default createStore({
         y: 0,
         z: 0,
       },
-      color: null,
+      color: {},
       passive: false,
     } as Model,
     modelFormat: null as null | Products,
