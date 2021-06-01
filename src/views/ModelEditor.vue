@@ -2,13 +2,18 @@
   <div class="model-preview-wrap">
     <ul class="tool-bar">
       <li v-for="(area, i) in selectedModelArea" :key="i">
-        <input type="color" id="area">
-        <label class="btn btn-circle" for="area">
+        <input
+          type="color"
+          :id="area"
+          v-model="modelColor[area]"
+          @input="changeModelColor"
+        />
+        <label class="btn btn-circle" :for="area">
           <span class="material-icons">palette</span>
         </label>
       </li>
       <li>
-        <button class="btn btn-circle">
+        <button class="btn btn-circle" @click="apply">
           <span class="material-icons">done</span>
         </button>
       </li>
@@ -25,6 +30,7 @@ import {
   onMounted,
   computed,
   nextTick,
+  onUnmounted,
 } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
@@ -33,7 +39,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import store from '@/store';
-import { Model, Product } from '@/types';
+import { Model, ModelColor, Product } from '@/types';
+import { Mesh, Object3D } from 'three';
 
 export default defineComponent({
   name: 'ModelEditor',
@@ -44,6 +51,7 @@ export default defineComponent({
     const router = useRouter();
     const publicPath = ref(process.env.BASE_URL);
     const selectedModel = ref<Model | null>(null);
+    const modelColor = ref<ModelColor>({});
     const modelFormat = computed(() => store.state.modelFormat);
     const modelData = computed(() => store.state.userData.modelData);
     const selectedModelArea = ref<Array<string>>([]);
@@ -53,23 +61,23 @@ export default defineComponent({
     let canvas: HTMLCanvasElement;
     const camera = new THREE.PerspectiveCamera(
       45,
-      window.innerWidth / (window.innerHeight - 66),
+      window.innerWidth / (window.innerHeight),
       0.1,
       10000,
     );
     let controls: OrbitControls;
-
     console.log(route.params);
-    // if (!route.params.status) {
-    //   router.push('/');
-    // }
     const { status } = route.params;
+    let model: THREE.Group;
+    let animation: number;
 
     onMounted(() => {
       let index: number;
       const len = modelData.value.length;
       if (status === 'new') {
         index = len - 1;
+      } else if (status === 'edit') {
+        index = Number(route.params.index);
       } else {
         index = 0;
       }
@@ -100,8 +108,8 @@ export default defineComponent({
       camera.zoom = 2;
 
       controls = new OrbitControls(camera, canvas);
-      controls.enabled = false;
       controls.target = new THREE.Vector3(0, 1.8, 0);
+      controls.enablePan = false;
       controls.update();
 
       // 燈光
@@ -119,15 +127,13 @@ export default defineComponent({
       directionalLight.position.set(-10, 20, 0);
       scene.add(pointLight);
       scene.add(directionalLight);
-      const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
-      scene.add(pointLightHelper);
 
       // 霧
       scene.fog = new THREE.Fog(0x449966, 1, 150);
 
       function render() {
         if (renderer) {
-          requestAnimationFrame(render);
+          animation = requestAnimationFrame(render);
           controls.update();
           camera.updateProjectionMatrix();
           renderer.render(scene, camera);
@@ -137,7 +143,7 @@ export default defineComponent({
       loader.load(
         `${publicPath.value}model/${selectedModel.value.name}.gltf`,
         (gltf) => {
-          const model = gltf.scene;
+          model = gltf.scene;
           console.log(model);
           model.traverse((object) => {
             if (object instanceof THREE.Mesh) {
@@ -161,9 +167,81 @@ export default defineComponent({
       );
     });
 
+    function changeModelColor() {
+      console.log('顏色更換');
+      if (model) {
+        model.traverse((object) => {
+          if (object instanceof THREE.Mesh
+            && selectedModelArea.value.indexOf(object.name) >= 0) {
+            const mesh = object;
+            const color = modelColor.value[mesh.name];
+            console.log(color);
+            if (color) {
+              mesh.material.color = new THREE.Color(color);
+            }
+          }
+        });
+      }
+    }
+
+    function apply() {
+      if (selectedModel.value) {
+        selectedModel.value.color = modelColor.value;
+        console.log(JSON.parse(JSON.stringify(selectedModel.value)));
+        store.dispatch('updateModelData', {
+          method: 'edit',
+          id: selectedModel.value.id,
+          data: JSON.parse(JSON.stringify(selectedModel.value)),
+        }).then((res) => {
+          if (res) {
+            store.dispatch('updateToast', {
+              type: 'success',
+              content: '編輯成功',
+            });
+            router.push('/model-list');
+          }
+        });
+      }
+    }
+
+    function resize() {
+      if (renderer) {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / (window.innerHeight);
+        camera.updateProjectionMatrix();
+      }
+    }
+
+    window.addEventListener('resize', resize, false);
+
+    onUnmounted(() => {
+      controls.dispose();
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          obj.geometry.dispose();
+          obj.material.dispose();
+        }
+      });
+      while (scene.children.length > 0) {
+        scene.remove(scene.children[0]);
+      }
+      if (animation) {
+        cancelAnimationFrame(animation);
+      }
+      if (renderer) {
+        renderer.dispose();
+        renderer.forceContextLoss();
+        renderer = null;
+      }
+    });
+
     return {
-      selectedModelArea,
+      apply,
+      changeModelColor,
+      modelColor,
       modelData,
+      selectedModelArea,
+      selectedModel,
     };
   },
 });
@@ -187,5 +265,13 @@ export default defineComponent({
   position: absolute;
   right: 16px;
   top: 24px;
+}
+.model-preview-wrap {
+  canvas {
+    cursor: grab;
+    display: block;
+  }
+  position: relative;
+  overflow: hidden;
 }
 </style>

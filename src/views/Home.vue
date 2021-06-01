@@ -114,7 +114,12 @@ import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import FunctionBar from '@/components/FunctionBar.vue';
 import Menu from '@/components/Menu.vue';
-import { Model, Note } from '@/types';
+import {
+  LoadedModel,
+  Model,
+  ModelColor,
+  Note,
+} from '@/types';
 import { Geometry, Object3D } from 'three';
 import screenfull from 'screenfull/dist/screenfull';
 
@@ -203,7 +208,6 @@ export default defineComponent({
       renderer.shadowMap.type = THREE.BasicShadowMap;
       renderer.setSize(window.innerWidth, window.innerHeight - 66);
 
-      // const composer = new EffectComposer(renderer);
       scene.background = new THREE.Color(0x449966);
 
       // 相機
@@ -261,8 +265,6 @@ export default defineComponent({
       function render() {
         controls.update();
         camera.updateProjectionMatrix();
-        // camera.position.set(gui.camera.pos.x, gui.camera.pos.y, gui.camera.pos.z);
-        // pointLight.position.set(gui.dLight.pos.x, gui.dLight.pos.y, gui.dLight.pos.z);
         animation = requestAnimationFrame(render);
         if (renderer) {
           renderer.render(scene, camera);
@@ -274,35 +276,60 @@ export default defineComponent({
       }
 
       const loader = new GLTFLoader();
+      const loadedModel: LoadedModel = {};
 
       const modelLen = modelData.value.length;
+
+      /**
+       * 模型樣式載入
+       */
+      function modelStyling(obj: THREE.Object3D,
+        color: ModelColor | null, colorKeys: Array<string> | null) {
+        const model = obj;
+        model.traverse((object) => {
+          if (object instanceof THREE.Mesh) {
+            const mesh = object;
+            mesh.castShadow = true;
+            if (color && colorKeys) {
+              if (colorKeys.indexOf(object.name) >= 0) {
+                mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
+              }
+            }
+          }
+        });
+        console.log(model);
+        model.castShadow = true;
+        model.position.set(model.position.x, model.position.y, model.position.z);
+        model.receiveShadow = false;
+      }
+
       let i = 0;
       while (i < modelLen) {
         const data = modelData.value[i];
-        loader.load(
-          `${publicPath.value}model/${data.name}.gltf`,
-          (gltf) => {
-            const model = gltf.scene;
-            model.traverse((object) => {
-              if (object instanceof THREE.Mesh) {
-                const mesh = object;
-                mesh.castShadow = true;
-              }
-            });
-            console.log(model);
-            model.castShadow = true;
-            model.position.set(model.position.x, model.position.y, model.position.z);
-            model.receiveShadow = false;
-            scene.add(model);
-            render();
-          },
-          (xhr) => {
-            console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
-          },
-          (error) => {
-            console.log('An error happened');
-          },
-        );
+        const { color } = modelData.value[i];
+        let colorKeys: Array<string> | null = null;
+        if (color) {
+          colorKeys = Object.keys(color);
+        }
+        if (!loadedModel[data.name]) {
+          loader.load(
+            `${publicPath.value}model/${data.name}.gltf`,
+            (gltf) => {
+              const model = gltf.scene;
+              modelStyling(model, (color as ModelColor | null), colorKeys);
+              scene.add(model);
+              render();
+            },
+            (xhr) => {
+              console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
+            },
+            (error) => {
+              console.log('An error happened');
+            },
+          );
+        } else {
+          modelStyling(loadedModel[data.name].clone(), (color as ModelColor | null), colorKeys);
+        }
         i += 1;
       }
 

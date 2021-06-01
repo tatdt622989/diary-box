@@ -408,6 +408,18 @@ export default createStore({
         commit('updateNoteData', noteData);
       }
     },
+    async updateModelData({ commit, dispatch, state }, data) {
+      const editModel = firebase.functions().httpsCallable('editModel');
+      let isSuccess = false;
+      console.log(data);
+      await editModel(data).then((res) => {
+        if (res.data.status === 'ok' && res.data.modelData) {
+          commit('updateModelData', res.data.modelData);
+          isSuccess = true;
+        }
+      });
+      return isSuccess;
+    },
   },
   modules: {
   },

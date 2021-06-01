@@ -69,3 +69,11 @@ export interface PointInfo {
   lastGet: string;
   pointCounter: number;
 }
+
+export interface ModelColor {
+  [key: string]: string;
+}
+
+export interface LoadedModel {
+  [key: string]: THREE.Object3D;
+}

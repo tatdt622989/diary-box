@@ -80,6 +80,9 @@
                   <li>
                     <button>刪除</button>
                   </li>
+                  <li>
+                    <button @click="editModel(i)">編輯</button>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -447,17 +450,28 @@ export default defineComponent({
       }
     }
 
+    function editModel(index: number) {
+      router.push({
+        name: 'ModelEditor',
+        params: {
+          index,
+          status: 'edit',
+        },
+      });
+    }
+
     return {
-      selectedMenu,
-      models,
-      height: computed(() => store.state.height),
-      view,
-      modelFormat: computed(() => store.state.modelFormat),
-      openBuyModal,
-      closeBuyModal,
       buyingModel,
       buyModel,
+      closeBuyModal,
+      editModel,
+      height: computed(() => store.state.height),
+      modelFormat: computed(() => store.state.modelFormat),
+      models,
+      openBuyModal,
+      selectedMenu,
       userData: computed(() => store.state.userData),
+      view,
     };
   },
 });
@@ -640,7 +654,10 @@ export default defineComponent({
 .content {
   .models {
     padding: 0 16px;
+    flex-grow: 1;
   }
+  display: flex;
+  flex-direction: column;
   align-items: center;
   padding: 0;
   flex-grow: 1;
