@@ -7,7 +7,7 @@
         </button>
         <span class="title">編輯模式</span>
       </div>
-      <button class="btn btn-circle">
+      <button class="btn btn-circle" @click="apply">
         <span class="material-icons">check</span>
       </button>
     </div>
@@ -48,7 +48,6 @@
 <script lang="ts">
 import {
   ref,
-  reactive,
   defineComponent,
   onMounted,
   onUnmounted,
@@ -62,9 +61,9 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
-import { Object3D, Vector3 } from 'three';
+import { Object3D } from 'three';
 import getModelPostion from '@/utils/getModelPosition';
 import rendererCreator from '@/utils/rendererCreator';
 import { LoadedModel, Model, ModelColor } from '@/types';
@@ -73,6 +72,9 @@ export default defineComponent({
   name: 'ModelEditor',
   setup(props) {
     const store = useStore();
+    const route = useRoute();
+    const router = useRouter();
+    const targetId = route.params.target;
     const publicPath = ref(process.env.BASE_URL);
     const modelData = ref<Array<Model>>(store.state.userData
       ? store.state.userData.modelData : [store.state.defaultModelData]);
@@ -84,6 +86,7 @@ export default defineComponent({
     let renderer: THREE.WebGLRenderer | null = null;
     let composer: EffectComposer | null = null;
     let effectFXAA: ShaderPass | null = null;
+    let groups: Array<THREE.Object3D> | null = null;
     const scene: THREE.Scene = new THREE.Scene();
 
     function resize() {
@@ -114,72 +117,21 @@ export default defineComponent({
       // const helper = new THREE.Box3Helper(targetBox);
       // scene.add(helper);
       let isOverlap = false;
-      const groups = scene.children.filter((obj) => obj.type === 'Group');
-      console.log(groups, uuid);
-      groups.forEach((g) => {
-        if (uuid !== g.uuid) {
-          console.log(g, '其他模型');
-          const currentBox = new THREE.Box3().setFromObject(g as Object3D);
-          if (targetBox.intersectsBox(currentBox)) {
-            console.log('重疊');
-            isOverlap = true;
+      if (groups) {
+        console.log(groups, uuid);
+        groups.forEach((g) => {
+          if (uuid !== g.uuid) {
+            console.log(g, '其他模型');
+            const currentBox = new THREE.Box3().setFromObject(g as Object3D);
+            if (targetBox.intersectsBox(currentBox)) {
+              console.log('重疊');
+              isOverlap = true;
+            }
           }
-        }
-      });
+        });
+      }
       console.log(isOverlap);
       return isOverlap;
-    }
-
-    function controller(type: string, direction: string) {
-      console.log(selectedModel, direction);
-      const posUnit = 1.5;
-      const rotateUnit = Math.PI / 8;
-      if (!selectedModel) {
-        return;
-      }
-      selectedModel.rotation.order = 'YXZ';
-      let targetModel = selectedModel.clone(true);
-      function setModelTransform() {
-        console.log(targetModel, 'tranform');
-        const axis = new THREE.Vector3(0, 1, 0);
-        if (type === 'rotate') {
-          switch (direction) {
-            case 'left':
-              targetModel.rotateOnWorldAxis(axis, -rotateUnit);
-              break;
-            case 'right':
-              targetModel.rotateOnWorldAxis(axis, rotateUnit);
-              break;
-            default:
-              break;
-          }
-        } else if (type === 'direction') {
-          switch (direction) {
-            case 'front':
-              axis.set(posUnit, 0, 0);
-              break;
-            case 'behind':
-              axis.set(-posUnit, 0, 0);
-              break;
-            case 'left':
-              axis.set(0, 0, posUnit);
-              break;
-            case 'right':
-              axis.set(0, 0, -posUnit);
-              break;
-            default:
-              break;
-          }
-          targetModel.position.set(targetModel.position.x += axis.x,
-            targetModel.position.y += axis.y, targetModel.position.z += axis.z);
-        }
-      }
-      setModelTransform();
-      if (getModelOverlapState(targetModel as Object3D, selectedModel.uuid)) {
-        return;
-      }
-      targetModel = selectedModel;
-      setModelTransform();
     }
 
     onMounted(() => {
@@ -258,10 +210,8 @@ export default defineComponent({
       function render() {
         if (renderer && camera.value) {
           requestAnimationFrame(render);
-          if (mouse.value && outlinePass) {
+          if (mouse.value && outlinePass && groups) {
             raycaster.setFromCamera(mouse.value, camera.value);
-            const groups = scene.children.filter((obj) => obj.type === 'Group');
-            console.log(groups);
             const intersects = raycaster.intersectObjects(groups, true);
             console.log(intersects, mouse.value, scene);
             if (intersects.length > 0) {
@@ -292,10 +242,10 @@ export default defineComponent({
       /**
        * 模型樣式載入
        */
-      function modelStyling(obj: THREE.Object3D,
+      function modelStyling(data: Model, obj: THREE.Object3D,
         color: ModelColor | null, colorKeys: Array<string> | null) {
-        const model = obj;
-        model.traverse((object) => {
+        const threeObj = obj;
+        threeObj.traverse((object) => {
           if (object instanceof THREE.Mesh) {
             const mesh = object;
             mesh.castShadow = true;
@@ -306,16 +256,16 @@ export default defineComponent({
             }
           }
         });
-        console.log(model);
-        model.castShadow = true;
-        if (modelLen > 1) {
-          const groups = scene.children.filter((el) => el.type === 'Group');
-          const pos = getModelPostion(model, groups);
-          model.position.set(pos.x, pos.y, pos.z);
+        console.log(threeObj);
+        threeObj.castShadow = true;
+        threeObj.rotation.set(data.rotation.x, data.rotation.y, data.rotation.z);
+        if (modelLen > 1 && groups) {
+          const pos = getModelPostion(threeObj, groups);
+          threeObj.position.set(pos.x, pos.y, pos.z);
         } else {
-          model.position.set(model.position.x, model.position.y, model.position.z);
+          threeObj.position.set(data.position.x, data.position.y, data.position.z);
         }
-        model.receiveShadow = false;
+        threeObj.receiveShadow = false;
       }
 
       /**
@@ -326,18 +276,20 @@ export default defineComponent({
         console.log(data);
         const { color } = modelData.value[i];
         let colorKeys: Array<string> | null = null;
-        let model;
+        let threeObj;
         if (color) {
           colorKeys = Object.keys(color);
         }
         if (!loadedModel[data.name]) {
-          model = await new Promise((resolve, reject) => {
+          threeObj = await new Promise((resolve, reject) => {
             loader.load(
               `${publicPath.value}model/${data.name}.gltf`,
               (gltf) => {
-                model = gltf.scene;
-                modelStyling(model, (color as ModelColor | null), colorKeys);
-                resolve(model);
+                threeObj = gltf.scene;
+                threeObj.userData.id = data.id;
+                modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
+                console.log(threeObj.userData, '模型資訊');
+                resolve(threeObj);
               },
               (xhr) => {
                 console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
@@ -348,10 +300,11 @@ export default defineComponent({
             );
           });
         } else {
-          model = loadedModel[data.name].clone();
-          modelStyling(model, (color as ModelColor | null), colorKeys);
+          threeObj = loadedModel[data.name].clone();
+          threeObj.userData.id = data.id;
+          modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
         }
-        scene.add(model as Object3D);
+        scene.add(threeObj as Object3D);
       }
 
       const result = [];
@@ -362,7 +315,13 @@ export default defineComponent({
       }
 
       Promise.all(result).then(() => {
+        groups = scene.children.filter((el) => el.type === 'Group');
+        const model = groups.find((obj) => obj.userData.id === targetId);
+        console.log(groups);
         render();
+        if (outlinePass && model) {
+          outlinePass.selectedObjects = [model];
+        }
       });
     });
 
@@ -371,10 +330,114 @@ export default defineComponent({
       renderer = null;
     });
 
+    function controller(type: string, direction: string) {
+      console.log(selectedModel, direction);
+      const posUnit = 1.5;
+      const rotateUnit = Math.PI / 8;
+      if (!selectedModel) {
+        return;
+      }
+      selectedModel.rotation.order = 'YXZ';
+      let targetModel = selectedModel.clone(true);
+      function setModelTransform() {
+        console.log(targetModel, 'tranform');
+        const axis = new THREE.Vector3(0, 1, 0);
+        if (type === 'rotate') {
+          switch (direction) {
+            case 'left':
+              targetModel.rotateOnWorldAxis(axis, -rotateUnit);
+              break;
+            case 'right':
+              targetModel.rotateOnWorldAxis(axis, rotateUnit);
+              break;
+            default:
+              break;
+          }
+        } else if (type === 'direction') {
+          switch (direction) {
+            case 'front':
+              axis.set(posUnit, 0, 0);
+              break;
+            case 'behind':
+              axis.set(-posUnit, 0, 0);
+              break;
+            case 'left':
+              axis.set(0, 0, posUnit);
+              break;
+            case 'right':
+              axis.set(0, 0, -posUnit);
+              break;
+            default:
+              break;
+          }
+          targetModel.position.set(targetModel.position.x += axis.x,
+            targetModel.position.y += axis.y, targetModel.position.z += axis.z);
+        }
+      }
+      setModelTransform();
+      if (getModelOverlapState(targetModel as Object3D, selectedModel.uuid)) {
+        return;
+      }
+      targetModel = selectedModel;
+      setModelTransform();
+    }
+
+    async function apply() {
+      if (scene && groups) {
+        const result: Array<Promise<boolean>> = [];
+        store.commit('updateLoadingStr', '場景存檔中');
+        store.commit('updateModalLoaded', false);
+        store.dispatch('openModal', {
+          type: 'loading',
+          asynchronous: true,
+        });
+        groups.forEach((group) => {
+          const pos = group.position.toArray();
+          const rotation = group.rotation.toArray();
+          const id = group.userData?.id;
+          console.log(pos, rotation);
+          modelData.value.forEach((obj) => {
+            const data = obj;
+            if (id === data.id) {
+              if (pos[0] !== data.position.x || pos[1] !== data.position.y
+                || pos[2] !== data.position.z || rotation[0] !== data.rotation.x
+                || rotation[1] !== data.rotation.y || rotation[2] !== data.rotation.z) {
+                [data.position.x, data.position.y, data.position.z] = pos;
+                [data.rotation.x, data.rotation.y, data.rotation.z] = rotation;
+                result.push(store.dispatch('updateModelData', {
+                  method: 'edit',
+                  id,
+                  data: JSON.parse(JSON.stringify(data)),
+                }));
+              }
+            }
+          });
+        });
+        Promise.all(result).then((val) => {
+          if (val.indexOf(false) === -1) {
+            store.dispatch('updateToast', {
+              type: 'success',
+              content: '編輯成功',
+            });
+            let times = 0;
+            const closeModal = setInterval(() => {
+              if (times > 50 || store.state.modalLoaded) {
+                store.commit('closeModal');
+                clearInterval(closeModal);
+              }
+              times += 1;
+            }, 100);
+            router.push('/home');
+          }
+        });
+      }
+    }
+
     return {
       getMousePos,
       mouse,
       controller,
+      apply,
     };
   },
 });

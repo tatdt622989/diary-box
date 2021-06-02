@@ -58,6 +58,7 @@ import {
   defineComponent,
   computed,
   onMounted,
+  onUnmounted,
 } from 'vue';
 import { useStore } from 'vuex';
 
@@ -70,35 +71,36 @@ export default defineComponent({
     const store = useStore();
     const timer = ref<number | null>(null);
 
-    onMounted(() => {
-      window.addEventListener('resize', () => {
-        if (timer.value) {
-          clearTimeout(timer.value);
-        }
-        timer.value = setTimeout(() => {
-          store.commit('getHeight', `${window.innerHeight}px`);
-          console.log('高度變動');
-          timer.value = null;
-        }, 500);
-      });
-    });
-
-    function login() {
-      store.commit('openModal', 'login');
+    function resize() {
+      if (timer.value) {
+        clearTimeout(timer.value);
+      }
+      timer.value = setTimeout(() => {
+        store.commit('getHeight', `${window.innerHeight}px`);
+        console.log('高度變動');
+        timer.value = null;
+      }, 500);
     }
 
-    function register() {
-      store.commit('openModal', 'register');
+    onMounted(() => {
+      window.addEventListener('resize', resize);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener('resize', resize);
+    });
+
+    function openModal(type: string) {
+      store.commit('menuToggler', false);
+      store.dispatch('openModal', {
+        type,
+        asynchronous: false,
+      });
     }
 
     function signOut() {
-      store.dispatch('signOut');
+      openModal('signOut');
       router.push('/');
-    }
-
-    function openModal() {
-      store.commit('menuToggler', false);
-      store.commit('openModal', 'quality');
     }
 
     return {
@@ -107,8 +109,6 @@ export default defineComponent({
       height: computed(() => store.state.height),
       userInfo: computed(() => store.state.userInfo),
       userData: computed(() => store.state.userData),
-      login,
-      register,
       signOut,
       openModal,
     };

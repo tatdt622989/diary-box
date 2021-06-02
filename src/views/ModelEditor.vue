@@ -17,6 +17,11 @@
           <span class="material-icons">done</span>
         </button>
       </li>
+      <li>
+        <button class="btn btn-circle" @click="$router.push('/model-list')">
+          <span class="material-icons">close</span>
+        </button>
+      </li>
     </ul>
     <canvas id="modelPreviewer"></canvas>
   </div>
@@ -26,10 +31,8 @@
 import {
   defineComponent,
   ref,
-  reactive,
   onMounted,
   computed,
-  nextTick,
   onUnmounted,
 } from 'vue';
 import { useStore } from 'vuex';
@@ -79,9 +82,10 @@ export default defineComponent({
       } else if (status === 'old') {
         index = Number(route.params.index);
       } else {
-        index = 0;
+        return router.push('/model-list');
       }
       selectedModel.value = modelData.value[index];
+      modelColor.value = JSON.parse((JSON.stringify(selectedModel.value.color)));
       if (modelFormat.value !== null) {
         console.log(selectedModel.value);
         const productKeys = Object.keys(modelFormat.value);
@@ -154,6 +158,7 @@ export default defineComponent({
             if (object instanceof THREE.Mesh) {
               const mesh = object;
               if (color && colorKeys) {
+                console.log(color);
                 if (colorKeys.indexOf(object.name) >= 0) {
                   mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
                 }
@@ -175,6 +180,7 @@ export default defineComponent({
           console.log('An error happened');
         },
       );
+      return false;
     });
 
     function changeModelColor() {
@@ -198,6 +204,12 @@ export default defineComponent({
       if (selectedModel.value) {
         selectedModel.value.color = modelColor.value;
         console.log(JSON.parse(JSON.stringify(selectedModel.value)));
+        store.commit('updateLoadingStr', '模型存檔中');
+        store.commit('updateModalLoaded', false);
+        store.dispatch('openModal', {
+          type: 'loading',
+          asynchronous: true,
+        });
         store.dispatch('updateModelData', {
           method: 'edit',
           id: selectedModel.value.id,
@@ -208,6 +220,14 @@ export default defineComponent({
               type: 'success',
               content: '編輯成功',
             });
+            let times = 0;
+            const closeModal = setInterval(() => {
+              if (times > 50 || store.state.modalLoaded) {
+                store.commit('closeModal');
+                clearInterval(closeModal);
+              }
+              times += 1;
+            }, 100);
             if (status === 'new' && selectedModel.value) {
               router.push({
                 name: 'SceneEditor',
@@ -234,20 +254,19 @@ export default defineComponent({
     window.addEventListener('resize', resize, false);
 
     onUnmounted(() => {
-      controls.dispose();
-      scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh) {
-          obj.geometry.dispose();
-          obj.material.dispose();
+      window.removeEventListener('resize', resize);
+      if (scene && controls && renderer && animation) {
+        controls.dispose();
+        scene.traverse((obj) => {
+          if (obj instanceof THREE.Mesh) {
+            obj.geometry.dispose();
+            obj.material.dispose();
+          }
+        });
+        while (scene.children.length > 0) {
+          scene.remove(scene.children[0]);
         }
-      });
-      while (scene.children.length > 0) {
-        scene.remove(scene.children[0]);
-      }
-      if (animation) {
         cancelAnimationFrame(animation);
-      }
-      if (renderer) {
         renderer.dispose();
         renderer.forceContextLoss();
         renderer = null;

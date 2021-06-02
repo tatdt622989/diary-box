@@ -39,22 +39,29 @@
     <canvas id="mainScene" ref="mainScene"></canvas>
     <div class="note-wrap" :class="{ active: isNoteOpen }">
       <div class="content">
-        <div class="d-flex justify-content-end">
+        <div class="d-flex justify-content-end w-100">
           <button class="btn btn-circle close-btn" @click="isNoteOpen = false">
             <span class="material-icons">close</span>
           </button>
         </div>
-        <p class="date">{{ noteDate }}</p>
+        <p class="date" v-if="noteDate">{{ noteDate }}</p>
         <div
+          class="text-container"
           v-html="lastestNoteData.length > 0 ? lastestNoteData[0].content : ''"
           v-if="lastestNoteData"
         ></div>
+        <div class="default" v-if="!noteDate">
+          <span class="material-icons">playlist_add</span>
+          <p>還沒有日記喔！</p>
+          <p>快來寫日記拿日記幣！</p>
+          <button @click="createNote" class="btn btn-primary">寫日記</button>
+        </div>
       </div>
       <button class="toggler" @click="isNoteOpen = !isNoteOpen">
         近期日記
       </button>
     </div>
-    <FunctionBar :mode="'home'" @create-note="createNote"></FunctionBar>
+    <FunctionBar :mode="'home'"></FunctionBar>
     <Menu></Menu>
     <div
       class="modal fade"
@@ -105,6 +112,7 @@ import {
   computed,
   watch,
   onUnmounted,
+  nextTick,
 } from 'vue';
 import { Modal } from 'bootstrap';
 import * as dat from 'dat.gui';
@@ -152,6 +160,7 @@ export default defineComponent({
     let animation: number;
     let takeScreenShot = false;
     let base64: string | null;
+    let camera: THREE.PerspectiveCamera | null;
 
     function getNote() {
       console.log(noteData.value, 'get note');
@@ -172,7 +181,23 @@ export default defineComponent({
       },
     );
 
+    function resize() {
+      if (renderer && camera) {
+        renderer.setSize(window.innerWidth, window.innerHeight - 66);
+        camera.aspect = window.innerWidth / (window.innerHeight - 66);
+        camera.updateProjectionMatrix();
+      }
+    }
+
     onMounted(async () => {
+      let times = 0;
+      const closeModal = setInterval(() => {
+        if (times > 50 || store.state.modalLoaded) {
+          store.commit('closeModal');
+          clearInterval(closeModal);
+        }
+        times += 1;
+      }, 100);
       getNote();
       canvas = document.getElementById('mainScene') as HTMLCanvasElement;
       renderer = rendererCreator(store.state.gpuTier ? store.state.gpuTier.tier : 0, canvas);
@@ -183,7 +208,7 @@ export default defineComponent({
       scene.background = new THREE.Color(0x449966);
 
       // 相機
-      const camera = new THREE.PerspectiveCamera(
+      camera = new THREE.PerspectiveCamera(
         45,
         window.innerWidth / (window.innerHeight - 66),
         0.1,
@@ -235,10 +260,10 @@ export default defineComponent({
       scene.fog = new THREE.Fog(0x449966, 1, 150);
 
       function render() {
-        controls.update();
-        camera.updateProjectionMatrix();
-        animation = requestAnimationFrame(render);
-        if (renderer) {
+        if (renderer && camera) {
+          controls.update();
+          camera.updateProjectionMatrix();
+          animation = requestAnimationFrame(render);
           renderer.render(scene, camera);
           if (takeScreenShot) {
             takeScreenShot = false;
@@ -254,10 +279,10 @@ export default defineComponent({
       /**
        * 模型樣式載入
        */
-      function modelStyling(obj: THREE.Object3D,
+      function modelStyling(data: Model, obj: THREE.Object3D,
         color: ModelColor | null, colorKeys: Array<string> | null) {
-        const model = obj;
-        model.traverse((object) => {
+        const threeObj = obj;
+        threeObj.traverse((object) => {
           if (object instanceof THREE.Mesh) {
             const mesh = object;
             mesh.castShadow = true;
@@ -268,13 +293,14 @@ export default defineComponent({
             }
           }
         });
-        console.log(model);
-        model.castShadow = true;
-        if (model.position.x === 0 && model.position.y === 0 && model.position.z === 0) {
+        console.log(threeObj);
+        threeObj.castShadow = true;
+        if (threeObj.position.x === 0 && threeObj.position.y === 0 && threeObj.position.z === 0) {
           onOriginalPosTimes += 1;
         }
-        model.position.set(model.position.x, model.position.y, model.position.z);
-        model.receiveShadow = false;
+        threeObj.position.set(data.position.x, data.position.y, data.position.z);
+        threeObj.rotation.set(data.rotation.x, data.rotation.y, data.rotation.z);
+        threeObj.receiveShadow = false;
       }
 
       /**
@@ -287,18 +313,18 @@ export default defineComponent({
         }
         const { color } = modelData.value[i];
         let colorKeys: Array<string> | null = null;
-        let model;
+        let threeObj;
         if (color) {
           colorKeys = Object.keys(color);
         }
         if (!loadedModel[data.name]) {
-          model = await new Promise((resolve, reject) => {
+          threeObj = await new Promise((resolve, reject) => {
             loader.load(
               `${publicPath.value}model/${data.name}.gltf`,
               (gltf) => {
-                model = gltf.scene;
-                modelStyling(model, (color as ModelColor | null), colorKeys);
-                resolve(model);
+                threeObj = gltf.scene;
+                modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
+                resolve(threeObj);
               },
               (xhr) => {
                 console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
@@ -309,10 +335,10 @@ export default defineComponent({
             );
           });
         } else {
-          model = loadedModel[data.name].clone();
-          modelStyling(model, (color as ModelColor | null), colorKeys);
+          threeObj = loadedModel[data.name].clone();
+          modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
         }
-        scene.add(model as Object3D);
+        scene.add(threeObj as Object3D);
       }
 
       const result = [];
@@ -325,19 +351,11 @@ export default defineComponent({
       Promise.all(result).then(() => {
         render();
       });
-
-      function resize() {
-        if (renderer) {
-          renderer.setSize(window.innerWidth, window.innerHeight - 66);
-          camera.aspect = window.innerWidth / (window.innerHeight - 66);
-          camera.updateProjectionMatrix();
-        }
-      }
-
       window.addEventListener('resize', resize, false);
     });
 
     onUnmounted(() => {
+      window.removeEventListener('resize', resize);
       controls.dispose();
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh) {
@@ -567,8 +585,15 @@ export default defineComponent({
     margin-right: -44px;
   }
   .content {
-    > div {
+    .text-container {
+      p {
+        text-align: left;
+      }
+      border: 2px solid $primary;
+      border-radius: 10px;
       width: 100%;
+      flex-grow: 1;
+      padding: 16px;
     }
     .date {
       font-size: 28px;
@@ -578,12 +603,47 @@ export default defineComponent({
       padding: 0 20px;
       margin-bottom: 32px;
     }
+    .default {
+      span {
+        color: $primary;
+        font-size: 120px;
+        margin-bottom: 20px;
+      }
+      p {
+        &:last-of-type {
+          margin-bottom: 32px;
+        }
+        color: $primary;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 0;
+      }
+      button {
+        border-radius: 999px;
+        color: $secondary;
+        font-size: 24px;
+        font-weight: bold;
+        height: 52px;
+        width: 120px;
+      }
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      margin: auto;
+      flex-direction: column;
+    }
     align-items: center;
     background-color: $secondary;
     border-left: 0;
     display: flex;
     flex-direction: column;
     height: 100%;
+    flex-grow: 1;
   }
   &.active {
     left: 0;

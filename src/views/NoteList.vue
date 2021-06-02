@@ -255,7 +255,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .node-list-wrap {
   .add-btn {
     &:hover,

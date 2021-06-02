@@ -213,6 +213,12 @@ export default defineComponent({
       console.log(models.value);
     }
 
+    function resize() {
+      if (renderer) {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    }
+
     async function init() {
       await nextTick();
       console.log('init-start');
@@ -364,11 +370,6 @@ export default defineComponent({
         };
         render();
       });
-      const resize = function () {
-        if (renderer) {
-          renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-      };
       window.addEventListener('resize', resize, false);
     }
 
@@ -431,6 +432,7 @@ export default defineComponent({
     });
 
     onUnmounted(() => {
+      window.removeEventListener('resize', resize);
       allSceneData.forEach((el) => {
         el.controls.dispose();
         el.scene.traverse((obj) => {
@@ -460,10 +462,6 @@ export default defineComponent({
       modal.show();
     }
 
-    function openLoginModal() {
-      store.commit('openModal', 'login');
-    }
-
     function closeBuyModal() {
       console.log('cancel', document.getElementById('confirmPurchaseModal'));
       modal.hide();
@@ -486,7 +484,7 @@ export default defineComponent({
           type: 'hint',
           content: '請先登入',
         });
-        openLoginModal();
+        router.push('/');
       }
     }
 

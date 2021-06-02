@@ -26,6 +26,11 @@ export interface Model {
     y: number;
     z: number;
   };
+  rotation: {
+    x: number;
+    y: number;
+    z: number;
+  }
   color: ModelColor;
   isUsed: boolean;
   passive: boolean;

@@ -83,8 +83,15 @@ export default defineComponent({
     const email = ref('');
     const password = ref('');
     const dataLoaded = computed(() => store.state.dataLoaded);
-    // onMounted(() => {
-    // });
+
+    watch(
+      computed(() => store.state.modalLoaded),
+      (newVal: boolean) => {
+        if (newVal) {
+          store.commit('closeModal');
+        }
+      },
+    );
 
     watch(dataLoaded, (newVal, oldVal) => {
       console.log('資料載入狀態變更');
@@ -131,7 +138,7 @@ export default defineComponent({
       if (store.state.modal) {
         store.state.modal.hide();
       }
-      store.commit('openModal', 'register');
+      store.dispatch('openModal', 'register');
     }
 
     return {

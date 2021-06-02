@@ -5,7 +5,7 @@ import {
   ToastMSG,
   UserData,
 } from '@/types';
-import { createStore } from 'vuex';
+import { createStore, Store } from 'vuex';
 import { Modal } from 'bootstrap';
 import firebase from 'firebase/app';
 import 'firebase/auth';
@@ -45,6 +45,11 @@ export default createStore({
         y: 0,
         z: 0,
       },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
       color: {},
       passive: false,
     } as Model,
@@ -70,6 +75,7 @@ export default createStore({
     quality: null,
     gpuTier: null as null | TierResult,
     isDebug: false,
+    modalLoaded: false,
   },
   mutations: {
     menuToggler(state, data) {
@@ -88,18 +94,10 @@ export default createStore({
         state.toastMsgList.splice(0, 1);
       }
     },
-    openModal(state, data) {
-      state.formHint = '';
-      const el = document.getElementById(`${data}Modal`);
-      let backdrop: boolean | 'static' | undefined = true;
-      if (data === 'loading') {
-        backdrop = 'static';
-      }
-      if (el) {
-        state.modal = new Modal(el, {
-          backdrop,
-        });
-        state.modal.show();
+    closeModal(state) {
+      if (state.modal) {
+        console.log('視窗關閉');
+        state.modal.hide();
       }
     },
     resetUserData(state) {
@@ -152,32 +150,18 @@ export default createStore({
     updateGpuTier(state, data) {
       state.gpuTier = data;
     },
+    updateModalLoaded(state, data) {
+      state.modalLoaded = data;
+    },
   },
   actions: {
-    updateToast({ commit }, data) {
-      commit('addToast', data);
-      setTimeout(() => {
-        commit('removeToast');
-      }, 3000);
-    },
-    async updateUserInfo({ state, commit, dispatch }) {
-      firebase.auth().onAuthStateChanged((user) => {
-        console.log('登入狀態改變', user);
-        if (user) {
-          state.userInfo = user;
-          dispatch('getUserData').then(() => {
-            state.dataLoaded = true;
-          });
-        } else {
-          commit('resetUserData');
-          state.userInfo = null;
-        }
-        if (state.modal) {
-          state.modal.hide();
-        }
+    login({ dispatch, commit, state }, data) {
+      commit('updateLoadingStr', '登入中');
+      commit('updateModalLoaded', false);
+      dispatch('openModal', {
+        type: 'loading',
+        asynchronous: true,
       });
-    },
-    login({ dispatch, state }, data) {
       const provider = new firebase.auth.GoogleAuthProvider();
       switch (data.type) {
         case 'google':
@@ -233,12 +217,6 @@ export default createStore({
           break;
       }
     },
-    getModelFormat({ state }) {
-      db.ref('/products').once('value', (snapshot) => {
-        console.log(snapshot.val());
-        state.modelFormat = snapshot.val();
-      });
-    },
     async register({ dispatch, state }, data) {
       firebase.auth().createUserWithEmailAndPassword(data.email, data.password).then((result) => {
         state.formHint = '';
@@ -272,7 +250,11 @@ export default createStore({
     },
     async buyModel({ dispatch, commit, state }, data) {
       commit('updateLoadingStr', '購買中');
-      commit('openModal', 'loading');
+      commit('updateModalLoaded', false);
+      dispatch('openModal', {
+        type: 'loading',
+        asynchronous: true,
+      });
       const buyModel = firebase.functions().httpsCallable('buyModel');
       const result = await buyModel({ buyingModel: data })
         .then((res) => {
@@ -298,7 +280,7 @@ export default createStore({
         });
       }
     },
-    signOut({ commit, dispatch, state }) {
+    signOut({ dispatch, commit, state }) {
       firebase.auth().signOut().then(() => {
         dispatch('updateToast', {
           type: 'success',
@@ -307,6 +289,42 @@ export default createStore({
         commit('resetUserData');
         state.userInfo = null;
         commit('menuToggler', false);
+      }).catch((err) => {
+        dispatch('updateToast', {
+          type: 'error',
+          content: err,
+        });
+      });
+    },
+    getModelFormat({ state }) {
+      db.ref('/products').once('value', (snapshot) => {
+        console.log(snapshot.val());
+        state.modelFormat = snapshot.val();
+      });
+    },
+    getPoint({ dispatch, commit, state }) {
+      const getPoint = firebase.functions().httpsCallable('getPoint');
+      getPoint().then((res) => {
+        if (state.modal) {
+          state.modal.hide();
+        }
+        console.log(res);
+        if (res.data && res.data.status === 'ok') {
+          if (res.data.point > 0) {
+            commit('updateModalLoaded', false);
+            commit('openModal', {
+              type: 'pointNotification',
+              asynchronous: false,
+            });
+            commit('updateGetPoint', res.data.point);
+            dispatch('getBalance');
+          } else {
+            dispatch('updateToast', {
+              type: 'error',
+              content: res.data.msg,
+            });
+          }
+        }
       }).catch((err) => {
         dispatch('updateToast', {
           type: 'error',
@@ -338,39 +356,70 @@ export default createStore({
       }
       return false;
     },
-    getPoint({ dispatch, commit, state }) {
-      const getPoint = firebase.functions().httpsCallable('getPoint');
-      getPoint().then((res) => {
+    async getBalance({ commit, state }) {
+      if (state.userInfo) {
+        const balance = await db.ref(`/users/${state.userInfo.uid}/pointInfo/balance`).once('value').then((snap) => snap.val());
+        commit('updateBalance', balance);
+      }
+    },
+    async getNoteData({ commit, state }) {
+      if (state.userInfo) {
+        const noteData = await db.ref(`/users/${state.userInfo.uid}/noteData`).once('value').then((snap) => snap.val());
+        commit('updateNoteData', noteData);
+      }
+    },
+    async getModelData({ commit, state }) {
+      if (state.userInfo) {
+        const noteData = await db.ref(`/users/${state.userInfo.uid}/modelData`).once('value').then((snap) => snap.val());
+        commit('updateNoteData', noteData);
+      }
+    },
+    updateToast({ commit }, data) {
+      commit('addToast', data);
+      setTimeout(() => {
+        commit('removeToast');
+      }, 3000);
+    },
+    async updateUserInfo({ dispatch, state, commit }) {
+      firebase.auth().onAuthStateChanged((user) => {
+        console.log('登入狀態改變', user);
+        if (user) {
+          state.userInfo = user;
+          dispatch('getUserData').then(() => {
+            state.dataLoaded = true;
+          });
+        } else {
+          commit('resetUserData');
+          state.userInfo = null;
+        }
         if (state.modal) {
           state.modal.hide();
         }
-        console.log(res);
-        if (res.data && res.data.status === 'ok') {
-          if (res.data.point > 0) {
-            commit('openModal', 'pointNotification');
-            commit('updateGetPoint', res.data.point);
-            dispatch('getBalance');
-          } else {
-            dispatch('updateToast', {
-              type: 'error',
-              content: res.data.msg,
-            });
-          }
-        }
-      }).catch((err) => {
-        dispatch('updateToast', {
-          type: 'error',
-          content: err,
-        });
       });
     },
-    async updateNoteData({ commit, state, dispatch }, data) {
+    async updateModelData({ dispatch, commit, state }, data) {
+      const editModel = firebase.functions().httpsCallable('editModel');
+      let isSuccess = false;
+      console.log(data);
+      await editModel(data).then((res) => {
+        if (res.data.status === 'ok' && res.data.modelData) {
+          commit('updateModelData', res.data.modelData);
+          isSuccess = true;
+        }
+      });
+      return isSuccess;
+    },
+    async updateNoteData({ dispatch, commit, state }, data) {
       let { noteData } = state.userData;
       console.log('note 更新', data, noteData);
       if (state.userInfo) {
         switch (data.type) {
           case 'add':
-            commit('openModal', 'loading');
+            commit('updateModalLoaded', false);
+            commit('openModal', {
+              type: 'loading',
+              asynchronous: true,
+            });
             commit('updateLoadingStr', '資料上傳中');
             noteData.push(data.data);
             break;
@@ -403,35 +452,24 @@ export default createStore({
         }
       }
     },
-    async getBalance({ commit, state }) {
-      if (state.userInfo) {
-        const balance = await db.ref(`/users/${state.userInfo.uid}/pointInfo/balance`).once('value').then((snap) => snap.val());
-        commit('updateBalance', balance);
+    openModal({ dispatch, commit, state }, data) {
+      state.formHint = '';
+      const el = document.getElementById(`${data.type}Modal`);
+      let backdrop: boolean | 'static' | undefined = true;
+      if (data.type === 'loading') {
+        backdrop = 'static';
       }
-    },
-    async getNoteData({ commit, state }) {
-      if (state.userInfo) {
-        const noteData = await db.ref(`/users/${state.userInfo.uid}/noteData`).once('value').then((snap) => snap.val());
-        commit('updateNoteData', noteData);
-      }
-    },
-    async getModelData({ commit, state }) {
-      if (state.userInfo) {
-        const noteData = await db.ref(`/users/${state.userInfo.uid}/modelData`).once('value').then((snap) => snap.val());
-        commit('updateNoteData', noteData);
-      }
-    },
-    async updateModelData({ commit, dispatch, state }, data) {
-      const editModel = firebase.functions().httpsCallable('editModel');
-      let isSuccess = false;
-      console.log(data);
-      await editModel(data).then((res) => {
-        if (res.data.status === 'ok' && res.data.modelData) {
-          commit('updateModelData', res.data.modelData);
-          isSuccess = true;
+      if (el) {
+        if (data.asynchronous) {
+          el.addEventListener('shown.bs.modal', () => {
+            state.modalLoaded = true;
+          });
         }
-      });
-      return isSuccess;
+        state.modal = new Modal(el, {
+          backdrop,
+        });
+        state.modal.show();
+      }
     },
   },
   modules: {
