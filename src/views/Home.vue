@@ -1,5 +1,5 @@
 <template>
-  <div class="main-wrap home-wrap">
+  <div class="main-wrap home-wrap" :style="{ height }">
     <div class="status">
       <div class="currency">
         <span>{{
@@ -35,6 +35,7 @@
         </button>
       </li>
     </ul>
+    <p v-if="$store.state.isDebug">{{ $store.state.gpuTier }}</p>
     <canvas id="mainScene" ref="mainScene"></canvas>
     <div class="note-wrap" :class="{ active: isNoteOpen }">
       <div class="content">
@@ -122,6 +123,7 @@ import {
 } from '@/types';
 import { Geometry, Object3D } from 'three';
 import screenfull from 'screenfull/dist/screenfull';
+import rendererCreator from '@/utils/rendererCreator';
 
 export default defineComponent({
   name: 'Home',
@@ -143,40 +145,13 @@ export default defineComponent({
     const img = ref('');
     const noteData = computed(() => store.state.userData.noteData);
     const userData = computed(() => store.state.userData);
+    const quality = computed(() => store.state.quality);
     let renderer: THREE.WebGLRenderer | null;
     const scene = new THREE.Scene();
     let controls: MapControls;
     let animation: number;
     let takeScreenShot = false;
     let base64: string | null;
-
-    const gui = {
-      camera: {
-        pos: {
-          x: 20,
-          y: 15,
-          z: -10,
-        },
-      },
-      dLight: {
-        pos: {
-          x: 10,
-          y: 15,
-          z: 1,
-        },
-      },
-    };
-
-    function datGuiInit() {
-      // const dLightFolder = datGui.value.addFolder('dLight');
-      // dLightFolder.add(gui.dLight.pos, 'x', 0, 50);
-      // dLightFolder.add(gui.dLight.pos, 'y', 0, 50);
-      // dLightFolder.add(gui.dLight.pos, 'z', 0, 50);
-      // const camera = datGui.value.addFolder('camera');
-      // camera.add(gui.camera.pos, 'x', -20, 50);
-      // camera.add(gui.camera.pos, 'y', -20, 50);
-      // camera.add(gui.camera.pos, 'z', -20, 50);
-    }
 
     function getNote() {
       console.log(noteData.value, 'get note');
@@ -200,10 +175,7 @@ export default defineComponent({
     onMounted(async () => {
       getNote();
       canvas = document.getElementById('mainScene') as HTMLCanvasElement;
-      renderer = new THREE.WebGLRenderer({
-        antialias: false,
-        canvas,
-      });
+      renderer = rendererCreator(store.state.gpuTier ? store.state.gpuTier.tier : 0, canvas);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.BasicShadowMap;
       renderer.setSize(window.innerWidth, window.innerHeight - 66);
@@ -305,6 +277,9 @@ export default defineComponent({
         model.receiveShadow = false;
       }
 
+      /**
+       * 同步載入模型
+       */
       async function ModelLoad(i: number) {
         const data = modelData.value[i];
         if (onOriginalPosTimes > 1) {
@@ -456,6 +431,7 @@ export default defineComponent({
       menuToggler: () => store.commit('menuToggler', true),
       img,
       enterFullScreen,
+      height: computed(() => store.state.height),
     };
   },
 });

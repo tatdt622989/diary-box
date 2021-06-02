@@ -1,14 +1,13 @@
-import THREE from "three";
+import * as THREE from 'three';
 
 export default function getModelPostion(target: THREE.Object3D, data: Array<THREE.Object3D>) {
   const targetUuid = target.uuid;
   const targetBox = new THREE.Box3().setFromObject(target);
-  let targetPosition = {
+  const targetPosition = {
     x: 0,
     y: 0,
     z: 0,
   };
-  getPosition();
   function getPosition() {
     data.forEach((group) => {
       if (targetUuid !== group.uuid) {
@@ -18,7 +17,8 @@ export default function getModelPostion(target: THREE.Object3D, data: Array<THRE
           getPosition();
         }
       }
-    })
+    });
   }
+  getPosition();
   return targetPosition;
 }

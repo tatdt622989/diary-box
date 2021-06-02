@@ -66,14 +66,16 @@ import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { Object3D, Vector3 } from 'three';
 import getModelPostion from '@/utils/getModelPosition';
+import rendererCreator from '@/utils/rendererCreator';
+import { LoadedModel, Model, ModelColor } from '@/types';
 
 export default defineComponent({
   name: 'ModelEditor',
   setup(props) {
     const store = useStore();
     const publicPath = ref(process.env.BASE_URL);
-    const modelData = store.state.userData
-      ? store.state.userData.modelData : [store.state.defaultModelData];
+    const modelData = ref<Array<Model>>(store.state.userData
+      ? store.state.userData.modelData : [store.state.defaultModelData]);
     const canvas = ref<HTMLCanvasElement>();
     const camera = ref<THREE.PerspectiveCamera>();
     const mouse = ref<THREE.Vector2 | null>(null);
@@ -89,7 +91,6 @@ export default defineComponent({
         renderer.setSize(window.innerWidth, window.innerHeight);
         composer.setSize(window.innerWidth, window.innerHeight);
         camera.value.aspect = window.innerWidth / (window.innerHeight);
-        camera.value.updateProjectionMatrix();
         camera.value.updateProjectionMatrix();
       }
     }
@@ -183,11 +184,7 @@ export default defineComponent({
 
     onMounted(() => {
       canvas.value = document.getElementById('editor') as HTMLCanvasElement;
-      renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        canvas: canvas.value,
-      });
-      // renderer.setPixelRatio(window.devicePixelRatio);
+      renderer = rendererCreator(store.state.gpuTier ? store.state.gpuTier.tier : 0, canvas.value);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -289,45 +286,84 @@ export default defineComponent({
       }
 
       const loader = new GLTFLoader();
+      const loadedModel: LoadedModel = {};
+      const modelLen = modelData.value.length;
 
-      const modelLen = modelData.length;
+      /**
+       * 模型樣式載入
+       */
+      function modelStyling(obj: THREE.Object3D,
+        color: ModelColor | null, colorKeys: Array<string> | null) {
+        const model = obj;
+        model.traverse((object) => {
+          if (object instanceof THREE.Mesh) {
+            const mesh = object;
+            mesh.castShadow = true;
+            if (color && colorKeys) {
+              if (colorKeys.indexOf(object.name) >= 0) {
+                mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
+              }
+            }
+          }
+        });
+        console.log(model);
+        model.castShadow = true;
+        if (modelLen > 1) {
+          const groups = scene.children.filter((el) => el.type === 'Group');
+          const pos = getModelPostion(model, groups);
+          model.position.set(pos.x, pos.y, pos.z);
+        } else {
+          model.position.set(model.position.x, model.position.y, model.position.z);
+        }
+        model.receiveShadow = false;
+      }
+
+      /**
+       * 同步載入模型
+       */
+      async function ModelLoad(i: number) {
+        const data = modelData.value[i];
+        console.log(data);
+        const { color } = modelData.value[i];
+        let colorKeys: Array<string> | null = null;
+        let model;
+        if (color) {
+          colorKeys = Object.keys(color);
+        }
+        if (!loadedModel[data.name]) {
+          model = await new Promise((resolve, reject) => {
+            loader.load(
+              `${publicPath.value}model/${data.name}.gltf`,
+              (gltf) => {
+                model = gltf.scene;
+                modelStyling(model, (color as ModelColor | null), colorKeys);
+                resolve(model);
+              },
+              (xhr) => {
+                console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
+              },
+              (error) => {
+                console.log('An error happened');
+              },
+            );
+          });
+        } else {
+          model = loadedModel[data.name].clone();
+          modelStyling(model, (color as ModelColor | null), colorKeys);
+        }
+        scene.add(model as Object3D);
+      }
+
+      const result = [];
       let i = 0;
       while (i < modelLen) {
-        const data = modelData[i];
-        loader.load(
-          `${publicPath.value}model/${data.name}.gltf`,
-          (gltf) => {
-            const model = gltf.scene;
-            console.log(model);
-            model.traverse((object) => {
-              if (object instanceof THREE.Mesh) {
-                const mesh = object;
-                mesh.castShadow = true;
-              }
-            });
-            model.castShadow = true;
-            if (modelLen > 1) {
-              const groups = scene.children.filter((obj) => obj.type === 'Group');
-              const pos = getModelPostion(model, groups);
-              model.position.set(pos.x, pos.y, pos.z);
-            } else {
-              model.position.set(data.position.x, data.position.y, data.position.z);
-            }
-            model.receiveShadow = false;
-            console.log(data);
-            scene.add(model);
-            render();
-          },
-          (xhr) => {
-            console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
-          },
-          (error) => {
-            console.log('An error happened');
-          },
-        );
+        result.push(ModelLoad(i));
         i += 1;
       }
-      window.addEventListener('resize', resize, false);
+
+      Promise.all(result).then(() => {
+        render();
+      });
     });
 
     onUnmounted(() => {

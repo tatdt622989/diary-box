@@ -14,30 +14,19 @@
             {{ userInfo.displayName || (userData && userData.name) }}
           </p>
         </li>
-        <!-- <li class="t-base" v-if="!userInfo">
-          <button @click="register">
-            <span class="material-icons">assignment_ind</span>
-            會員註冊
-          </button>
-        </li> -->
-        <!-- <li class="t-base" v-if="!userInfo">
-          <button @click="login">
-            <span class="material-icons">login</span>
-            會員登入
-          </button>
-        </li> -->
+
         <li class="t-base" v-if="userInfo && userInfo.email">
           <button @click="signOut">
             <span class="material-icons">logout</span>
             會員登出
           </button>
         </li>
-        <li class="t-base">
-          <button>
+        <!-- <li class="t-base">
+          <button @click="openModal">
             <span class="material-icons">settings</span>
             畫質設定
           </button>
-        </li>
+        </li> -->
       </ul>
       <div class="about">
         <p>關於作者</p>
@@ -75,6 +64,8 @@ import { useStore } from 'vuex';
 export default defineComponent({
   name: 'Menu',
   emits: ['set-data'],
+  components: {
+  },
   setup(props, { attrs, slots, emit }) {
     const store = useStore();
     const timer = ref<number | null>(null);
@@ -105,6 +96,11 @@ export default defineComponent({
       router.push('/');
     }
 
+    function openModal() {
+      store.commit('menuToggler', false);
+      store.commit('openModal', 'quality');
+    }
+
     return {
       isMenuOpen: computed(() => store.state.isMenuOpen),
       menuToggler: () => store.commit('menuToggler', false),
@@ -114,6 +110,7 @@ export default defineComponent({
       login,
       register,
       signOut,
+      openModal,
     };
   },
 });

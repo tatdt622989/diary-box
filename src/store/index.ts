@@ -5,7 +5,7 @@ import {
   ToastMSG,
   UserData,
 } from '@/types';
-import { createStore, Store } from 'vuex';
+import { createStore } from 'vuex';
 import { Modal } from 'bootstrap';
 import firebase from 'firebase/app';
 import 'firebase/auth';
@@ -13,6 +13,7 @@ import 'firebase/database';
 import 'firebase/firestore';
 import 'firebase/analytics';
 import 'firebase/functions';
+import { TierResult } from 'detect-gpu';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -66,6 +67,9 @@ export default createStore({
     dataLoaded: false,
     getPoint: null,
     loadingStr: '',
+    quality: null,
+    gpuTier: null as null | TierResult,
+    isDebug: false,
   },
   mutations: {
     menuToggler(state, data) {
@@ -138,6 +142,15 @@ export default createStore({
       state.userData.pointInfo = data.pointInfo;
       state.userData.email = data.email;
       state.userData.noteData = data.noteData ? data.noteData : [];
+    },
+    updateQuality(state, data) {
+      state.quality = data;
+      if (state.modal) {
+        state.modal.hide();
+      }
+    },
+    updateGpuTier(state, data) {
+      state.gpuTier = data;
     },
   },
   actions: {

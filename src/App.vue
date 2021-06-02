@@ -3,6 +3,7 @@
   <Toast></Toast>
   <PointNotification></PointNotification>
   <Loading></Loading>
+  <Quality></Quality>
 </template>
 
 <script lang="ts">
@@ -18,6 +19,8 @@ import { useStore } from 'vuex';
 import Toast from '@/components/Toast.vue';
 import PointNotification from '@/components/PointNotification.vue';
 import Loading from '@/components/Loading.vue';
+import Quality from '@/components/Quality.vue';
+import { getGPUTier } from 'detect-gpu';
 
 export default defineComponent({
   name: 'app',
@@ -25,17 +28,21 @@ export default defineComponent({
     Toast,
     PointNotification,
     Loading,
+    Quality,
   },
   setup() {
     const store = useStore();
-
     store.dispatch('getModelFormat');
 
-    onMounted(() => {
+    onMounted(async () => {
       store.commit('getHeight');
       window.addEventListener('resize', () => {
         store.commit('getHeight');
       }, false);
+      (async () => {
+        const gpuTier = await getGPUTier();
+        store.commit('updateGpuTier', gpuTier);
+      })();
     });
 
     return {

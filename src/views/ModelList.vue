@@ -11,6 +11,13 @@
         <span class="material-icons">arrow_back</span>
       </button>
       <p>{{ view === "ModelList" ? "所有模型" : "購買模型" }}</p>
+      <button
+        class="btn-circle"
+        @click="$router.push('/store')"
+        v-if="view === 'ModelList'"
+      >
+        <span class="material-icons">store</span>
+      </button>
     </div>
     <div
       class="w-100 d-flex justify-content-center currency-wrap"
@@ -123,7 +130,6 @@
         </div>
       </div>
     </div>
-    <FunctionBar :mode="'model-list'" v-if="view === 'ModelList'"></FunctionBar>
     <canvas id="modelList"></canvas>
   </div>
 </template>
@@ -146,7 +152,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Navbar from '@/components/Navbar.vue';
-import FunctionBar from '@/components/FunctionBar.vue';
 import {
   SceneData,
   Model,
@@ -160,7 +165,6 @@ export default defineComponent({
   name: 'ModelList',
   components: {
     Navbar,
-    FunctionBar,
   },
   setup() {
     const store = useStore();
@@ -276,7 +280,7 @@ export default defineComponent({
           if (object instanceof THREE.Mesh) {
             const mesh = object;
             mesh.castShadow = true;
-            if (color && colorKeys) {
+            if (color && colorKeys && view.value === 'ModelList') {
               if (colorKeys.indexOf(object.name) >= 0) {
                 mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
               }
@@ -520,6 +524,9 @@ export default defineComponent({
       height: 280px;
     }
     .header {
+      p {
+        padding-right: 52px;
+      }
       padding-bottom: 0;
     }
     .content {
@@ -704,7 +711,6 @@ export default defineComponent({
 .header {
   p {
     flex-grow: 1;
-    padding-right: 52px;
     text-align: center;
   }
   background: $primary;

@@ -9,13 +9,6 @@
     </button>
     <button
       class="t-base"
-      @click="$router.push('/')"
-      v-if="mode === 'model-list'"
-    >
-      <span class="material-icons">edit</span>
-    </button>
-    <button
-      class="t-base"
       @click="$router.push({
         name: 'ModelList',
       })"
@@ -26,7 +19,7 @@
     <button
       class="t-base"
       @click="$router.push('/store')"
-      v-if="mode === 'model-list'"
+      v-if="mode === 'home'"
     >
       <span class="material-icons">store</span>
     </button>
