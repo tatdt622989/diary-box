@@ -24,7 +24,7 @@
           <span class="material-icons">photo_camera</span>
         </button>
       </li>
-      <li>
+      <li @click="reset">
         <button>
           <span class="material-icons">center_focus_strong</span>
         </button>
@@ -227,6 +227,7 @@ export default defineComponent({
       controls.maxDistance = 500;
       controls.minPolarAngle = 0;
       controls.maxPolarAngle = Math.PI / 2.5;
+      controls.saveState();
 
       // 地板
       const planeGeometry = new THREE.PlaneGeometry(250, 250, 32);
@@ -426,11 +427,22 @@ export default defineComponent({
       }
     }
 
+    function reset() {
+      if (controls) {
+        controls.reset();
+      }
+    }
+
     return {
-      store,
-      screenShotModal,
+      createNote,
+      downloadImg,
+      enterFullScreen,
+      height: computed(() => store.state.height),
+      img,
       isMenuOpen: computed(() => store.state.isMenuOpen),
+      isNoteOpen,
       lastestNoteData,
+      menuToggler: () => store.commit('menuToggler', true),
       noteDate: computed(() => {
         const len = noteData.value.length;
         const date = len > 0
@@ -441,15 +453,11 @@ export default defineComponent({
         return '';
       }),
       openModal,
-      createNote,
-      isNoteOpen,
-      downloadImg,
+      reset,
+      screenShotModal,
       shareImg,
+      store,
       userData,
-      menuToggler: () => store.commit('menuToggler', true),
-      img,
-      enterFullScreen,
-      height: computed(() => store.state.height),
     };
   },
 });

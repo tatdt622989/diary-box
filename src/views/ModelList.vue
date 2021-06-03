@@ -468,24 +468,31 @@ export default defineComponent({
     }
 
     function buyModel() {
-      if (store.state.userInfo) {
-        store.dispatch('buyModel', buyingModel.value).then(() => {
+      let times = 0;
+      const closeModal = setInterval(() => {
+        if (times > 50 || store.state.modalLoaded) {
           modal.hide();
-          router.push({
-            name: 'ModelEditor',
-            params: {
-              status: 'new',
-            },
-          });
-        });
-      } else {
-        closeBuyModal();
-        store.dispatch('updateToast', {
-          type: 'hint',
-          content: '請先登入',
-        });
-        router.push('/');
-      }
+          clearInterval(closeModal);
+          if (store.state.userInfo) {
+            store.dispatch('buyModel', buyingModel.value).then(() => {
+              router.push({
+                name: 'ModelEditor',
+                params: {
+                  status: 'new',
+                },
+              });
+            });
+          } else {
+            closeBuyModal();
+            store.dispatch('updateToast', {
+              type: 'hint',
+              content: '請先登入',
+            });
+            router.push('/');
+          }
+        }
+        times += 1;
+      }, 100);
     }
 
     function editModel(index: number) {

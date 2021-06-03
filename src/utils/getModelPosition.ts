@@ -1,24 +1,28 @@
 import * as THREE from 'three';
 
-export default function getModelPostion(target: THREE.Object3D, data: Array<THREE.Object3D>) {
-  const targetUuid = target.uuid;
-  const targetBox = new THREE.Box3().setFromObject(target);
-  const targetPosition = {
-    x: 0,
-    y: 0,
-    z: 0,
-  };
-  function getPosition() {
-    data.forEach((group) => {
-      if (targetUuid !== group.uuid) {
-        const box = new THREE.Box3().setFromObject(target);
-        if (targetBox.intersectsBox(box)) {
-          targetPosition.x += 3;
-          getPosition();
-        }
-      }
-    });
+export default function getModelPostion(groups: Array<THREE.Object3D>) {
+  function setPos(tgt: THREE.Object3D, current: THREE.Object3D) {
+    const tgtBox = new THREE.Box3().setFromObject(tgt);
+    const currentBox = new THREE.Box3().setFromObject(current);
+    if (tgtBox.intersectsBox(currentBox)) {
+      console.log('重疊', tgt, current);
+      const offset = tgt.position.x + 3;
+      tgt.position.setX(offset);
+      setPos(tgt, current);
+    }
   }
-  getPosition();
-  return targetPosition;
+  const len = groups.length;
+  let i = 0;
+  while (i < len) {
+    console.log(groups[i]);
+    let n = 0;
+    while (n < len) {
+      console.log(i, n);
+      if (i !== n) {
+        setPos(groups[i], groups[n]);
+      }
+      n += 1;
+    }
+    i += 1;
+  }
 }

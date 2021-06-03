@@ -34,6 +34,7 @@ import {
   onMounted,
   computed,
   onUnmounted,
+  nextTick,
 } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
@@ -74,7 +75,16 @@ export default defineComponent({
     let model: THREE.Group;
     let animation: number;
 
-    onMounted(() => {
+    onMounted(async () => {
+      await nextTick();
+      let times = 0;
+      const closeModal = setInterval(() => {
+        if (times > 50 || store.state.modalLoaded) {
+          store.commit('closeModal');
+          clearInterval(closeModal);
+        }
+        times += 1;
+      }, 100);
       let index: number;
       const len = modelData.value.length;
       if (status === 'new') {
@@ -85,7 +95,11 @@ export default defineComponent({
         return router.push('/model-list');
       }
       selectedModel.value = modelData.value[index];
-      modelColor.value = JSON.parse((JSON.stringify(selectedModel.value.color)));
+      if (modelFormat.value) {
+        modelColor.value = JSON.parse((JSON.stringify(
+          modelFormat.value[selectedModel.value.name],
+        )));
+      }
       if (modelFormat.value !== null) {
         console.log(selectedModel.value);
         const productKeys = Object.keys(modelFormat.value);
@@ -280,6 +294,7 @@ export default defineComponent({
       modelData,
       selectedModelArea,
       selectedModel,
+      userData: computed(() => store.state.userData),
     };
   },
 });

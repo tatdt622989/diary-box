@@ -64,20 +64,21 @@ import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { Object3D } from 'three';
-import getModelPostion from '@/utils/getModelPosition';
+import modelOverlapping from '@/utils/modelOverlapping';
 import rendererCreator from '@/utils/rendererCreator';
 import { LoadedModel, Model, ModelColor } from '@/types';
 
 export default defineComponent({
-  name: 'ModelEditor',
+  name: 'SceneEditor',
   setup(props) {
     const store = useStore();
     const route = useRoute();
     const router = useRouter();
     const targetId = route.params.target;
     const publicPath = ref(process.env.BASE_URL);
-    const modelData = ref<Array<Model>>(store.state.userData
-      ? store.state.userData.modelData : [store.state.defaultModelData]);
+    const modelData = store.state.userData
+      ? computed(() => store.state.userData.modelData)
+      : ref<Array<Model>>([store.state.defaultModelData]);
     const canvas = ref<HTMLCanvasElement>();
     const camera = ref<THREE.PerspectiveCamera>();
     const mouse = ref<THREE.Vector2 | null>(null);
@@ -88,6 +89,7 @@ export default defineComponent({
     let effectFXAA: ShaderPass | null = null;
     let groups: Array<THREE.Object3D> | null = null;
     const scene: THREE.Scene = new THREE.Scene();
+    const overlapping = ref<Array<Array<THREE.Object3D>> | null>(null);
 
     function resize() {
       if (renderer && camera.value && composer) {
@@ -256,15 +258,9 @@ export default defineComponent({
             }
           }
         });
-        console.log(threeObj);
         threeObj.castShadow = true;
+        threeObj.position.set(data.position.x, data.position.y, data.position.z);
         threeObj.rotation.set(data.rotation.x, data.rotation.y, data.rotation.z);
-        if (modelLen > 1 && groups) {
-          const pos = getModelPostion(threeObj, groups);
-          threeObj.position.set(pos.x, pos.y, pos.z);
-        } else {
-          threeObj.position.set(data.position.x, data.position.y, data.position.z);
-        }
         threeObj.receiveShadow = false;
       }
 
@@ -316,12 +312,22 @@ export default defineComponent({
 
       Promise.all(result).then(() => {
         groups = scene.children.filter((el) => el.type === 'Group');
-        const model = groups.find((obj) => obj.userData.id === targetId);
-        console.log(groups);
-        render();
+        if (modelLen > 1 && groups) {
+          overlapping.value = modelOverlapping(groups) as Array<Array<THREE.Object3D>>;
+          console.log('取得模型重疊狀態', overlapping.value);
+          overlapping.value.forEach((obj) => {
+            if (outlinePass) {
+              outlinePass.visibleEdgeColor.set('#ff0000');
+              outlinePass.selectedObjects = [obj[0], obj[1]];
+            }
+          });
+        }
+        const model = groups.find((obj) => obj.userData.id === Number(targetId));
+        console.log(model, '框選目標', groups);
         if (outlinePass && model) {
           outlinePass.selectedObjects = [model];
         }
+        render();
       });
     });
 
@@ -335,6 +341,10 @@ export default defineComponent({
       const posUnit = 1.5;
       const rotateUnit = Math.PI / 8;
       if (!selectedModel) {
+        store.dispatch('updateToast', {
+          type: 'hint',
+          content: '請先選擇模型',
+        });
         return;
       }
       selectedModel.rotation.order = 'YXZ';
@@ -396,7 +406,7 @@ export default defineComponent({
           const rotation = group.rotation.toArray();
           const id = group.userData?.id;
           console.log(pos, rotation);
-          modelData.value.forEach((obj) => {
+          modelData.value.forEach((obj: Model) => {
             const data = obj;
             if (id === data.id) {
               if (pos[0] !== data.position.x || pos[1] !== data.position.y
@@ -434,6 +444,7 @@ export default defineComponent({
     }
 
     return {
+      modelData,
       getMousePos,
       mouse,
       controller,

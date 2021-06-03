@@ -126,6 +126,7 @@ export default createStore({
       state.userData.noteData = data;
     },
     updateModelData(state, data) {
+      console.log(data, '更新模型資料');
       state.userData.modelData = data;
     },
     updateBalance(state, data) {
@@ -266,9 +267,6 @@ export default createStore({
           await dispatch('getModelData');
           await dispatch('getBalance');
         }
-        if (state.modal) {
-          state.modal.hide();
-        }
         dispatch('updateToast', {
           type: 'success',
           content: result.data.msg,
@@ -312,7 +310,7 @@ export default createStore({
         if (res.data && res.data.status === 'ok') {
           if (res.data.point > 0) {
             commit('updateModalLoaded', false);
-            commit('openModal', {
+            dispatch('openModal', {
               type: 'pointNotification',
               asynchronous: false,
             });
@@ -370,8 +368,9 @@ export default createStore({
     },
     async getModelData({ commit, state }) {
       if (state.userInfo) {
-        const noteData = await db.ref(`/users/${state.userInfo.uid}/modelData`).once('value').then((snap) => snap.val());
-        commit('updateNoteData', noteData);
+        const modelData = await db.ref(`/users/${state.userInfo.uid}/modelData`).once('value').then((snap) => snap.val());
+        console.log('模型資料', modelData);
+        commit('updateModelData', modelData);
       }
     },
     updateToast({ commit }, data) {
@@ -416,11 +415,11 @@ export default createStore({
         switch (data.type) {
           case 'add':
             commit('updateModalLoaded', false);
-            commit('openModal', {
+            commit('updateLoadingStr', '資料上傳中');
+            dispatch('openModal', {
               type: 'loading',
               asynchronous: true,
             });
-            commit('updateLoadingStr', '資料上傳中');
             noteData.push(data.data);
             break;
           case 'edit':
