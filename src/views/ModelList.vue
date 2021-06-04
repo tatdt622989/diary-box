@@ -7,7 +7,7 @@
   >
     <Navbar></Navbar>
     <div class="header">
-      <button class="btn-circle" @click="$router.go(-1)">
+      <button class="btn-circle" @click="$router.push('/home')">
         <span class="material-icons">arrow_back</span>
       </button>
       <p>{{ view === "ModelList" ? "所有模型" : "購買模型" }}</p>
@@ -38,7 +38,7 @@
             :class="{ passive: v.passive && view === 'ModelList' }"
           >
             <div class="item-bg">
-              <div class="item-wrap">
+              <div class="item-wrap" :style="{ zIndex: 1000 - i}">
                 <div
                   v-if="view === 'ModelList'"
                   class="position-absolute start-0 top-0"
@@ -79,7 +79,7 @@
                   "
                 >
                   <li>
-                    <button>預覽</button>
+                    <button @click="previewModal(i)">預覽</button>
                   </li>
                   <li>
                     <button>切換為未使用</button>
@@ -505,6 +505,16 @@ export default defineComponent({
       });
     }
 
+    function previewModal(index: number) {
+      router.push({
+        name: 'ModelEditor',
+        params: {
+          index,
+          status: 'preview',
+        },
+      });
+    }
+
     return {
       buyingModel,
       buyModel,
@@ -517,6 +527,7 @@ export default defineComponent({
       selectedMenu,
       userData: computed(() => store.state.userData),
       view,
+      previewModal,
     };
   },
 });
@@ -664,6 +675,7 @@ export default defineComponent({
     }
     box-shadow: 4px 0px 16px rgba(68, 153, 102, 0.5);
     opacity: 1;
+    z-index: 99999;
   }
   display: flex;
   flex-direction: column;

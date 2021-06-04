@@ -84,15 +84,6 @@ export default defineComponent({
     const password = ref('');
     const dataLoaded = computed(() => store.state.dataLoaded);
 
-    watch(
-      computed(() => store.state.modalLoaded),
-      (newVal: boolean) => {
-        if (newVal) {
-          store.commit('closeModal');
-        }
-      },
-    );
-
     watch(dataLoaded, (newVal, oldVal) => {
       console.log('資料載入狀態變更');
       if (newVal) {
@@ -138,7 +129,10 @@ export default defineComponent({
       if (store.state.modal) {
         store.state.modal.hide();
       }
-      store.dispatch('openModal', 'register');
+      store.dispatch('openModal', {
+        type: 'register',
+        asynchronous: false,
+      });
     }
 
     return {

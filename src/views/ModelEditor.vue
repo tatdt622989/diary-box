@@ -1,6 +1,13 @@
 <template>
   <div class="model-preview-wrap">
-    <ul class="tool-bar">
+    <button
+      class="return-btn btn btn-circle btn-primary"
+      v-if="$route.params.status === 'preview'"
+      @click="$router.go(-1)"
+    >
+      <span class="material-icons">arrow_back</span>
+    </button>
+    <ul class="tool-bar" v-if="$route.params.status !== 'preview'">
       <li v-for="(area, i) in selectedModelArea" :key="i">
         <input
           type="color"
@@ -89,7 +96,7 @@ export default defineComponent({
       const len = modelData.value.length;
       if (status === 'new') {
         index = len - 1;
-      } else if (status === 'old') {
+      } else if (status === 'old' || status === 'preview') {
         index = Number(route.params.index);
       } else {
         return router.push('/model-list');
@@ -326,5 +333,10 @@ export default defineComponent({
   }
   position: relative;
   overflow: hidden;
+}
+.return-btn {
+  position: absolute;
+  left: 16px;
+  top: 24px;
 }
 </style>

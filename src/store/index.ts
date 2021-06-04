@@ -351,6 +351,14 @@ export default createStore({
         }
         commit('updateUserData', userData);
         commit('menuToggler', false);
+        let times = 0;
+        const closeModal = setInterval(() => {
+          if (times > 50 || state.modalLoaded) {
+            commit('closeModal');
+            clearInterval(closeModal);
+          }
+          times += 1;
+        }, 100);
       }
       return false;
     },

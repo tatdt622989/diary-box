@@ -11,6 +11,7 @@
         <span class="material-icons">check</span>
       </button>
     </div>
+    <p class="hint">{{ hint }}</p>
     <div id="directionController">
       <div>
         <button class="btn btn-circle" @click="controller('direction', 'behind')">
@@ -63,9 +64,11 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
-import { Object3D } from 'three';
+import { Camera, Event, Object3D } from 'three';
 import modelOverlapping from '@/utils/modelOverlapping';
 import rendererCreator from '@/utils/rendererCreator';
+import getModelOverlapState from '@/utils/getModelOverlapState';
+import getModelPosition from '@/utils/getModelPosition';
 import { LoadedModel, Model, ModelColor } from '@/types';
 
 export default defineComponent({
@@ -76,11 +79,17 @@ export default defineComponent({
     const router = useRouter();
     const targetId = route.params.target;
     const publicPath = ref(process.env.BASE_URL);
+    const hint = ref('請選擇模型開始編輯');
     const modelData = store.state.userData
       ? computed(() => store.state.userData.modelData)
       : ref<Array<Model>>([store.state.defaultModelData]);
     const canvas = ref<HTMLCanvasElement>();
-    const camera = ref<THREE.PerspectiveCamera>();
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      window.innerWidth / (window.innerHeight - 66),
+      0.1,
+      10000,
+    );
     const mouse = ref<THREE.Vector2 | null>(null);
     let selectedModel: Object3D | null = null;
     let outlinePass: OutlinePass | null = null;
@@ -90,51 +99,53 @@ export default defineComponent({
     let groups: Array<THREE.Object3D> | null = null;
     const scene: THREE.Scene = new THREE.Scene();
     const overlapping = ref<Array<Array<THREE.Object3D>> | null>(null);
+    const raycaster = new THREE.Raycaster();
 
-    function resize() {
-      if (renderer && camera.value && composer) {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        composer.setSize(window.innerWidth, window.innerHeight);
-        camera.value.aspect = window.innerWidth / (window.innerHeight);
-        camera.value.updateProjectionMatrix();
-      }
-    }
+    scene.background = new THREE.Color(0x449966);
 
-    function getMousePos(e: MouseEvent | TouchEvent) {
-      mouse.value = new THREE.Vector2();
-      if (e instanceof TouchEvent) {
-        mouse.value.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
-        mouse.value.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
-        console.log(e.touches[0].clientX, e.touches[0].clientY, '按下');
-      } else {
-        mouse.value.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.value.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        console.log(e, e.clientX, e.clientY, '按下');
-      }
-    }
+    // 相機
+    camera.position.set(40, 30, 0);
+    camera.zoom = 1;
 
-    function getModelOverlapState(target: Object3D, uuid: string) {
-      console.log(target);
-      const targetBox = new THREE.Box3().setFromObject(target as Object3D);
-      // const helper = new THREE.Box3Helper(targetBox);
-      // scene.add(helper);
-      let isOverlap = false;
-      if (groups) {
-        console.log(groups, uuid);
-        groups.forEach((g) => {
-          if (uuid !== g.uuid) {
-            console.log(g, '其他模型');
-            const currentBox = new THREE.Box3().setFromObject(g as Object3D);
-            if (targetBox.intersectsBox(currentBox)) {
-              console.log('重疊');
-              isOverlap = true;
-            }
-          }
-        });
-      }
-      console.log(isOverlap);
-      return isOverlap;
-    }
+    // 地板
+    const planeGeometry = new THREE.PlaneGeometry(200, 200, 32);
+    const texture = new THREE.TextureLoader().load('../images/grid.png', (obj) => {
+      const t = obj;
+      t.wrapS = THREE.RepeatWrapping;
+      t.wrapT = THREE.RepeatWrapping;
+      t.offset.set(0, 0);
+      t.repeat.set(4, 4);
+    });
+    const planeMaterial = new THREE.MeshStandardMaterial(
+      { color: '#929292', side: THREE.DoubleSide, map: texture },
+    );
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.rotateX(Math.PI / 2);
+    plane.receiveShadow = true;
+    scene.add(plane);
+    const pointer = new THREE.Vector2();
+    let planePoint: THREE.Vector3;
+
+    // 燈光
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xF8EBCF, 0.6, 10000);
+    pointLight.position.set(15, 27, 7);
+    pointLight.castShadow = true;
+    pointLight.shadow.radius = 2;
+    pointLight.shadow.mapSize.width = 1024;
+    pointLight.shadow.mapSize.height = 1024;
+    pointLight.shadow.camera.near = 1;
+    pointLight.shadow.camera.far = 10000;
+    const directionalLight = new THREE.DirectionalLight(0xF8EBCF, 0.6);
+    directionalLight.position.set(-10, 20, 0);
+    scene.add(pointLight);
+    scene.add(directionalLight);
+    const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
+    scene.add(pointLightHelper);
+
+    // 霧
+    scene.fog = new THREE.Fog(0x449966, 1, 150);
 
     onMounted(() => {
       canvas.value = document.getElementById('editor') as HTMLCanvasElement;
@@ -145,95 +156,51 @@ export default defineComponent({
       composer = new EffectComposer(renderer);
       composer.setSize(window.innerWidth, window.innerHeight);
 
-      scene.background = new THREE.Color(0x449966);
-
-      // 相機
-      camera.value = new THREE.PerspectiveCamera(
-        45,
-        window.innerWidth / (window.innerHeight - 66),
-        0.1,
-        10000,
-      );
-      camera.value.position.set(30, 10, 0);
-      camera.value.zoom = 1;
-
-      // 控制器
-      const controls: MapControls = new MapControls(camera.value, canvas.value);
-      controls.target = new THREE.Vector3(0, 5, 0);
-      controls.dampingFactor = 0.05;
-      controls.enableDamping = true;
-      controls.minPolarAngle = 0;
-      controls.maxPolarAngle = Math.PI / 2.5;
-
-      // 地板
-      const planeGeometry = new THREE.PlaneGeometry(250, 250, 32);
-      const planeMaterial = new THREE.MeshStandardMaterial(
-        { color: 0x2F6F48, side: THREE.DoubleSide },
-      );
-      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-      plane.rotateX(Math.PI / 2);
-      plane.receiveShadow = true;
-      scene.add(plane);
-
-      // 燈光
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-      scene.add(ambientLight);
-      const pointLight = new THREE.PointLight(0xF8EBCF, 0.6, 10000);
-      pointLight.position.set(15, 27, 7);
-      pointLight.castShadow = true;
-      pointLight.shadow.radius = 2;
-      pointLight.shadow.mapSize.width = 1024;
-      pointLight.shadow.mapSize.height = 1024;
-      pointLight.shadow.camera.near = 1;
-      pointLight.shadow.camera.far = 10000;
-      const directionalLight = new THREE.DirectionalLight(0xF8EBCF, 0.6);
-      directionalLight.position.set(-10, 20, 0);
-      scene.add(pointLight);
-      scene.add(directionalLight);
-      const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
-      scene.add(pointLightHelper);
-
-      // 霧
-      scene.fog = new THREE.Fog(0x449966, 1, 150);
-
       // 取得滑鼠位置模型
-      const raycaster = new THREE.Raycaster();
-      const renderPass = new RenderPass(scene, camera.value);
+      const renderPass = new RenderPass(scene, camera);
       composer.addPass(renderPass);
 
       outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth,
-        window.innerHeight), scene, camera.value);
+        window.innerHeight), scene, camera);
       composer.addPass(outlinePass);
 
       effectFXAA = new ShaderPass(FXAAShader);
       effectFXAA.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
       composer.addPass(effectFXAA);
 
+      // 控制器
+      const controls: MapControls = new MapControls(camera, canvas.value);
+      controls.target = new THREE.Vector3(0, 5, 0);
+      // controls.dampingFactor = 0.03;
+      controls.enableDamping = true;
+      controls.enableRotate = false;
+      controls.minPolarAngle = 0;
+      controls.maxPolarAngle = Math.PI / 2.5;
+
       function render() {
-        if (renderer && camera.value) {
+        if (renderer) {
           requestAnimationFrame(render);
           if (mouse.value && outlinePass && groups) {
-            raycaster.setFromCamera(mouse.value, camera.value);
+            raycaster.setFromCamera(mouse.value, camera);
             const intersects = raycaster.intersectObjects(groups, true);
             console.log(intersects, mouse.value, scene);
             if (intersects.length > 0) {
               outlinePass.selectedObjects = [intersects[0].object.parent as Object3D];
               selectedModel = intersects[0].object.parent?.parent!;
+              hint.value = '點選場景空白處或控制按鈕修改模型位置及旋轉角度';
+              // const helper = new THREE.Box3Helper(new THREE.Box3().setFromObject(selectedModel));
+              // scene.add(helper);
             } else {
               outlinePass.selectedObjects = [];
               selectedModel = null;
+              hint.value = '請選擇模型開始編輯';
             }
-            // const box = new THREE.Box3().setFromObject(selectedModel as Object3D);
-            // const helper = new THREE.Box3Helper(box);
-            // scene.add(helper);
-            console.log(selectedModel);
             mouse.value = null;
           }
           controls.update();
           if (composer) {
             composer.render();
           }
-          // renderer.render(scene, camera.value);
         }
       }
 
@@ -315,11 +282,9 @@ export default defineComponent({
         if (modelLen > 1 && groups) {
           overlapping.value = modelOverlapping(groups) as Array<Array<THREE.Object3D>>;
           console.log('取得模型重疊狀態', overlapping.value);
-          overlapping.value.forEach((obj) => {
-            if (outlinePass) {
-              outlinePass.visibleEdgeColor.set('#ff0000');
-              outlinePass.selectedObjects = [obj[0], obj[1]];
-            }
+          overlapping.value.forEach((ary) => {
+            const target = ary[0];
+            getModelPosition(groups!, target);
           });
         }
         const model = groups.find((obj) => obj.userData.id === Number(targetId));
@@ -327,30 +292,25 @@ export default defineComponent({
         if (outlinePass && model) {
           outlinePass.selectedObjects = [model];
         }
+
         render();
       });
-    });
-
-    onUnmounted(() => {
-      window.removeEventListener('resize', resize);
-      renderer = null;
     });
 
     function controller(type: string, direction: string) {
       console.log(selectedModel, direction);
       const posUnit = 1.5;
       const rotateUnit = Math.PI / 8;
-      if (!selectedModel) {
+      if (!selectedModel && type !== 'point') {
         store.dispatch('updateToast', {
           type: 'hint',
           content: '請先選擇模型',
         });
         return;
       }
-      selectedModel.rotation.order = 'YXZ';
-      let targetModel = selectedModel.clone(true);
-      function setModelTransform() {
-        console.log(targetModel, 'tranform');
+      function setModelTransform(model: THREE.Object3D) {
+        const targetModel = model;
+        console.log(type, targetModel, 'tranform');
         const axis = new THREE.Vector3(0, 1, 0);
         if (type === 'rotate') {
           switch (direction) {
@@ -381,15 +341,71 @@ export default defineComponent({
               break;
           }
           targetModel.position.set(targetModel.position.x += axis.x,
-            targetModel.position.y += axis.y, targetModel.position.z += axis.z);
+            0, targetModel.position.z += axis.z);
+        } else if (type === 'point' && planePoint) {
+          console.log(planePoint);
+          axis.set(planePoint.x, 0, planePoint.z);
+          targetModel.position.set(axis.x, 0, axis.z);
         }
       }
-      setModelTransform();
-      if (getModelOverlapState(targetModel as Object3D, selectedModel.uuid)) {
-        return;
+      if (selectedModel) {
+        selectedModel.rotation.order = 'YXZ';
+        let targetModel = selectedModel.clone(true);
+        let currentIsOverlap = false;
+        if (groups) {
+          overlapping.value = modelOverlapping(groups) as Array<Array<THREE.Object3D>>;
+          overlapping.value.forEach((ary) => {
+            if (ary[0].uuid === selectedModel?.uuid || ary[1].uuid === selectedModel?.uuid) {
+              currentIsOverlap = true;
+            }
+          });
+        }
+        console.log(currentIsOverlap, overlapping.value);
+        if (!currentIsOverlap && groups) {
+          setModelTransform(targetModel);
+          if (getModelOverlapState(groups, targetModel as Object3D, selectedModel.uuid)) {
+            return;
+          }
+        }
+        targetModel = selectedModel;
+        setModelTransform(targetModel);
       }
-      targetModel = selectedModel;
-      setModelTransform();
+    }
+
+    function onPointerClick(e: Event, pos: any) {
+      console.log(pos);
+      if (renderer && camera && mouse.value) {
+        pointer.x = (pos.x / renderer.domElement.clientWidth) * 2 - 1;
+        pointer.y = -(pos.y / renderer.domElement.clientHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera as any);
+        const intersects = raycaster.intersectObjects([plane as THREE.Object3D]);
+        console.log('與平面相交', intersects[0]);
+        planePoint = intersects[0].point;
+        controller('point', '');
+      }
+    }
+
+    function getMousePos(e: MouseEvent | TouchEvent) {
+      mouse.value = new THREE.Vector2();
+      let pos;
+      if (e instanceof TouchEvent) {
+        mouse.value.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+        mouse.value.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+        pos = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+        };
+        console.log(e.touches[0].clientX, e.touches[0].clientY, '按下');
+      } else {
+        mouse.value.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.value.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        pos = {
+          x: e.clientX,
+          y: e.clientY,
+        };
+        console.log(e, e.clientX, e.clientY, '按下');
+      }
+      onPointerClick(e, pos);
     }
 
     async function apply() {
@@ -443,12 +459,28 @@ export default defineComponent({
       }
     }
 
+    function resize() {
+      if (renderer && composer) {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / (window.innerHeight);
+        camera.updateProjectionMatrix();
+      }
+    }
+    window.addEventListener('resize', resize, false);
+
+    onUnmounted(() => {
+      window.removeEventListener('resize', resize);
+      renderer = null;
+    });
+
     return {
       modelData,
       getMousePos,
       mouse,
       controller,
       apply,
+      hint,
     };
   },
 });
@@ -462,8 +494,8 @@ export default defineComponent({
     }
     .title {
       border-radius: 999px;
-      border: 2px solid $secondary;
-      color: $secondary;
+      color: $primary;
+      background: $secondary;
       font-size: 20px;
       font-weight: bold;
       height: 52px;
@@ -475,6 +507,21 @@ export default defineComponent({
     justify-content: space-between;
     margin-top: 24px;
     position: absolute;
+  }
+  .hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 120px;
+    font-size: 24px;
+    font-weight: bold;
+    color: $secondary;
+    letter-spacing: 2px;
+    margin: auto;
+    width: 374px;
+    border: 2px solid $secondary;
+    border-radius: 10px;
+    padding: 8px;
   }
   #directionController {
     > div {
@@ -503,21 +550,26 @@ export default defineComponent({
       }
       display: flex;
     }
-    bottom: 32px;
+    bottom: 28px;
     display: flex;
     flex-wrap: wrap;
     transform: rotate(45deg);
     position: absolute;
-    right: 32px;
+    right: 26px;
     width: 136px;
   }
   #rotateController {
     button {
-      margin: 8px;
+      &:first-child {
+        margin-right: 8px;
+      }
+      &:last-child {
+        margin-left: 8px;
+      }
     }
     bottom: 18px;
     display: flex;
-    left: 16px;
+    left: 20px;
     position: absolute;
   }
   display: flex;

@@ -39,7 +39,7 @@
     <canvas id="mainScene" ref="mainScene"></canvas>
     <div class="note-wrap" :class="{ active: isNoteOpen }">
       <div class="content">
-        <div class="d-flex justify-content-end w-100">
+        <div class="d-flex justify-content-end w-100 mb-2">
           <button class="btn btn-circle close-btn" @click="isNoteOpen = false">
             <span class="material-icons">close</span>
           </button>
@@ -190,14 +190,6 @@ export default defineComponent({
     }
 
     onMounted(async () => {
-      let times = 0;
-      const closeModal = setInterval(() => {
-        if (times > 50 || store.state.modalLoaded) {
-          store.commit('closeModal');
-          clearInterval(closeModal);
-        }
-        times += 1;
-      }, 100);
       getNote();
       canvas = document.getElementById('mainScene') as HTMLCanvasElement;
       renderer = rendererCreator(store.state.gpuTier ? store.state.gpuTier.tier : 0, canvas);
@@ -276,7 +268,6 @@ export default defineComponent({
 
       const loadedModel: LoadedModel = {};
       const modelLen = modelData.value.length;
-      let onOriginalPosTimes = 0;
       /**
        * 模型樣式載入
        */
@@ -294,11 +285,8 @@ export default defineComponent({
             }
           }
         });
-        console.log(threeObj);
+        console.log(threeObj, data);
         threeObj.castShadow = true;
-        if (threeObj.position.x === 0 && threeObj.position.y === 0 && threeObj.position.z === 0) {
-          onOriginalPosTimes += 1;
-        }
         threeObj.position.set(data.position.x, data.position.y, data.position.z);
         threeObj.rotation.set(data.rotation.x, data.rotation.y, data.rotation.z);
         threeObj.receiveShadow = false;
@@ -308,10 +296,8 @@ export default defineComponent({
        * 同步載入模型
        */
       async function ModelLoad(i: number) {
-        const data = modelData.value[i];
-        if (onOriginalPosTimes > 1) {
-          return;
-        }
+        const data = JSON.parse(JSON.stringify(modelData.value[i]));
+        console.log('data', data);
         const { color } = modelData.value[i];
         let colorKeys: Array<string> | null = null;
         let threeObj;
@@ -320,6 +306,7 @@ export default defineComponent({
         }
         if (!loadedModel[data.name]) {
           threeObj = await new Promise((resolve, reject) => {
+            console.log(data.name, 'name');
             loader.load(
               `${publicPath.value}model/${data.name}.gltf`,
               (gltf) => {
@@ -331,7 +318,7 @@ export default defineComponent({
                 console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
               },
               (error) => {
-                console.log('An error happened');
+                console.log('An error happened', error);
               },
             );
           });
@@ -640,8 +627,8 @@ export default defineComponent({
       position: absolute;
       left: 0;
       right: 0;
-      top: 0;
-      bottom: 0;
+      top: 50%;
+      transform: translateY(-50%);
       margin: auto;
       flex-direction: column;
     }

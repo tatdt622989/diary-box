@@ -140,6 +140,9 @@ export default defineComponent({
     }
     padding-top: 0;
   }
+  form {
+    width: 100%;
+  }
   input {
     &::placeholder {
       color: $primary;

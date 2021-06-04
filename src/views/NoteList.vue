@@ -21,12 +21,13 @@
       </button>
     </div>
     <div class="content scroll-bar" @click="isFilterOpen = false">
-      <div v-if="searchingWord">
+      <div v-if="searchingWord" class="search-status">
         <p class="search-result">
-          搜尋"&nbsp;&nbsp;<span>{{ searchingWord }}</span>&nbsp;&nbsp;"結果
+          搜尋"&nbsp;&nbsp;<span>{{ searchingWord }}</span
+          >&nbsp;&nbsp;"結果
         </p>
-        <button>
-          <span class="materail-icons">close</span>
+        <button class="cancel-btn btn" @click="clearSearch">
+          <span class="material-icons">close</span>
         </button>
       </div>
       <div class="data-group" v-for="(item, i) in noteList" :key="i">
@@ -166,6 +167,7 @@ export default defineComponent({
         } else {
           noteList.value[index].notes.push(el);
           noteList.value[index].time.push(timeStr);
+          noteList.value[index].notes.reverse();
         }
       });
     }
@@ -230,6 +232,11 @@ export default defineComponent({
       isFilterOpen.value = false;
     }
 
+    function clearSearch() {
+      getNotelist(noteData.value);
+      searchingWord.value = '';
+    }
+
     watch(isFilterOpen, (newVal) => {
       if (!newVal) {
         filterKeyword.value = '';
@@ -250,6 +257,7 @@ export default defineComponent({
       openFilter,
       selectedMenu,
       searchingWord,
+      clearSearch,
     };
   },
 });
@@ -317,6 +325,14 @@ export default defineComponent({
     width: 100%;
     overflow-y: auto;
   }
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: flex-start;
+  width: 100%;
+}
+.search-status {
   .search-result {
     span {
       font-weight: bold;
@@ -325,14 +341,14 @@ export default defineComponent({
     font-size: 20px;
     width: 100%;
     text-align: left;
-    margin-bottom: 20px;
   }
-  align-items: center;
+  .cancel-btn {
+    span {
+      color: $secondary;
+    }
+  }
   display: flex;
-  flex-direction: column;
-  height: 100vh;
-  justify-content: flex-start;
-  width: 100%;
+  margin-bottom: 20px;
 }
 .default {
   span {
