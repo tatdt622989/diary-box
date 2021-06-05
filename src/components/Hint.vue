@@ -6,27 +6,30 @@
     aria-labelledby="hintModalLabel"
     aria-hidden="true"
   >
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="hintModalLabel">Modal title</h5>
           <button
             type="button"
-            class="btn-close"
+            class="btn btn-circle"
             data-bs-dismiss="modal"
             aria-label="Close"
-          ></button>
+          >
+            <span class="material-icons">close</span>
+          </button>
         </div>
-        <div class="modal-body">...</div>
+        <div class="modal-body">
+          <p>是否要刪除模型？</p>
+        </div>
         <div class="modal-footer">
           <button
             type="button"
-            class="btn btn-secondary"
+            class="btn btn-primary"
             data-bs-dismiss="modal"
           >
-            取消
+            否
           </button>
-          <button type="button" class="btn btn-primary">儲存</button>
+          <button type="button" class="btn btn-primary" @click="$emit('deleteModel')">是</button>
         </div>
       </div>
     </div>
@@ -47,5 +50,12 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+.modal-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0;
+  height: auto;
+  padding: 16px;
+}
 </style>

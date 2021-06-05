@@ -14,7 +14,7 @@
   "scene": 0,
   "nodes": [
     {
-      "name": "chair",
+      "name": "body",
       "extras": {
         "name": "chair.002"
       },
@@ -22,6 +22,9 @@
     },
     {
       "name": "chair",
+      "extras": {
+        "name": "chair"
+      },
       "children": [
         0
       ]

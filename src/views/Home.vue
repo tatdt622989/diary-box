@@ -2,9 +2,7 @@
   <div class="main-wrap home-wrap" :style="{ height }">
     <div class="status">
       <div class="currency">
-        <span>{{
-          store.state.userData.pointInfo.balance
-        }}</span>
+        <span>{{ store.state.userData.pointInfo.balance }}</span>
         <img src="@/assets/images/currency.svg" />
       </div>
     </div>
@@ -14,6 +12,11 @@
           <span class="material-icons">menu</span>
         </button>
       </li>
+      <!-- <li>
+        <button @click="menuToggler">
+          <span class="material-icons">help</span>
+        </button>
+      </li> -->
       <li>
         <button @click="enterFullScreen">
           <span class="material-icons">fullscreen</span>
@@ -206,12 +209,12 @@ export default defineComponent({
         0.1,
         10000,
       );
-      camera.position.set(20, 10, 0);
+      camera.position.set(40, 25, 0);
       camera.zoom = 1;
 
       // 控制器
       controls = new MapControls(camera, canvas);
-      controls.target = new THREE.Vector3(0, 5, 0);
+      controls.target = new THREE.Vector3(0, 6, 0);
       controls.dampingFactor = 0.1;
       controls.enableDamping = true;
       controls.screenSpacePanning = false;
@@ -222,9 +225,9 @@ export default defineComponent({
       controls.saveState();
 
       // 地板
-      const planeGeometry = new THREE.PlaneGeometry(250, 250, 32);
+      const planeGeometry = new THREE.PlaneGeometry(600, 650, 32);
       const planeMaterial = new THREE.MeshStandardMaterial(
-        { color: 0x2F6F48, side: THREE.DoubleSide },
+        { color: '#336744', side: THREE.DoubleSide },
       );
       const plane = new THREE.Mesh(planeGeometry, planeMaterial);
       plane.rotateX(Math.PI / 2);
@@ -246,11 +249,11 @@ export default defineComponent({
       directionalLight.position.set(-10, 20, 0);
       scene.add(pointLight);
       scene.add(directionalLight);
-      const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
-      scene.add(pointLightHelper);
+      // const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
+      // scene.add(pointLightHelper);
 
       // 霧
-      scene.fog = new THREE.Fog(0x449966, 1, 150);
+      scene.fog = new THREE.Fog(0x449966, 1, 300);
 
       function render() {
         if (renderer && camera) {
@@ -332,7 +335,9 @@ export default defineComponent({
       const result = [];
       let i = 0;
       while (i < modelLen) {
-        result.push(ModelLoad(i));
+        if (!modelData.value[i].passive) {
+          result.push(ModelLoad(i));
+        }
         i += 1;
       }
 

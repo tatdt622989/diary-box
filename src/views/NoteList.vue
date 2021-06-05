@@ -38,7 +38,7 @@
           <li
             v-for="(item, n) in noteList[i].notes"
             :key="n"
-            @click="editNote(item)"
+            @click="editNote(item.id)"
           >
             <span class="title">{{ item.title }}</span>
             <span class="time">{{ noteList[i].time[[n]] }}</span>
@@ -57,10 +57,10 @@
               v-if="selectedMenu[0] === i && selectedMenu[1] === n"
             >
               <li>
-                <button @click="editNote(item)">編輯</button>
+                <button @click="editNote(item.id)">編輯</button>
               </li>
               <li>
-                <button>預覽</button>
+                <button @click="previewNote(item.id)">預覽</button>
               </li>
               <li>
                 <button @click="deleteNote(item.id)">刪除</button>
@@ -193,11 +193,19 @@ export default defineComponent({
       });
     }
 
-    function editNote(note: Note) {
-      console.log(note);
+    function editNote(id: number) {
       router.push({
         name: 'TextEditor',
-        params: { status: 'note-edit', id: note.id },
+        params: { status: 'note-edit', id },
+      });
+    }
+
+    function previewNote(id: number) {
+      router.push({
+        name: 'NotePreviewer',
+        params: {
+          id,
+        },
       });
     }
 
@@ -247,6 +255,7 @@ export default defineComponent({
       createNote,
       deleteNote,
       editNote,
+      previewNote,
       filterApply,
       filterKeyword,
       filterReset,

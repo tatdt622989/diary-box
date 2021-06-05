@@ -68,8 +68,8 @@ ul {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  margin-top: 12px;
-  padding: 0 20px;
+  padding: 0 16px;
+  padding-top: 16px;
   width: 100%;
 }
 
@@ -224,4 +224,13 @@ button {
     background-color: #e7d6ac;
     border-radius: 20px;
   }
+}
+
+.splide__arrow {
+  svg {
+    fill: $primary;
+  }
+  background-color: #fff;
+  height: 44px;
+  width: 44px;
 }

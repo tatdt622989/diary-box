@@ -45,9 +45,9 @@
                 >
                   <button
                     class="menu-btn btn-circle"
-                    @click.stop="selectedMenu = [i, n]"
+                    @click.stop="selectedMenu = [i]"
                     :class="{
-                      active: selectedMenu[0] === i && selectedMenu[1] === n,
+                      active: selectedMenu[0] === i,
                     }"
                   >
                     <span class="material-icons">more_vert</span>
@@ -74,18 +74,19 @@
                   @click.stop
                   v-if="
                     selectedMenu[0] === i &&
-                    selectedMenu[1] === n &&
                     view === 'ModelList'
                   "
                 >
                   <li>
-                    <button @click="previewModal(i)">預覽</button>
+                    <button @click="preview(i)">預覽</button>
                   </li>
                   <li>
-                    <button>切換為未使用</button>
+                    <button @click="togglePassiveState(i)">
+                      {{ v.passive ? '切換為使用中' : '切換為未使用' }}
+                    </button>
                   </li>
                   <li>
-                    <button>刪除</button>
+                    <button @click="openDeleteModal(v.id)">刪除</button>
                   </li>
                   <li>
                     <button @click="editModel(i)">編輯</button>
@@ -131,6 +132,7 @@
       </div>
     </div>
     <canvas id="modelList"></canvas>
+    <Hint @delete-model="deleteModel"></Hint>
   </div>
 </template>
 
@@ -152,6 +154,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Navbar from '@/components/Navbar.vue';
+import Hint from '@/components/Hint.vue';
 import {
   SceneData,
   Model,
@@ -165,6 +168,7 @@ export default defineComponent({
   name: 'ModelList',
   components: {
     Navbar,
+    Hint,
   },
   setup() {
     const store = useStore();
@@ -174,6 +178,7 @@ export default defineComponent({
     const selectedMenu = ref<Array<string>>([]);
     const publicPath = ref(process.env.BASE_URL);
     const view = ref<string>(route.name as string);
+    const selectedId = ref<number | null>(null);
     let renderer: THREE.WebGLRenderer | null = null;
     let canvas: HTMLCanvasElement;
     let animation: number;
@@ -191,6 +196,7 @@ export default defineComponent({
     let firstLoad = true;
     const modelFormat = computed(() => store.state.modelFormat);
     let modal: Modal;
+    const modelData = computed(() => store.state.userData.modelData);
 
     function getModels() {
       if (view.value === 'Store' && store.state.modelFormat) {
@@ -205,7 +211,7 @@ export default defineComponent({
       } else if (view.value === 'ModelList') {
         console.log(store.state.userData);
         if (store.state.userData) {
-          models.value = store.state.userData.modelData;
+          models.value = JSON.parse(JSON.stringify(modelData.value));
         } else {
           models.value = [store.state.defaultModelData];
         }
@@ -242,7 +248,7 @@ export default defineComponent({
           0.1,
           1000,
         );
-        camera.position.set(0, 10, 19.5);
+        camera.position.set(20, 8, 0);
         camera.zoom = 2;
         const controls = new OrbitControls(camera, el);
         controls.autoRotate = true;
@@ -255,13 +261,13 @@ export default defineComponent({
         const ambientLight = new THREE.AmbientLight(0xffffff, 1);
         scene.add(ambientLight);
         const pointLight = new THREE.PointLight(0xffffff, 0.4, 10000);
-        pointLight.position.set(0, 7, 5);
+        pointLight.position.set(-10, 7, 0);
         pointLight.castShadow = true;
         scene.add(pointLight);
         // const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
         // scene.add(pointLightHelper);
         const directionalLight = new THREE.DirectionalLight(0xcff3f8, 0.7);
-        directionalLight.position.set(-10, 20, 0);
+        directionalLight.position.set(5, 10, 3);
         scene.add(directionalLight);
 
         // 霧
@@ -505,13 +511,90 @@ export default defineComponent({
       });
     }
 
-    function previewModal(index: number) {
+    function preview(index: number) {
       router.push({
         name: 'ModelEditor',
         params: {
           index,
           status: 'preview',
         },
+      });
+    }
+
+    function openDeleteModal(id: number) {
+      selectedId.value = id;
+      console.log(selectedId.value);
+      store.dispatch('openModal', {
+        type: 'hint',
+        asynchronous: false,
+      });
+    }
+
+    async function deleteModel() {
+      let times = 0;
+      await new Promise((resolve) => {
+        const closeModal = setInterval(() => {
+          if (times > 50 || store.state.modalLoaded) {
+            store.commit('closeModal');
+            clearInterval(closeModal);
+            resolve(null);
+          }
+          times += 1;
+        }, 100);
+      });
+      store.commit('updateLoadingStr', '模型刪除中');
+      store.commit('updateModalLoaded', false);
+      store.dispatch('openModal', {
+        type: 'loading',
+        asynchronous: true,
+      });
+      await store.dispatch('updateModelData', {
+        method: 'delete',
+        id: selectedId.value,
+      }).then((res) => {
+        if (res) {
+          times = 0;
+          const closeModal = setInterval(() => {
+            if (times > 50 || store.state.modalLoaded) {
+              store.commit('closeModal');
+              clearInterval(closeModal);
+              getModels();
+              selectedMenu.value = [];
+              selectedId.value = null;
+            }
+            times += 1;
+          }, 100);
+        }
+      });
+    }
+
+    async function togglePassiveState(i: number) {
+      const model = JSON.parse(JSON.stringify(models.value.filter((obj, index) => index === i)))[0];
+      console.log(model);
+      store.commit('updateLoadingStr', '狀態切換中');
+      store.commit('updateModalLoaded', false);
+      store.dispatch('openModal', {
+        type: 'loading',
+        asynchronous: true,
+      });
+      model.passive = !model.passive;
+      await store.dispatch('updateModelData', {
+        method: 'edit',
+        id: model.id,
+        data: model,
+      }).then((res) => {
+        if (res) {
+          let times = 0;
+          const closeModal = setInterval(() => {
+            if (times > 50 || store.state.modalLoaded) {
+              store.commit('closeModal');
+              clearInterval(closeModal);
+              getModels();
+              selectedMenu.value = [];
+            }
+            times += 1;
+          }, 100);
+        }
       });
     }
 
@@ -527,7 +610,10 @@ export default defineComponent({
       selectedMenu,
       userData: computed(() => store.state.userData),
       view,
-      previewModal,
+      preview,
+      togglePassiveState,
+      deleteModel,
+      openDeleteModal,
     };
   },
 });
@@ -546,7 +632,7 @@ export default defineComponent({
       padding-bottom: 0;
     }
     .content {
-      padding-top: 168px;
+      padding-top: 172px;
     }
   }
   .models {
@@ -708,7 +794,7 @@ export default defineComponent({
   }
   background-color: $primary;
   position: fixed;
-  top: 130px;
+  top: 134px;
   z-index: 1000;
 }
 .content {
@@ -723,7 +809,7 @@ export default defineComponent({
   flex-grow: 1;
   overflow-y: auto;
   padding: 0;
-  padding-top: 92px;
+  padding-top: 96px;
 }
 .header {
   p {
@@ -733,7 +819,7 @@ export default defineComponent({
   background: $primary;
   padding-bottom: 28px;
   margin-top: 0;
-  padding-top: 12px;
+  padding-top: 16px;
   position: fixed;
   left: 0;
   top: 66px;
@@ -742,7 +828,7 @@ export default defineComponent({
 canvas {
   position: fixed;
   left: 0;
-  z-index: 998;
+  z-index: 99;
   top: 0;
   pointer-events: none;
 }

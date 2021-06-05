@@ -431,11 +431,11 @@ export default defineComponent({
     font-weight: bold;
     height: 48px;
     line-height: 44px;
-    padding: 0 20px;
+    padding: 0 16px;
     width: 100%;
   }
   border-radius: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   padding: 0;
   width: 100%;
 }

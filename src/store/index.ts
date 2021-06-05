@@ -221,16 +221,17 @@ export default createStore({
     async register({ dispatch, state }, data) {
       firebase.auth().createUserWithEmailAndPassword(data.email, data.password).then((result) => {
         state.formHint = '';
-        dispatch('updateToast', {
-          type: 'success',
-          content: '註冊成功',
-        });
         console.log(result);
         if (result.user) {
           result.user.updateProfile({
             displayName: data.userName,
           }).then(() => {
             dispatch('updateUserInfo');
+          }).catch((err) => {
+            dispatch('updateToast', {
+              type: 'error',
+              content: err,
+            });
           });
         }
       }).catch((error) => {

@@ -8,6 +8,7 @@ const TextEditor = () => import('@/views/TextEditor.vue');
 const ModelList = () => import('@/views/ModelList.vue');
 const SceneEditor = () => import('@/views/SceneEditor.vue');
 const ModelEditor = () => import('@/views/ModelEditor.vue');
+const NotePreviewer = () => import('@/views/NotePreviewer.vue');
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -54,6 +55,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/model-editor',
     name: 'ModelEditor',
     component: ModelEditor,
+  },
+  {
+    path: '/note-previewer',
+    name: 'NotePreviewer',
+    component: NotePreviewer,
   },
 ];
 

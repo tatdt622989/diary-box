@@ -108,13 +108,13 @@ export default defineComponent({
     camera.zoom = 1;
 
     // 地板
-    const planeGeometry = new THREE.PlaneGeometry(200, 200, 32);
+    const planeGeometry = new THREE.PlaneGeometry(600, 600, 32);
     const texture = new THREE.TextureLoader().load('../images/grid.png', (obj) => {
       const t = obj;
       t.wrapS = THREE.RepeatWrapping;
       t.wrapT = THREE.RepeatWrapping;
-      t.offset.set(0, 0);
-      t.repeat.set(4, 4);
+      t.offset.set(0, 0.492);
+      t.repeat.set(6, 6);
     });
     const planeMaterial = new THREE.MeshStandardMaterial(
       { color: '#929292', side: THREE.DoubleSide, map: texture },
@@ -141,11 +141,11 @@ export default defineComponent({
     directionalLight.position.set(-10, 20, 0);
     scene.add(pointLight);
     scene.add(directionalLight);
-    const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
-    scene.add(pointLightHelper);
+    // const pointLightHelper = new THREE.PointLightHelper(pointLight, 5);
+    // scene.add(pointLightHelper);
 
     // 霧
-    scene.fog = new THREE.Fog(0x449966, 1, 150);
+    scene.fog = new THREE.Fog(0x449966, 1, 300);
 
     onMounted(() => {
       canvas.value = document.getElementById('editor') as HTMLCanvasElement;
@@ -273,7 +273,9 @@ export default defineComponent({
       const result = [];
       let i = 0;
       while (i < modelLen) {
-        result.push(ModelLoad(i));
+        if (!modelData.value[i].passive) {
+          result.push(ModelLoad(i));
+        }
         i += 1;
       }
 
@@ -505,7 +507,7 @@ export default defineComponent({
     }
     display: flex;
     justify-content: space-between;
-    margin-top: 24px;
+    padding-top: 24px;
     position: absolute;
   }
   .hint {
@@ -550,7 +552,7 @@ export default defineComponent({
       }
       display: flex;
     }
-    bottom: 28px;
+    bottom: 30px;
     display: flex;
     flex-wrap: wrap;
     transform: rotate(45deg);
@@ -567,7 +569,7 @@ export default defineComponent({
         margin-left: 8px;
       }
     }
-    bottom: 18px;
+    bottom: 24px;
     display: flex;
     left: 20px;
     position: absolute;

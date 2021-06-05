@@ -85,13 +85,20 @@ export default defineComponent({
     const email = ref('');
     const password = ref('');
 
-    function register() {
+    async function register() {
       if (!userName.value || !password.value || !email.value) {
-        store.commit('updateFormHint', '欄位不能為空');
+        return store.commit('updateFormHint', '欄位不能為空');
       }
       if (userName.value.search(/\W/g) > 0 || password.value.search(/\W/g) > 0) {
-        store.commit('updateFormHint', '不能使用特殊符號');
+        return store.commit('updateFormHint', '不能使用特殊符號');
       }
+      store.commit('closeModal');
+      store.commit('updateLoadingStr', '帳號註冊中');
+      store.commit('updateModalLoaded', false);
+      store.dispatch('openModal', {
+        type: 'loading',
+        asynchronous: true,
+      });
       store.dispatch('register', {
         userName: userName.value,
         email: email.value,

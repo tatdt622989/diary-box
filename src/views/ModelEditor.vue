@@ -149,7 +149,7 @@ export default defineComponent({
       pointLight.shadow.camera.near = 1;
       pointLight.shadow.camera.far = 10000;
       const directionalLight = new THREE.DirectionalLight(0xF8EBCF, 0.6);
-      directionalLight.position.set(-10, 20, 0);
+      directionalLight.position.set(5, 10, 3);
       scene.add(pointLight);
       scene.add(directionalLight);
 

@@ -4,6 +4,7 @@
   <PointNotification></PointNotification>
   <Loading></Loading>
   <Quality></Quality>
+  <Guide></Guide>
 </template>
 
 <script lang="ts">
@@ -20,6 +21,7 @@ import Toast from '@/components/Toast.vue';
 import PointNotification from '@/components/PointNotification.vue';
 import Loading from '@/components/Loading.vue';
 import Quality from '@/components/Quality.vue';
+import Guide from '@/components/Guide.vue';
 import { getGPUTier } from 'detect-gpu';
 
 export default defineComponent({
@@ -29,6 +31,7 @@ export default defineComponent({
     PointNotification,
     Loading,
     Quality,
+    Guide,
   },
   setup() {
     const store = useStore();

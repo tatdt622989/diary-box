@@ -21,6 +21,12 @@
             會員登出
           </button>
         </li>
+        <li class="t-base">
+          <button @click="openModal('guide')">
+            <span class="material-icons">help</span>
+            操作引導
+          </button>
+        </li>
         <!-- <li class="t-base">
           <button @click="openModal">
             <span class="material-icons">settings</span>
