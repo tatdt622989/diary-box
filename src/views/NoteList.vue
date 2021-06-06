@@ -155,21 +155,36 @@ export default defineComponent({
         const date = new Date(parseInt(el.id, 10));
         const dateStr = `${date.getFullYear()} / ${date.getMonth() + 1 >= 10 ? date.getMonth() + 1 : `0${date.getMonth() + 1}`} / ${date.getDate() >= 10 ? date.getDate() : `0${date.getDate()}`}`;
         console.log(dateStr);
-        const timeStr = `${date.getHours() >= 10 ? date.getHours() : `0${date.getHours()}`} : ${date.getMinutes() >= 10 ? date.getMinutes() : `0${date.getMinutes()}`}`;
         const index = dateList.indexOf(dateStr);
         if (index === -1) {
           noteList.value.push({
             date: dateStr,
             notes: [el],
-            time: [timeStr],
+            time: [],
           });
           dateList.push(dateStr);
         } else {
           noteList.value[index].notes.push(el);
-          noteList.value[index].time.push(timeStr);
-          noteList.value[index].notes.reverse();
         }
       });
+      noteList.value.forEach((obj) => {
+        const group = obj;
+        if (filterSort.value === 'new->old') {
+          group.notes.sort((a, b) => Number(b.id) - Number(a.id));
+        } else {
+          group.notes.sort((a, b) => Number(a.id) - Number(b.id));
+        }
+        group.notes.forEach((note) => {
+          const { id } = note;
+          const date = new Date(parseInt(id, 10));
+          const timeStr = `${date.getHours() >= 10 ? date.getHours() : `0${date.getHours()}`} : ${date.getMinutes() >= 10 ? date.getMinutes() : `0${date.getMinutes()}`}`;
+          console.log(timeStr, 'time');
+          group.time.push(timeStr);
+        });
+      });
+      if (filterSort.value === 'new->old') {
+        noteList.value.reverse();
+      }
     }
 
     onMounted(() => {
@@ -223,9 +238,6 @@ export default defineComponent({
         filteredNoteData = filteredNoteData.filter((note: Note) => note.title.search(
           filterKeyword.value,
         ) >= 0);
-      }
-      if (filterSort.value === 'old->new') {
-        filteredNoteData = filteredNoteData.reverse();
       }
       console.log(filteredNoteData, filterKeyword.value);
       getNotelist(filteredNoteData);

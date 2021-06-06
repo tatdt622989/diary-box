@@ -357,6 +357,20 @@ export default createStore({
           if (times > 50 || state.modalLoaded) {
             commit('closeModal');
             clearInterval(closeModal);
+            let guideState;
+            try {
+              guideState = Number(localStorage.getItem('guideState'));
+            } catch (e) {
+              localStorage.removeItem('guideState');
+            }
+            console.log(guideState, 'state');
+            if (!guideState) {
+              console.log(guideState, 'state');
+              dispatch('openModal', {
+                type: 'guide',
+                asynchronous: false,
+              });
+            }
           }
           times += 1;
         }, 100);
@@ -399,9 +413,6 @@ export default createStore({
         } else {
           commit('resetUserData');
           state.userInfo = null;
-        }
-        if (state.modal) {
-          state.modal.hide();
         }
       });
     },
@@ -461,6 +472,7 @@ export default createStore({
       }
     },
     openModal({ dispatch, commit, state }, data) {
+      console.log(data.type, 'openmodal');
       state.formHint = '';
       const el = document.getElementById(`${data.type}Modal`);
       let backdrop: boolean | 'static' | undefined = true;

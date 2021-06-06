@@ -84,11 +84,11 @@ export default defineComponent({
     const password = ref('');
     const dataLoaded = computed(() => store.state.dataLoaded);
 
-    watch(dataLoaded, (newVal, oldVal) => {
+    watch(dataLoaded, async (newVal, oldVal) => {
       console.log('資料載入狀態變更');
       if (newVal) {
-        router.push('/home');
         store.commit('updateDataLoadStatus', false);
+        router.push('/home');
       }
     });
 

@@ -179,7 +179,7 @@ button {
       height: 52px;
       padding: 8px;
       position: relative;
-      right: -8px;
+      right: -12px;
       width: 52px;
       transition: $t-base;
     }
@@ -224,13 +224,4 @@ button {
     background-color: #e7d6ac;
     border-radius: 20px;
   }
-}
-
-.splide__arrow {
-  svg {
-    fill: $primary;
-  }
-  background-color: #fff;
-  height: 44px;
-  width: 44px;
 }

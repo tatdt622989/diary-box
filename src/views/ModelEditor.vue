@@ -8,7 +8,7 @@
       <span class="material-icons">arrow_back</span>
     </button>
     <ul class="tool-bar" v-if="$route.params.status !== 'preview'">
-      <li v-for="(area, i) in selectedModelArea" :key="i">
+      <li v-for="(area, i) in modelArea" :key="i">
         <input
           type="color"
           :id="area"
@@ -65,7 +65,7 @@ export default defineComponent({
     const modelColor = ref<ModelColor>({});
     const modelFormat = computed(() => store.state.modelFormat);
     const modelData = computed(() => store.state.userData.modelData);
-    const selectedModelArea = ref<Array<string>>([]);
+    const modelArea = ref<Array<string>>([]);
     console.log(route.params.ts);
     let renderer: THREE.WebGLRenderer | null = null;
     const scene: THREE.Scene = new THREE.Scene();
@@ -104,7 +104,7 @@ export default defineComponent({
       selectedModel.value = modelData.value[index];
       if (modelFormat.value) {
         modelColor.value = JSON.parse((JSON.stringify(
-          modelFormat.value[selectedModel.value.name],
+          modelFormat.value[selectedModel.value.name].color,
         )));
       }
       if (modelFormat.value !== null) {
@@ -115,7 +115,8 @@ export default defineComponent({
           if (modelFormat.value !== null && selectedModel.value
             && key === selectedModel.value.name) {
             const areas = Object.keys(modelFormat.value[key].color);
-            selectedModelArea.value = areas;
+            console.log(areas, 'areas');
+            modelArea.value = areas;
           }
         });
       }
@@ -180,7 +181,7 @@ export default defineComponent({
               const mesh = object;
               if (color && colorKeys) {
                 console.log(color);
-                if (colorKeys.indexOf(object.name) >= 0) {
+                if (colorKeys.indexOf(object.name) >= 0 && color[object.name]) {
                   mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
                 }
               }
@@ -209,7 +210,7 @@ export default defineComponent({
       if (model) {
         model.traverse((object) => {
           if (object instanceof THREE.Mesh
-            && selectedModelArea.value.indexOf(object.name) >= 0) {
+            && modelArea.value.indexOf(object.name) >= 0) {
             const mesh = object;
             const color = modelColor.value[mesh.name];
             console.log(color);
@@ -223,7 +224,11 @@ export default defineComponent({
 
     function apply() {
       if (selectedModel.value) {
-        selectedModel.value.color = modelColor.value;
+        modelArea.value.forEach((area: string) => {
+          if (selectedModel.value && modelColor.value[area as any]) {
+            selectedModel.value.color[area] = modelColor.value[area as any];
+          }
+        });
         console.log(JSON.parse(JSON.stringify(selectedModel.value)));
         store.commit('updateLoadingStr', '模型存檔中');
         store.commit('updateModalLoaded', false);
@@ -299,7 +304,7 @@ export default defineComponent({
       changeModelColor,
       modelColor,
       modelData,
-      selectedModelArea,
+      modelArea,
       selectedModel,
       userData: computed(() => store.state.userData),
     };
