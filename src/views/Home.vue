@@ -93,9 +93,9 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="shareImg">
+            <!-- <button type="button" class="btn btn-primary" @click="shareImg">
               分享
-            </button>
+            </button> -->
             <button type="button" class="btn btn-primary" @click="downloadImg">
               下載
             </button>
@@ -564,6 +564,9 @@ export default defineComponent({
     }
     padding-top: 0;
     padding-bottom: 0;
+  }
+  .modal-footer {
+    justify-content: center;
   }
 }
 .note-wrap {

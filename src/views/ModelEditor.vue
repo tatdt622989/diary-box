@@ -225,7 +225,7 @@ export default defineComponent({
     function apply() {
       if (selectedModel.value) {
         modelArea.value.forEach((area: string) => {
-          if (selectedModel.value && modelColor.value[area as any]) {
+          if (selectedModel.value && selectedModel.value.color && modelColor.value[area as any]) {
             selectedModel.value.color[area] = modelColor.value[area as any];
           }
         });

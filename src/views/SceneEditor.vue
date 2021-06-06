@@ -109,7 +109,7 @@ export default defineComponent({
 
     // 地板
     const planeGeometry = new THREE.PlaneGeometry(600, 600, 32);
-    const texture = new THREE.TextureLoader().load('../images/grid.png', (obj) => {
+    const texture = new THREE.TextureLoader().load(`${publicPath.value}images/grid.png`, (obj) => {
       const t = obj;
       t.wrapS = THREE.RepeatWrapping;
       t.wrapT = THREE.RepeatWrapping;
@@ -120,6 +120,7 @@ export default defineComponent({
       { color: '#929292', side: THREE.DoubleSide, map: texture },
     );
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.name = 'plane';
     plane.rotateX(Math.PI / 2);
     plane.receiveShadow = true;
     scene.add(plane);
@@ -184,10 +185,11 @@ export default defineComponent({
             raycaster.setFromCamera(mouse.value, camera);
             const intersects = raycaster.intersectObjects(groups, true);
             console.log(intersects, mouse.value, scene);
-            if (intersects.length > 0) {
+            if (intersects.length > 0
+              && intersects[0].object.parent?.parent!.uuid !== selectedModel?.uuid) {
               outlinePass.selectedObjects = [intersects[0].object.parent as Object3D];
               selectedModel = intersects[0].object.parent?.parent!;
-              hint.value = '點選場景空白處或控制按鈕修改模型位置及旋轉角度';
+              hint.value = '點擊空白處和控制按鈕修改模型位置及旋轉角度，點擊選中模型取消選取';
               // const helper = new THREE.Box3Helper(new THREE.Box3().setFromObject(selectedModel));
               // scene.add(helper);
             } else {
@@ -293,6 +295,7 @@ export default defineComponent({
         console.log(model, '框選目標', groups);
         if (outlinePass && model) {
           outlinePass.selectedObjects = [model];
+          selectedModel = model;
         }
 
         render();
@@ -301,7 +304,7 @@ export default defineComponent({
 
     function controller(type: string, direction: string) {
       console.log(selectedModel, direction);
-      const posUnit = 1.5;
+      const posUnit = 1;
       const rotateUnit = Math.PI / 8;
       if (!selectedModel && type !== 'point') {
         store.dispatch('updateToast', {
@@ -317,10 +320,10 @@ export default defineComponent({
         if (type === 'rotate') {
           switch (direction) {
             case 'left':
-              targetModel.rotateOnWorldAxis(axis, -rotateUnit);
+              targetModel.rotateOnWorldAxis(axis, rotateUnit);
               break;
             case 'right':
-              targetModel.rotateOnWorldAxis(axis, rotateUnit);
+              targetModel.rotateOnWorldAxis(axis, -rotateUnit);
               break;
             default:
               break;
@@ -376,21 +379,27 @@ export default defineComponent({
 
     function onPointerClick(e: Event, pos: any) {
       console.log(pos);
-      if (renderer && camera && mouse.value) {
+      if (renderer && camera && mouse.value && groups) {
         pointer.x = (pos.x / renderer.domElement.clientWidth) * 2 - 1;
         pointer.y = -(pos.y / renderer.domElement.clientHeight) * 2 + 1;
         raycaster.setFromCamera(pointer, camera as any);
-        const intersects = raycaster.intersectObjects([plane as THREE.Object3D]);
-        console.log('與平面相交', intersects[0]);
+        const intersects = raycaster.intersectObjects(
+          [plane as THREE.Object3D, ...groups], true,
+        );
+        console.log('與平面相交', intersects, groups);
+        if (intersects[0].object.name !== 'plane') {
+          return;
+        }
         planePoint = intersects[0].point;
         controller('point', '');
       }
     }
 
-    function getMousePos(e: MouseEvent | TouchEvent) {
+    function getMousePos(e: any) {
+      console.log(e);
       mouse.value = new THREE.Vector2();
       let pos;
-      if (e instanceof TouchEvent) {
+      if (window.TouchEvent && e instanceof TouchEvent) {
         mouse.value.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
         mouse.value.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
         pos = {
@@ -515,7 +524,7 @@ export default defineComponent({
     left: 0;
     right: 0;
     top: 120px;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: bold;
     color: $secondary;
     letter-spacing: 2px;
