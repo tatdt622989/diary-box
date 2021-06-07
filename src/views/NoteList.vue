@@ -148,13 +148,10 @@ export default defineComponent({
 
     function getNotelist(data: Array<Note>) {
       noteList.value = [];
-      console.log('取得日記顯示列表');
       const dateList: Array<string> = [];
       data.forEach((el: Note) => {
-        console.log(el.id);
         const date = new Date(parseInt(el.id, 10));
         const dateStr = `${date.getFullYear()} / ${date.getMonth() + 1 >= 10 ? date.getMonth() + 1 : `0${date.getMonth() + 1}`} / ${date.getDate() >= 10 ? date.getDate() : `0${date.getDate()}`}`;
-        console.log(dateStr);
         const index = dateList.indexOf(dateStr);
         if (index === -1) {
           noteList.value.push({
@@ -178,7 +175,6 @@ export default defineComponent({
           const { id } = note;
           const date = new Date(parseInt(id, 10));
           const timeStr = `${date.getHours() >= 10 ? date.getHours() : `0${date.getHours()}`} : ${date.getMinutes() >= 10 ? date.getMinutes() : `0${date.getMinutes()}`}`;
-          console.log(timeStr, 'time');
           group.time.push(timeStr);
         });
       });
@@ -192,7 +188,6 @@ export default defineComponent({
     });
 
     watch(noteData, (newVal, oldVal) => {
-      console.log('日記更新');
       getNotelist(newVal);
     });
 
@@ -239,7 +234,6 @@ export default defineComponent({
           filterKeyword.value,
         ) >= 0);
       }
-      console.log(filteredNoteData, filterKeyword.value);
       getNotelist(filteredNoteData);
       tempFilterSort.value = filterSort.value;
       searchingWord.value = filterKeyword.value;

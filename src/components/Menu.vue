@@ -83,7 +83,6 @@ export default defineComponent({
       }
       timer.value = setTimeout(() => {
         store.commit('getHeight', `${window.innerHeight}px`);
-        console.log('高度變動');
         timer.value = null;
       }, 500);
     }

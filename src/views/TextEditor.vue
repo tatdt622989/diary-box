@@ -129,7 +129,6 @@ export default defineComponent({
       });
 
       qlEditor = document.querySelector('.ql-editor');
-      console.log(qlEditor);
 
       if (status.value === 'note-edit') {
         const targetNote: Note = noteData.value.filter((note: Note) => note.id === noteId)[0];
@@ -141,7 +140,6 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      console.log(route.params);
       if (!route.params.status) {
         router.push('/note-list');
       }

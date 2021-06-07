@@ -209,14 +209,12 @@ export default defineComponent({
         });
         models.value = result;
       } else if (view.value === 'ModelList') {
-        console.log(store.state.userData);
         if (store.state.userData) {
           models.value = JSON.parse(JSON.stringify(modelData.value));
         } else {
           models.value = [store.state.defaultModelData];
         }
       }
-      console.log(models.value);
     }
 
     function resize() {
@@ -227,7 +225,6 @@ export default defineComponent({
 
     async function init() {
       await nextTick();
-      console.log('init-start');
       if (renderer) {
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -278,7 +275,6 @@ export default defineComponent({
       }
       const loader = new GLTFLoader();
       const modelLen = models.value.length;
-      console.log(modelLen);
       let i = 0;
       const loadResult: Array<Promise<SceneData>> = [];
       const loadedModel: LoadedModel = {};
@@ -299,14 +295,18 @@ export default defineComponent({
             }
           }
         });
-        console.log(model);
         model.castShadow = true;
         model.position.set(model.position.x, model.position.y, model.position.z);
         model.receiveShadow = false;
       }
+      store.commit('updateLoadingStr', '模型載入中');
+      store.commit('updateModalLoaded', false);
+      store.dispatch('openModal', {
+        type: 'loading',
+        asynchronous: true,
+      });
       while (i < modelLen) {
         const el = document.getElementById(`scene${i}`) as HTMLElement;
-        console.log(el);
         const sceneData: SceneData = createScene(el);
         const { name } = models.value[i];
         const { color } = models.value[i];
@@ -317,10 +317,9 @@ export default defineComponent({
         const asyncLoad = (index: number) => new Promise<SceneData>((resolve) => {
           if (!loadedModel[name]) {
             loader.load(
-              `${publicPath.value}model/${name}.gltf`,
+              `${publicPath.value}model/${name}.gltf?v=1.0`,
               (gltf) => {
                 const model = gltf.scene.children[0];
-                console.log(model);
                 modelStyling(model, (color as ModelColor | null), colorKeys);
                 sceneData.scene.add(model);
                 resolve(sceneData);
@@ -375,12 +374,19 @@ export default defineComponent({
           }
         };
         render();
+        let times = 0;
+        const closeModal = setInterval(() => {
+          if (times > 50 || store.state.modalLoaded) {
+            store.commit('closeModal');
+            clearInterval(closeModal);
+          }
+          times += 1;
+        }, 100);
       });
       window.addEventListener('resize', resize, false);
     }
 
     function clearCanvas() {
-      console.log('清空畫布');
       allSceneData.forEach((el) => {
         el.controls.dispose();
         el.scene.traverse((obj) => {
@@ -409,7 +415,6 @@ export default defineComponent({
     });
 
     watch(modelFormat, (newVal) => {
-      console.log('模型監聽器', newVal, allSceneData.length);
       if (newVal && view.value === 'Store' && firstLoad) {
         if (allSceneData.length > 0) {
           clearCanvas();
@@ -469,7 +474,6 @@ export default defineComponent({
     }
 
     function closeBuyModal() {
-      console.log('cancel', document.getElementById('confirmPurchaseModal'));
       modal.hide();
     }
 
@@ -523,7 +527,6 @@ export default defineComponent({
 
     function openDeleteModal(id: number) {
       selectedId.value = id;
-      console.log(selectedId.value);
       store.dispatch('openModal', {
         type: 'hint',
         asynchronous: false,
@@ -570,7 +573,6 @@ export default defineComponent({
 
     async function togglePassiveState(i: number) {
       const model = JSON.parse(JSON.stringify(models.value.filter((obj, index) => index === i)))[0];
-      console.log(model);
       store.commit('updateLoadingStr', '狀態切換中');
       store.commit('updateModalLoaded', false);
       store.dispatch('openModal', {

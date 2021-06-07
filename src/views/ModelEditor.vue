@@ -66,7 +66,6 @@ export default defineComponent({
     const modelFormat = computed(() => store.state.modelFormat);
     const modelData = computed(() => store.state.userData.modelData);
     const modelArea = ref<Array<string>>([]);
-    console.log(route.params.ts);
     let renderer: THREE.WebGLRenderer | null = null;
     const scene: THREE.Scene = new THREE.Scene();
     let canvas: HTMLCanvasElement;
@@ -77,7 +76,6 @@ export default defineComponent({
       10000,
     );
     let controls: OrbitControls;
-    console.log(route.params);
     const { status } = route.params;
     let model: THREE.Group;
     let animation: number;
@@ -108,14 +106,11 @@ export default defineComponent({
         )));
       }
       if (modelFormat.value !== null) {
-        console.log(selectedModel.value);
         const productKeys = Object.keys(modelFormat.value);
         productKeys.forEach((key) => {
-          console.log(key);
           if (modelFormat.value !== null && selectedModel.value
             && key === selectedModel.value.name) {
             const areas = Object.keys(modelFormat.value[key].color);
-            console.log(areas, 'areas');
             modelArea.value = areas;
           }
         });
@@ -167,7 +162,7 @@ export default defineComponent({
       }
       const loader = new GLTFLoader();
       loader.load(
-        `${publicPath.value}model/${selectedModel.value.name}.gltf`,
+        `${publicPath.value}model/${selectedModel.value.name}.gltf?v=1.0`,
         (gltf) => {
           model = gltf.scene;
           const { color } = selectedModel.value!;
@@ -175,12 +170,10 @@ export default defineComponent({
           if (color) {
             colorKeys = Object.keys(color);
           }
-          console.log(model);
           model.traverse((object) => {
             if (object instanceof THREE.Mesh) {
               const mesh = object;
               if (color && colorKeys) {
-                console.log(color);
                 if (colorKeys.indexOf(object.name) >= 0 && color[object.name]) {
                   mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
                 }
@@ -191,7 +184,6 @@ export default defineComponent({
           model.castShadow = true;
           model.position.set(0, 0, 0);
           model.receiveShadow = false;
-          console.log(model);
           scene.add(model);
           render();
         },
@@ -206,14 +198,12 @@ export default defineComponent({
     });
 
     function changeModelColor() {
-      console.log('顏色更換');
       if (model) {
         model.traverse((object) => {
           if (object instanceof THREE.Mesh
             && modelArea.value.indexOf(object.name) >= 0) {
             const mesh = object;
             const color = modelColor.value[mesh.name];
-            console.log(color);
             if (color) {
               mesh.material.color = new THREE.Color(color);
             }
@@ -229,7 +219,6 @@ export default defineComponent({
             selectedModel.value.color[area] = modelColor.value[area as any];
           }
         });
-        console.log(JSON.parse(JSON.stringify(selectedModel.value)));
         store.commit('updateLoadingStr', '模型存檔中');
         store.commit('updateModalLoaded', false);
         store.dispatch('openModal', {

@@ -248,7 +248,7 @@ export default defineComponent({
         if (!loadedModel[data.name]) {
           threeObj = await new Promise((resolve, reject) => {
             loader.load(
-              `${publicPath.value}model/${data.name}.gltf`,
+              `${publicPath.value}model/${data.name}.gltf?v=1.0`,
               (gltf) => {
                 threeObj = gltf.scene;
                 threeObj.userData.id = data.id;
@@ -432,7 +432,6 @@ export default defineComponent({
           const pos = group.position.toArray();
           const rotation = group.rotation.toArray();
           const id = group.userData?.id;
-          console.log(pos, rotation);
           modelData.value.forEach((obj: Model) => {
             const data = obj;
             if (id === data.id) {

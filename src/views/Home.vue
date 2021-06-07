@@ -166,11 +166,9 @@ export default defineComponent({
     let camera: THREE.PerspectiveCamera | null;
 
     function getNote() {
-      console.log(noteData.value, 'get note');
       if (noteData.value.length > 0) {
         const lastestDateTs = noteData.value[noteData.value.length - 1].id;
         const lastestDayStartTs = lastestDateTs - (lastestDateTs % 100000);
-        console.log(lastestDayStartTs, lastestDateTs);
         lastestNoteData.value = noteData.value.filter(
           (note: Note) => Number(note.id) > lastestDayStartTs,
         );
@@ -179,7 +177,7 @@ export default defineComponent({
 
     watch(
       noteData,
-      (newVal, oldVal) => {
+      () => {
         getNote();
       },
     );
@@ -288,7 +286,6 @@ export default defineComponent({
             }
           }
         });
-        console.log(threeObj, data);
         threeObj.castShadow = true;
         threeObj.position.set(data.position.x, data.position.y, data.position.z);
         threeObj.rotation.set(data.rotation.x, data.rotation.y, data.rotation.z);
@@ -300,7 +297,6 @@ export default defineComponent({
        */
       async function ModelLoad(i: number) {
         const data = JSON.parse(JSON.stringify(modelData.value[i]));
-        console.log('data', data);
         const { color } = modelData.value[i];
         let colorKeys: Array<string> | null = null;
         let threeObj;
@@ -309,9 +305,8 @@ export default defineComponent({
         }
         if (!loadedModel[data.name]) {
           threeObj = await new Promise((resolve, reject) => {
-            console.log(data.name, 'name');
             loader.load(
-              `${publicPath.value}model/${data.name}.gltf`,
+              `${publicPath.value}model/${data.name}.gltf?v=1.0`,
               (gltf) => {
                 threeObj = gltf.scene;
                 modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
@@ -371,7 +366,6 @@ export default defineComponent({
 
     function screenShot() {
       takeScreenShot = true;
-      console.log(base64);
       base64 = null;
       setTimeout(() => {
         if (base64) {
@@ -381,7 +375,6 @@ export default defineComponent({
     }
 
     function openModal() {
-      console.log(screenShotModal.value);
       if (screenShotModal.value) {
         screenShot();
         const modal = new Modal(screenShotModal.value);

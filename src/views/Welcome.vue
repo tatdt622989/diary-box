@@ -85,7 +85,6 @@ export default defineComponent({
     const dataLoaded = computed(() => store.state.dataLoaded);
 
     watch(dataLoaded, async (newVal, oldVal) => {
-      console.log('資料載入狀態變更');
       if (newVal) {
         store.commit('updateDataLoadStatus', false);
         router.push('/home');
@@ -96,7 +95,6 @@ export default defineComponent({
     function login(type: string) {
       const ts = Date.now();
       if (!lastTs || ts - lastTs > 5000) {
-        console.log('登入觸發');
         switch (type) {
           case 'email':
             if (!password.value || !email.value) {

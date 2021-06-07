@@ -96,7 +96,6 @@ export default createStore({
     },
     closeModal(state) {
       if (state.modal) {
-        console.log('視窗關閉');
         state.modal.hide();
       }
     },
@@ -126,7 +125,6 @@ export default createStore({
       state.userData.noteData = data;
     },
     updateModelData(state, data) {
-      console.log(data, '更新模型資料');
       state.userData.modelData = data;
     },
     updateBalance(state, data) {
@@ -221,7 +219,6 @@ export default createStore({
     async register({ dispatch, state }, data) {
       firebase.auth().createUserWithEmailAndPassword(data.email, data.password).then((result) => {
         state.formHint = '';
-        console.log(result);
         if (result.user) {
           result.user.updateProfile({
             displayName: data.userName,
@@ -259,24 +256,30 @@ export default createStore({
       });
       const buyModel = firebase.functions().httpsCallable('buyModel');
       const result = await buyModel({ buyingModel: data })
-        .then((res) => {
-          console.log(res);
-          return res;
+        .then((res) => res)
+        .catch((err) => {
+          dispatch('updateToast', {
+            type: 'error',
+            content: err,
+          });
+          return null;
         });
-      if (result.data.status === 'ok') {
-        if (result.data.msg === '購買成功') {
-          await dispatch('getModelData');
-          await dispatch('getBalance');
+      if (result) {
+        if (result.data.status === 'ok') {
+          if (result.data.msg === '購買成功') {
+            await dispatch('getModelData');
+            await dispatch('getBalance');
+          }
+          dispatch('updateToast', {
+            type: 'success',
+            content: result.data.msg,
+          });
+        } else {
+          dispatch('updateToast', {
+            type: 'error',
+            content: result.data.msg,
+          });
         }
-        dispatch('updateToast', {
-          type: 'success',
-          content: result.data.msg,
-        });
-      } else {
-        dispatch('updateToast', {
-          type: 'error',
-          content: result.data.msg,
-        });
       }
     },
     signOut({ dispatch, commit, state }) {
@@ -297,7 +300,6 @@ export default createStore({
     },
     getModelFormat({ state }) {
       db.ref('/products').once('value', (snapshot) => {
-        console.log(snapshot.val());
         state.modelFormat = snapshot.val();
       });
     },
@@ -307,7 +309,6 @@ export default createStore({
         if (state.modal) {
           state.modal.hide();
         }
-        console.log(res);
         if (res.data && res.data.status === 'ok') {
           if (res.data.point > 0) {
             commit('updateModalLoaded', false);
@@ -332,7 +333,6 @@ export default createStore({
       });
     },
     async getUserData({ dispatch, commit, state }) {
-      console.log('取得使用者資料');
       if (state.userInfo) {
         let userData = await db.ref(`/users/${state.userInfo.uid}`).once('value').then((snapshot) => snapshot.val());
         if (!userData) {
@@ -344,7 +344,6 @@ export default createStore({
           }
           const newUserFormat = firebase.functions().httpsCallable('newUserFormat');
           await newUserFormat({ displayName }).then((res) => {
-            console.log('資料取得完畢', res);
             if (res.data.userData) {
               userData = res.data.userData;
             }
@@ -363,9 +362,7 @@ export default createStore({
             } catch (e) {
               localStorage.removeItem('guideState');
             }
-            console.log(guideState, 'state');
             if (!guideState) {
-              console.log(guideState, 'state');
               dispatch('openModal', {
                 type: 'guide',
                 asynchronous: false,
@@ -392,7 +389,6 @@ export default createStore({
     async getModelData({ commit, state }) {
       if (state.userInfo) {
         const modelData = await db.ref(`/users/${state.userInfo.uid}/modelData`).once('value').then((snap) => snap.val());
-        console.log('模型資料', modelData);
         commit('updateModelData', modelData);
       }
     },
@@ -404,7 +400,6 @@ export default createStore({
     },
     async updateUserInfo({ dispatch, state, commit }) {
       firebase.auth().onAuthStateChanged((user) => {
-        console.log('登入狀態改變', user);
         if (user) {
           state.userInfo = user;
           dispatch('getUserData').then(() => {
@@ -419,7 +414,6 @@ export default createStore({
     async updateModelData({ dispatch, commit, state }, data) {
       const editModel = firebase.functions().httpsCallable('editModel');
       let isSuccess = false;
-      console.log(data);
       await editModel(data).then((res) => {
         if (res.data.status === 'ok' && res.data.modelData) {
           commit('updateModelData', res.data.modelData);
@@ -430,7 +424,6 @@ export default createStore({
     },
     async updateNoteData({ dispatch, commit, state }, data) {
       let { noteData } = state.userData;
-      console.log('note 更新', data, noteData);
       if (state.userInfo) {
         switch (data.type) {
           case 'add':
@@ -455,7 +448,6 @@ export default createStore({
           default:
             break;
         }
-        console.log('日記存入資料庫前', noteData);
         await db.ref(`/users/${state.userInfo.uid}/noteData`).set(noteData);
         await dispatch('getNoteData');
         if (data.type === 'edit') {
@@ -472,7 +464,6 @@ export default createStore({
       }
     },
     openModal({ dispatch, commit, state }, data) {
-      console.log(data.type, 'openmodal');
       state.formHint = '';
       const el = document.getElementById(`${data.type}Modal`);
       let backdrop: boolean | 'static' | undefined = true;
