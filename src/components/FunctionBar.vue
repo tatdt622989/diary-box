@@ -55,6 +55,11 @@
   min-height: 66px;
   width: 100%;
   padding: 0 20px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
 }
 </style>
 

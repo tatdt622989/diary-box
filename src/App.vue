@@ -44,6 +44,7 @@ export default defineComponent({
       }, false);
       (async () => {
         const gpuTier = await getGPUTier();
+        console.log(gpuTier);
         store.commit('updateGpuTier', gpuTier);
       })();
     });

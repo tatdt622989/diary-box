@@ -215,10 +215,17 @@ export default defineComponent({
     function apply() {
       if (selectedModel.value) {
         modelArea.value.forEach((area: string) => {
-          if (selectedModel.value && selectedModel.value.color && modelColor.value[area as any]) {
-            selectedModel.value.color[area] = modelColor.value[area as any];
+          if (selectedModel.value) {
+            if ((selectedModel.value.color && modelColor.value[area as any])) {
+              selectedModel.value.color[area] = modelColor.value[area as any];
+            } else if (!selectedModel.value.color) {
+              console.log(area, modelColor.value[area as any]);
+              selectedModel.value.color = {};
+              selectedModel.value.color[area] = modelColor.value[area as any];
+            }
           }
         });
+        console.log(modelArea.value, JSON.parse(JSON.stringify(selectedModel.value)));
         store.commit('updateLoadingStr', '模型存檔中');
         store.commit('updateModalLoaded', false);
         store.dispatch('openModal', {
@@ -240,19 +247,19 @@ export default defineComponent({
               if (times > 50 || store.state.modalLoaded) {
                 store.commit('closeModal');
                 clearInterval(closeModal);
+                if (status === 'new' && selectedModel.value) {
+                  router.push({
+                    name: 'SceneEditor',
+                    params: {
+                      target: selectedModel.value.id,
+                    },
+                  });
+                } else if (status === 'old') {
+                  router.push('/model-list');
+                }
               }
               times += 1;
             }, 100);
-            if (status === 'new' && selectedModel.value) {
-              router.push({
-                name: 'SceneEditor',
-                params: {
-                  target: selectedModel.value.id,
-                },
-              });
-            } else if (status === 'old') {
-              router.push('/model-list');
-            }
           }
         });
       }

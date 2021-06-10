@@ -8,7 +8,6 @@ export default function rendererCreator(quality: number, canvas: HTMLCanvasEleme
       renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: false,
-        powerPreference: 'low-power',
         precision: 'mediump',
       });
       break;
@@ -22,11 +21,15 @@ export default function rendererCreator(quality: number, canvas: HTMLCanvasEleme
       renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
-        powerPreference: 'high-performance',
       });
       renderer.setPixelRatio(window.devicePixelRatio);
       break;
     default:
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+      });
+      renderer.setPixelRatio(window.devicePixelRatio);
       break;
   }
   return renderer as THREE.WebGLRenderer;

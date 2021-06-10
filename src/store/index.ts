@@ -306,25 +306,30 @@ export default createStore({
     getPoint({ dispatch, commit, state }) {
       const getPoint = firebase.functions().httpsCallable('getPoint');
       getPoint().then((res) => {
-        if (state.modal) {
-          state.modal.hide();
-        }
-        if (res.data && res.data.status === 'ok') {
-          if (res.data.point > 0) {
-            commit('updateModalLoaded', false);
-            dispatch('openModal', {
-              type: 'pointNotification',
-              asynchronous: false,
-            });
-            commit('updateGetPoint', res.data.point);
-            dispatch('getBalance');
-          } else {
-            dispatch('updateToast', {
-              type: 'error',
-              content: res.data.msg,
-            });
+        let times = 0;
+        const closeModal = setInterval(() => {
+          if (times > 50 || state.modalLoaded) {
+            commit('closeModal');
+            clearInterval(closeModal);
+            if (res.data && res.data.status === 'ok') {
+              if (res.data.point > 0) {
+                commit('updateModalLoaded', false);
+                dispatch('openModal', {
+                  type: 'pointNotification',
+                  asynchronous: false,
+                });
+                commit('updateGetPoint', res.data.point);
+                dispatch('getBalance');
+              } else {
+                dispatch('updateToast', {
+                  type: 'hint',
+                  content: res.data.msg,
+                });
+              }
+            }
           }
-        }
+          times += 1;
+        }, 100);
       }).catch((err) => {
         dispatch('updateToast', {
           type: 'error',
@@ -424,15 +429,15 @@ export default createStore({
     },
     async updateNoteData({ dispatch, commit, state }, data) {
       let { noteData } = state.userData;
+      commit('updateModalLoaded', false);
+      commit('updateLoadingStr', '資料上傳中');
+      dispatch('openModal', {
+        type: 'loading',
+        asynchronous: true,
+      });
       if (state.userInfo) {
         switch (data.type) {
           case 'add':
-            commit('updateModalLoaded', false);
-            commit('updateLoadingStr', '資料上傳中');
-            dispatch('openModal', {
-              type: 'loading',
-              asynchronous: true,
-            });
             noteData.push(data.data);
             break;
           case 'edit':

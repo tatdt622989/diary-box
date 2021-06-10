@@ -74,12 +74,13 @@ import {
   reactive,
   defineComponent,
   onMounted,
+  onUnmounted,
   computed,
   nextTick,
 } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
-import Quill, { Sources } from 'quill';
+import Quill from 'quill';
 import Navbar from '@/components/Navbar.vue';
 import { Note } from '@/types';
 
@@ -131,11 +132,14 @@ export default defineComponent({
       qlEditor = document.querySelector('.ql-editor');
 
       if (status.value === 'note-edit') {
+        console.log('編輯開啟');
         const targetNote: Note = noteData.value.filter((note: Note) => note.id === noteId)[0];
         if (targetNote) {
           (qlEditor as HTMLElement).innerHTML = targetNote.content;
           title.value = targetNote.title;
         }
+      } else {
+        (qlEditor as HTMLElement).innerHTML = '';
       }
     };
 
@@ -148,7 +152,7 @@ export default defineComponent({
       editorInit();
     });
 
-    function saveData() {
+    async function saveData() {
       if (!title.value) {
         store.dispatch('updateToast', {
           type: 'hint',
@@ -156,7 +160,7 @@ export default defineComponent({
         });
         return;
       }
-      if (quill.value && status) {
+      if (quill.value && status.value) {
         const content = (qlEditor as HTMLElement).innerHTML;
         const data = {
           id: noteId,
@@ -164,18 +168,26 @@ export default defineComponent({
           title: title.value,
         };
         if (status.value === 'note-edit') {
-          store.dispatch('updateNoteData', {
+          await store.dispatch('updateNoteData', {
             type: 'edit',
             data,
           });
+          let times = 0;
+          const closeModal = setInterval(() => {
+            if (times > 50 || store.state.modalLoaded) {
+              store.commit('closeModal');
+              clearInterval(closeModal);
+              times += 1;
+            }
+          });
           router.push('/note-list');
         } else if (status.value === 'note-add') {
-          store.dispatch('updateNoteData', {
+          await store.dispatch('updateNoteData', {
             type: 'add',
             data,
           });
-          router.push('/note-list');
           store.dispatch('getPoint');
+          router.push('/note-list');
         }
         // store.commit('updateNote', data);
       }

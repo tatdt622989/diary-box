@@ -1,5 +1,6 @@
 <template>
   <div class="main-wrap home-wrap" :style="{ height }">
+    <!-- <p class="position-absoulte">{{ store.state.gpuTier }}</p> -->
     <div class="status">
       <div class="currency">
         <span>{{ store.state.userData.pointInfo.balance }}</span>
@@ -164,6 +165,7 @@ export default defineComponent({
     let takeScreenShot = false;
     let base64: string | null;
     let camera: THREE.PerspectiveCamera | null;
+    const height = computed(() => store.state.height);
 
     function getNote() {
       if (noteData.value.length > 0) {
@@ -183,6 +185,7 @@ export default defineComponent({
     );
 
     function resize() {
+      console.log('resize');
       if (renderer && camera) {
         renderer.setSize(window.innerWidth, window.innerHeight - 66);
         camera.aspect = window.innerWidth / (window.innerHeight - 66);
@@ -193,7 +196,13 @@ export default defineComponent({
     onMounted(async () => {
       getNote();
       canvas = document.getElementById('mainScene') as HTMLCanvasElement;
-      renderer = rendererCreator(store.state.gpuTier ? store.state.gpuTier.tier : 0, canvas);
+      let tier;
+      if (store.state.gpuTier.type && store.state.gpuTier.type === 'FALLBACK') {
+        tier = false;
+      } else {
+        tier = store.state.gpuTier ? store.state.gpuTier.tier : 0;
+      }
+      renderer = rendererCreator(tier, canvas);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.BasicShadowMap;
       renderer.setSize(window.innerWidth, window.innerHeight - 66);
@@ -338,6 +347,7 @@ export default defineComponent({
 
       Promise.all(result).then(() => {
         render();
+        resize();
       });
       window.addEventListener('resize', resize, false);
     });
@@ -422,7 +432,7 @@ export default defineComponent({
       createNote,
       downloadImg,
       enterFullScreen,
-      height: computed(() => store.state.height),
+      height,
       img,
       isMenuOpen: computed(() => store.state.isMenuOpen),
       isNoteOpen,
@@ -452,6 +462,7 @@ export default defineComponent({
 .home-wrap {
   display: flex;
   flex-direction: column;
+  overflow-y: visible;
 }
 .status {
   .currency {
@@ -582,14 +593,19 @@ export default defineComponent({
   }
   .content {
     .text-container {
-      p {
+      >p {
         text-align: left;
+        word-break: break-word;
+        width: 100%;
+        margin: 0;
       }
       border: 2px solid $primary;
       border-radius: 10px;
       width: 100%;
       flex-grow: 1;
       padding: 16px;
+      display: flex;
+      flex-wrap: wrap;
     }
     .date {
       font-size: 28px;
@@ -653,5 +669,6 @@ export default defineComponent({
   transform: translateY(-50%);
   transition: $t-base;
   width: 100%;
+  z-index: 10;
 }
 </style>

@@ -20,7 +20,7 @@ import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 
 export default defineComponent({
-  name: 'NotePreview',
+  name: 'NotePreviewer',
   setup() {
     const store = useStore();
     const route = useRoute();
@@ -37,23 +37,30 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .note-preview-wrap {
   .content {
+    >p {
+      word-break: break-word;
+      width: 100%;
+      margin: 0;
+    }
     border-radius: 20px;
     background: $secondary;
     padding: 16px;
     text-align: left;
+    display: flex;
+    flex-wrap: wrap;
   }
   display: flex;
   flex-grow: 1;
   padding: 0 16px;
   padding-bottom: 16px;
   padding-top: 92px;
-}
-.close-btn {
-  left: 16px;
-  position: absolute;
-  top: 16px;
+  .close-btn {
+    left: 16px;
+    position: absolute;
+    top: 16px;
+  }
 }
 </style>
