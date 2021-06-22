@@ -9,6 +9,9 @@ const ModelList = () => import('@/views/ModelList.vue');
 const SceneEditor = () => import('@/views/SceneEditor.vue');
 const ModelEditor = () => import('@/views/ModelEditor.vue');
 const NotePreviewer = () => import('@/views/NotePreviewer.vue');
+const Privacy = () => import('@/views/Privacy.vue');
+const Accounting = () => import('@/views/Accounting.vue');
+const AccountingList = () => import('@/views/AccountingList.vue');
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -61,6 +64,21 @@ const routes: Array<RouteRecordRaw> = [
     name: 'NotePreviewer',
     component: NotePreviewer,
   },
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: Privacy,
+  },
+  {
+    path: '/accounting',
+    name: 'Accounting',
+    component: Accounting,
+  },
+  {
+    path: '/accounting-list',
+    name: 'AccountingList',
+    component: AccountingList,
+  },
 ];
 
 const router = createRouter({
@@ -71,7 +89,7 @@ const router = createRouter({
 // 導航守衛
 router.beforeEach((to, from, next) => {
   console.log(to, from);
-  if (to.name !== 'Welcome' && !store.state.userInfo) {
+  if (to.name !== 'Welcome' && to.name !== 'Privacy' && !store.state.userInfo) {
     next({
       path: '/',
     });

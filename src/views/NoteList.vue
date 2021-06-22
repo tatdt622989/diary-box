@@ -12,7 +12,7 @@
       <div>
         <p>日記一覽</p>
         <div class="hint">
-          每天前十筆隨機獲得10~50
+          每天前五筆隨機獲得10~50
           <img src="@/assets/images/currency-reverse.svg" alt="" />
         </div>
       </div>

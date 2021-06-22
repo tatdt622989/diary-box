@@ -289,7 +289,7 @@ export default defineComponent({
             const mesh = object;
             mesh.castShadow = true;
             if (color && colorKeys) {
-              if (colorKeys.indexOf(object.name) >= 0) {
+              if (colorKeys.indexOf(object.name) >= 0 && color[object.name]) {
                 mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
               }
             }

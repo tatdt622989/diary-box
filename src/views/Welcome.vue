@@ -55,6 +55,7 @@
       </div>
     </div>
     <Register></Register>
+    <a class="privacy-btn" @click="$router.push('/privacy')">隱私權條款</a>
   </div>
 </template>
 
@@ -295,6 +296,13 @@ export default defineComponent({
     }
     display: flex;
     justify-content: space-between;
+  }
+  .privacy-btn {
+    background: none;
+    color: $secondary;
+    position: absolute;
+    bottom: 16px;
+    cursor: pointer;
   }
   display: flex;
   align-items: center;

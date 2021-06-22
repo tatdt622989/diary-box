@@ -3,23 +3,26 @@
     <button
       class="t-base"
       @click="$router.push('/note-list')"
-      v-if="mode === 'home'"
     >
       <span class="material-icons">article</span>
+    </button>
+    <button
+      class="t-base"
+      @click="$router.push('/accounting')"
+    >
+      <span class="material-icons">savings</span>
     </button>
     <button
       class="t-base"
       @click="$router.push({
         name: 'ModelList',
       })"
-      v-if="mode === 'home'"
     >
       <span class="material-icons">category</span>
     </button>
     <button
       class="t-base"
       @click="$router.push('/store')"
-      v-if="mode === 'home'"
     >
       <span class="material-icons">store</span>
     </button>
