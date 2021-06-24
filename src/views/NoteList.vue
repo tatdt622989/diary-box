@@ -78,7 +78,7 @@
       <span class="material-icons">add</span>
       <span>新增日記</span>
     </button>
-    <div class="filter-wrap" :class="{ active: isFilterOpen }" @click.stop>
+    <div class="slide-up-window" :class="{ active: isFilterOpen }" @click.stop>
       <p>搜尋</p>
       <button class="close-btn" @click="isFilterOpen = false">
         <span class="material-icons">close</span>
@@ -446,99 +446,5 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   margin-bottom: 32px;
-}
-.filter-wrap {
-  p {
-    font-size: 20px;
-    font-weight: bold;
-    color: $primary;
-    margin-bottom: 20px;
-  }
-  input {
-    height: 52px;
-    width: 100%;
-    border-radius: 999px;
-    border: 3px solid $primary;
-    background: transparent;
-    text-indent: 20px;
-    font-size: 20px;
-    font-weight: bold;
-    color: $primary;
-  }
-  .close-btn {
-    &:hover {
-      background-color: $tertiary;
-    }
-    span {
-      color: $primary;
-      line-height: 52px;
-    }
-    background-color: transparent;
-    border-radius: 999px;
-    height: 52px;
-    position: absolute;
-    right: 20px;
-    top: 8px;
-    transition: $t-base;
-    width: 52px;
-  }
-  .btn-group {
-    button {
-      &.active {
-        background: $primary;
-        color: $secondary;
-      }
-      &:first-child {
-        margin-right: 20px;
-      }
-      width: 170px;
-    }
-    .cancel-btn {
-      &:hover {
-        background-color: darken(#9f9684, 10%);
-      }
-      background-image: linear-gradient();
-      background-color: #9f9684;
-      color: $secondary;
-      border: 0;
-      margin-top: 20px;
-    }
-    .apply-btn {
-      &:hover {
-        background-position: 0 0;
-      }
-      background: linear-gradient(
-          90deg,
-          $primary 0%,
-          $primary 50%,
-          $secondary 110%
-        )
-        100% 0 / 200%;
-      border: 0;
-      color: $secondary;
-      margin-top: 20px;
-    }
-    display: flex;
-    justify-content: flex-start;
-  }
-  .status-group {
-    justify-content: flex-end;
-  }
-  hr {
-    height: 0;
-    border-top: 1px dashed #9f9684;
-  }
-  &.active {
-    bottom: 0;
-  }
-  background-color: $secondary;
-  border-radius: 20px 20px 0 0;
-  bottom: -400px;
-  height: 400px;
-  padding: 24px 28px 25px 28px;
-  position: absolute;
-  text-align: left;
-  transition: $t-base;
-  width: 100%;
 }
 </style>

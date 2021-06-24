@@ -34,14 +34,14 @@
         <canvas id="summaryGraph"></canvas>
       </div>
       <div class="graph-type">
+        <button @click="type = 'income'" :class="{ active: type === 'income' }">
+          收入
+        </button>
         <button
           @click="type = 'expenditure'"
           :class="{ active: type === 'expenditure' }"
         >
           支出
-        </button>
-        <button @click="type = 'income'" :class="{ active: type === 'income' }">
-          收入
         </button>
       </div>
       <ul class="accounting-list w-100">
@@ -77,6 +77,13 @@
           <div class="tag">
             <span class="material-icons">local_hospital</span>
             <span>醫療</span>
+          </div>
+          <span>{{ "-$2000" }}</span>
+        </li>
+        <li>
+          <div class="tag">
+            <span class="material-icons">more</span>
+            <span>其他</span>
           </div>
           <span>{{ "-$2000" }}</span>
         </li>
@@ -133,7 +140,7 @@ export default defineComponent({
             '#0081BB',
             '#adaaa5',
           ],
-          hoverOffset: 4,
+          hoverOffset: 0,
           borderColor: '#F8EBCF',
           width: 500,
         }],
@@ -231,10 +238,10 @@ export default defineComponent({
   .timeline {
     input {
       &:nth-of-type(1) {
-        width: 72px;
+        width: 80px;
       }
       &:nth-of-type(2) {
-        width: 39px;
+        width: 56px;
       }
       border: 2px solid $primary;
       background: none;
