@@ -2,14 +2,18 @@
   <div
     class="main-wrap accounting-list-wrap menu-layout"
     :style="{ height }"
-    @click="isDatePickerOpen = false"
+    @click="
+      isDatePickerOpen = false;
+      editorStatus = false;
+      selectedAccountingIndex = null;
+    "
   >
     <Navbar></Navbar>
     <div class="header">
       <button class="btn-circle" @click.stop="$router.push('/accounting')">
         <span class="material-icons">arrow_back</span>
       </button>
-      <p>{{ date }}</p>
+      <p v-cloak>{{ date }}</p>
       <button
         class="btn-circle"
         @click.stop="isDatePickerOpen = !isDatePickerOpen"
@@ -26,80 +30,123 @@
       </DatePicker>
     </div>
     <div class="content">
-      <div class="date"></div>
       <ul class="accounting-list">
-        <li>
+        <li v-for="(item, i) in displayAccountings" :key="'display' + i">
           <div class="icon">
-            <span class="material-icons"></span>
+            <span class="material-icons">{{ item.icon }}</span>
           </div>
-          <span></span>
-          <span></span>
-          <button></button>
-          <ul class="menu">
-            <li></li>
+          <span class="text ellipsis">{{ item.title }}</span>
+          <span class="text ellipsis">
+            {{ `${item.type === "income" ? "+" : "-"}${item.price}元` }}
+          </span>
+          <button
+            class="btn btn-circle menu-btn"
+            :class="{ active: selectedAccountingIndex === i }"
+            @click.stop="selectedAccountingIndex = i"
+          >
+            <span class="material-icons">more_vert</span>
+          </button>
+          <ul
+            class="function-menu"
+            v-if="selectedAccountingIndex === i"
+            @click.stop
+          >
+            <li>
+              <button @click="editorStatus = 'edit'">編輯</button>
+            </li>
+            <li>
+              <button
+                @click="
+                  $store.dispatch('openModal', {
+                    type: 'deleteCheck',
+                    asynchronous: false,
+                  });
+                  selectedAccountingIndex = i;
+                "
+              >
+                刪除
+              </button>
+            </li>
           </ul>
         </li>
       </ul>
+      <div class="default" v-if="displayAccountings.length === 0">
+        <span class="material-icons"> playlist_add </span>
+        <p>這天還沒有收支紀錄喔！</p>
+      </div>
     </div>
     <button
       class="btn btn-secondary"
       id="bookkeepingBtn"
-      @click="editorStatus = 'add'"
+      @click.stop="editorStatus = 'add'"
     >
       開始記帳
     </button>
     <div
       class="accounting-editor slide-up-window"
       :class="{ active: editorStatus }"
+      @click.stop
     >
       <p>{{ editorStatus === "add" ? "新增收支" : "編輯收支" }}</p>
       <div class="accounting-status">
         <button
-          @click="editorAccountingStatus = 'income'"
+          @click="
+            editorAccountingStatus = 'income';
+            editorTags = '薪資';
+            editorIcon = 'attach_money';
+          "
           :class="{ active: editorAccountingStatus === 'income' }"
         >
           收入
         </button>
         <button
-          @click="editorAccountingStatus = 'expenditure'"
+          @click="
+            editorAccountingStatus = 'expenditure';
+            editorTags = '娛樂';
+            editorIcon = 'sports_esports';
+          "
           :class="{ active: editorAccountingStatus === 'expenditure' }"
         >
           支出
         </button>
       </div>
       <hr />
-      <div class="type-group">
+      <div class="tags-group">
         <button
-          class="btn btn-circle type-btn"
-          v-for="item in accrountingTypeData[editorAccountingStatus]"
-          @click.stop="editorAccountingType = item.name"
+          class="btn btn-circle tag-btn"
+          v-for="item in accountingTags[editorAccountingStatus]"
+          @click.stop="
+            editorTags = item.name;
+            editorIcon = item.icon;
+          "
           :key="item"
-          :class="{ active : editorAccountingType === item.name }"
+          :class="{ active: editorTags === item.name }"
         >
           <span class="material-icons">{{ item.icon }}</span>
           {{ item.name }}
         </button>
       </div>
       <hr />
-      <input type="text" placeholder="名稱" />
+      <input type="text" placeholder="名稱" v-model="editorTitle" />
       <div class="money">
         <span>元</span>
-        <input type="text" placeholder="金額" />
+        <input type="number" placeholder="金額" v-model.number="editorPrice" />
       </div>
       <hr />
       <div class="btn-group status-group">
         <button class="btn-rectangle cancel-btn" @click="filterReset">
           取消
         </button>
-        <button class="btn-rectangle apply-btn" @click="filterApply">
+        <button class="btn-rectangle apply-btn" @click="updateAccounting">
           套用
         </button>
       </div>
     </div>
+    <DeleteCheck @deleteEvent="deleteAccounting"></DeleteCheck>
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import {
   ref,
   reactive,
@@ -109,22 +156,28 @@ import {
   watch,
 } from 'vue';
 import Navbar from '@/components/Navbar.vue';
+import DeleteCheck from '@/components/DeleteCheck.vue';
 import { useStore } from 'vuex';
+import { useRouter, useRoute } from 'vue-router';
 import { DatePicker } from 'v-calendar';
+import {
+  Accounting,
+  Accountings,
+} from '@/types';
 
 export default defineComponent({
   name: 'AccountingList',
   components: {
     Navbar,
     DatePicker,
+    DeleteCheck,
   },
   setup() {
-    const date = ref(new Date());
+    const date = ref<any>(new Date());
     const isDatePickerOpen = ref(false);
+    const route = useRoute();
     const store = useStore();
-    const editorStatus = ref(false);
-    const editorAccountingStatus = ref('expenditure');
-    const accrountingTypeData = {
+    const accountingTags = {
       expenditure: [{
         name: '娛樂',
         icon: 'sports_esports',
@@ -155,9 +208,18 @@ export default defineComponent({
         icon: 'more',
       }],
     };
-    const editorAccountingType = ref('娛樂');
+    const editorStatus = ref<boolean | string>(false);
+    const editorAccountingStatus = ref('expenditure');
+    const editorIcon = ref('sports_esports');
+    const editorTags = ref('娛樂');
+    const editorPrice = ref();
+    const editorTitle = ref('');
+    const accountingData = ref<Accountings>({});
+    const displayAccountings = ref<Array<Accounting>>([]);
+    const selectedAccountingIndex = ref();
+    const openedFunctionMenu = ref<number>();
 
-    function getZero(num) {
+    function getZero(num: number) {
       if (num < 10) {
         return `0${num}`;
       }
@@ -166,13 +228,113 @@ export default defineComponent({
 
     date.value = `${date.value.getFullYear()}年${getZero(date.value.getMonth() + 1)}月${getZero(date.value.getDate())}日`;
 
-    watch(date, () => {
-      isDatePickerOpen.value = false;
+    onMounted(async () => {
+      if (route.params.status && route.params.status === 'add') {
+        editorStatus.value = 'add';
+      }
+      accountingData.value = await store.dispatch('getAccountingData') || {};
+      if (!accountingData.value[date.value]) {
+        accountingData.value[date.value] = [];
+      }
+      console.log(JSON.stringify(accountingData.value), date.value);
+      displayAccountings.value = accountingData.value[date.value] as Array<Accounting> || [];
     });
 
-    watch(editorAccountingType, () => {
-      console.log(editorAccountingType.value);
+    watch(date, () => {
+      isDatePickerOpen.value = false;
+      selectedAccountingIndex.value = null;
+      displayAccountings.value = accountingData.value[date.value] as Array<Accounting> || [];
     });
+
+    watch(isDatePickerOpen, (n) => {
+      if (n) {
+        editorStatus.value = false;
+      }
+    });
+
+    watch(editorStatus, (n) => {
+      if (n) {
+        isDatePickerOpen.value = false;
+        selectedAccountingIndex.value = null;
+      }
+    });
+
+    function editorReset() {
+      editorStatus.value = false;
+      editorAccountingStatus.value = 'expenditure';
+      editorTitle.value = '';
+      editorTags.value = '娛樂';
+      editorPrice.value = null;
+      editorIcon.value = 'sports_esports';
+    }
+
+    async function updateAccounting() {
+      if (!editorTitle.value) {
+        return store.dispatch('updateToast', {
+          type: 'hint',
+          content: '請填寫名稱',
+        });
+      }
+      if (!editorPrice.value) {
+        return store.dispatch('updateToast', {
+          type: 'hint',
+          content: '請填寫價格',
+        });
+      }
+      const data: Accounting = {
+        type: editorAccountingStatus.value,
+        title: editorTitle.value,
+        tag: editorTags.value,
+        price: editorPrice.value,
+        icon: editorIcon.value,
+      };
+      if (editorStatus.value === 'add') {
+        accountingData.value[date.value].splice(0, 0, data);
+      } else if (editorStatus.value === 'edit') {
+        accountingData.value[date.value][selectedAccountingIndex.value] = data;
+      }
+      await store.dispatch('updateAccountingData', {
+        key: date.value,
+        data: accountingData.value[date.value],
+      });
+      let times = 0;
+      const closeModal = setInterval(() => {
+        if (times > 50 || store.state.modalLoaded) {
+          store.commit('closeModal');
+          store.dispatch('updateToast', {
+            type: 'success',
+            content: '上傳成功',
+          });
+          clearInterval(closeModal);
+          editorReset();
+        }
+        times += 1;
+      }, 100);
+      return false;
+    }
+
+    async function deleteAccounting() {
+      store.commit('closeModal');
+      accountingData.value[date.value].splice(selectedAccountingIndex.value, 1);
+      const data = accountingData.value[date.value];
+      await store.dispatch('updateAccountingData', {
+        key: date.value,
+        data,
+      });
+      let times = 0;
+      const closeModal = setInterval(() => {
+        if (times > 50 || store.state.modalLoaded) {
+          store.commit('closeModal');
+          store.dispatch('updateToast', {
+            type: 'success',
+            content: '刪除成功',
+          });
+          clearInterval(closeModal);
+          editorReset();
+        }
+        times += 1;
+      }, 100);
+    }
 
     return {
       date,
@@ -184,8 +346,16 @@ export default defineComponent({
       isDatePickerOpen,
       editorStatus,
       editorAccountingStatus,
-      accrountingTypeData,
-      editorAccountingType,
+      accountingTags,
+      editorTags,
+      updateAccounting,
+      selectedAccountingIndex,
+      openedFunctionMenu,
+      editorPrice,
+      editorTitle,
+      displayAccountings,
+      editorIcon,
+      deleteAccounting,
     };
   },
 });
@@ -204,7 +374,14 @@ export default defineComponent({
   right: 16px;
   border: 2px solid $primary;
 }
+
+.content {
+  height: 100%;
+}
 .header {
+  p[v-cloak] {
+    display: none;
+  }
   overflow: visible;
   position: relative;
 }
@@ -212,6 +389,7 @@ export default defineComponent({
   position: absolute;
   right: 16px;
   top: 76px;
+  z-index: 100;
 }
 .accounting-editor {
   .accounting-status {
@@ -233,8 +411,8 @@ export default defineComponent({
     height: 52px;
     overflow: hidden;
   }
-  .type-group {
-    .type-btn {
+  .tags-group {
+    .tag-btn {
       &.active {
         span {
           color: $secondary;
@@ -271,6 +449,7 @@ export default defineComponent({
   }
   .money {
     input {
+      appearance: none;
       margin-bottom: 0;
       padding-right: 20px;
     }
@@ -290,7 +469,83 @@ export default defineComponent({
       margin-top: 0;
     }
   }
-  bottom: 0;
+  &.active {
+    bottom: 0;
+  }
+  bottom: -526px;
   height: 526px;
+}
+.default {
+  span {
+    color: $secondary;
+    font-size: 120px;
+  }
+  p {
+    color: $secondary;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  display: flex;
+  flex-direction: column;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+}
+.accounting-list {
+  > li {
+    .icon {
+      span {
+        color: $secondary;
+        font-size: 32px;
+      }
+      align-items: center;
+      background: none;
+      border-radius: 999px;
+      display: flex;
+      height: 52px;
+      justify-content: center;
+      border: 1px solid $secondary;
+      width: 52px;
+    }
+    .text {
+      &:nth-of-type(1) {
+        width: 40%;
+        text-align: left;
+        padding-left: 12px;
+      }
+      &:nth-of-type(2) {
+        flex-grow: 1;
+        text-align: right;
+        padding-right: 8px;
+      }
+      color: $secondary;
+      font-size: 20px;
+      font-weight: bold;
+      overflow: hidden;
+    }
+    display: flex;
+    justify-content: space-between;
+    height: 82px;
+    border-bottom: 2px solid $secondary;
+    align-items: center;
+    position: relative;
+  }
+}
+.menu-btn {
+  &:hover,
+  &:active,
+  &.active {
+    span {
+      color: $primary;
+    }
+    background-color: $secondary;
+  }
+  span {
+    color: $secondary;
+  }
+  background-color: $primary;
+  position: relative;
 }
 </style>

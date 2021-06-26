@@ -227,7 +227,6 @@ export default defineComponent({
         });
         console.log(modelArea.value, JSON.parse(JSON.stringify(selectedModel.value)));
         store.commit('updateLoadingStr', '模型存檔中');
-        store.commit('updateModalLoaded', false);
         store.dispatch('openModal', {
           type: 'loading',
           asynchronous: true,

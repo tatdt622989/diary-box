@@ -300,7 +300,6 @@ export default defineComponent({
         model.receiveShadow = false;
       }
       store.commit('updateLoadingStr', '模型載入中');
-      store.commit('updateModalLoaded', false);
       store.dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
@@ -546,7 +545,6 @@ export default defineComponent({
         }, 100);
       });
       store.commit('updateLoadingStr', '模型刪除中');
-      store.commit('updateModalLoaded', false);
       store.dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
@@ -574,7 +572,6 @@ export default defineComponent({
     async function togglePassiveState(i: number) {
       const model = JSON.parse(JSON.stringify(models.value.filter((obj, index) => index === i)))[0];
       store.commit('updateLoadingStr', '狀態切換中');
-      store.commit('updateModalLoaded', false);
       store.dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
@@ -752,18 +749,6 @@ export default defineComponent({
     position: relative;
     user-select: none;
     z-index: 999;
-  }
-  .function-menu {
-    button {
-      display: flex;
-      flex-wrap: nowrap;
-      align-items: center;
-      justify-content: center;
-      white-space: nowrap;
-    }
-    box-shadow: 4px 0px 16px rgba(68, 153, 102, 0.5);
-    opacity: 1;
-    z-index: 99999;
   }
   display: flex;
   flex-direction: column;

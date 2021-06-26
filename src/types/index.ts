@@ -30,7 +30,7 @@ export interface Model {
     x: number;
     y: number;
     z: number;
-  }
+  };
   color: ModelColor;
   isUsed: boolean;
   passive: boolean;
@@ -81,4 +81,16 @@ export interface ModelColor {
 
 export interface LoadedModel {
   [key: string]: THREE.Object3D;
+}
+
+export interface Accounting {
+  type: string;
+  title: string;
+  tag: string;
+  price: number;
+  icon: string;
+}
+
+export interface Accountings {
+  [key: string]: Array<Accounting>;
 }

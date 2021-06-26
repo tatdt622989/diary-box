@@ -186,7 +186,7 @@ export default defineComponent({
             type: 'add',
             data,
           });
-          store.dispatch('getPoint');
+          store.dispatch('getPoint', { type: 'note' });
           router.push('/note-list');
         }
         // store.commit('updateNote', data);

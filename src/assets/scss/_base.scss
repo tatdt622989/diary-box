@@ -82,15 +82,6 @@ ul {
 }
 
 .function-menu {
-  padding: 0;
-  position: absolute;
-  right: 0;
-  top: 65px;
-  width: 120px;
-  z-index: 999;
-}
-
-.function-menu {
   li {
     &:last-child {
       button {
@@ -130,7 +121,12 @@ ul {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 9999;
+  z-index: 999;
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 65px;
+  width: 120px;
 }
 
 .toast-container .toast {
@@ -319,4 +315,22 @@ button {
   text-align: left;
   transition: $t-base;
   width: 100%;
+}
+
+.function-menu {
+  button {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+  }
+  box-shadow: 4px 0px 16px rgba(68, 153, 102, 0.5);
+  opacity: 1;
+}
+
+.ellipsis {
+  overflow:hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }

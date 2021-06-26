@@ -156,7 +156,6 @@ export default createStore({
   actions: {
     login({ dispatch, commit, state }, data) {
       commit('updateLoadingStr', '登入中');
-      commit('updateModalLoaded', false);
       dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
@@ -249,7 +248,6 @@ export default createStore({
     },
     async buyModel({ dispatch, commit, state }, data) {
       commit('updateLoadingStr', '購買中');
-      commit('updateModalLoaded', false);
       dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
@@ -303,9 +301,9 @@ export default createStore({
         state.modelFormat = snapshot.val();
       });
     },
-    getPoint({ dispatch, commit, state }) {
+    getPoint({ dispatch, commit, state }, data) {
       const getPoint = firebase.functions().httpsCallable('getPoint');
-      getPoint().then((res) => {
+      getPoint({ type: data.type }).then((res) => {
         let times = 0;
         const closeModal = setInterval(() => {
           if (times > 50 || state.modalLoaded) {
@@ -313,7 +311,6 @@ export default createStore({
             clearInterval(closeModal);
             if (res.data && res.data.status === 'ok') {
               if (res.data.point > 0) {
-                commit('updateModalLoaded', false);
                 dispatch('openModal', {
                   type: 'pointNotification',
                   asynchronous: false,
@@ -387,7 +384,8 @@ export default createStore({
     },
     async getNoteData({ commit, state }) {
       if (state.userInfo) {
-        const noteData = await db.ref(`/users/${state.userInfo.uid}/noteData`).once('value').then((snap) => snap.val());
+        let noteData = await db.ref(`/users/${state.userInfo.uid}/noteData`).once('value').then((snap) => snap.val());
+        noteData = noteData.filter((obj: Note) => obj);
         commit('updateNoteData', noteData);
       }
     },
@@ -396,6 +394,14 @@ export default createStore({
         const modelData = await db.ref(`/users/${state.userInfo.uid}/modelData`).once('value').then((snap) => snap.val());
         commit('updateModelData', modelData);
       }
+    },
+    async getAccountingData({ state }) {
+      if (state.userInfo) {
+        const accountingData = await db.ref(`/users/${state.userInfo.uid}/accountingData`).once('value').then((snap) => snap.val());
+        console.log(accountingData);
+        return accountingData;
+      }
+      return null;
     },
     updateToast({ commit }, data) {
       commit('addToast', data);
@@ -429,7 +435,8 @@ export default createStore({
     },
     async updateNoteData({ dispatch, commit, state }, data) {
       let { noteData } = state.userData;
-      commit('updateModalLoaded', false);
+      let index = null;
+      const note = data.data;
       commit('updateLoadingStr', '資料上傳中');
       dispatch('openModal', {
         type: 'loading',
@@ -438,12 +445,12 @@ export default createStore({
       if (state.userInfo) {
         switch (data.type) {
           case 'add':
-            noteData.push(data.data);
+            index = noteData.length;
             break;
           case 'edit':
             noteData.forEach((el: Note, i: number) => {
               if (el.id === data.data.id) {
-                noteData[i] = data.data;
+                index = i;
               }
             });
             break;
@@ -453,7 +460,11 @@ export default createStore({
           default:
             break;
         }
-        await db.ref(`/users/${state.userInfo.uid}/noteData`).set(noteData);
+        if (data.type === 'delete') {
+          await db.ref(`/users/${state.userInfo.uid}/noteData`).set(noteData);
+        } else {
+          await db.ref(`/users/${state.userInfo.uid}/noteData/${index}`).set(note);
+        }
         await dispatch('getNoteData');
         if (data.type === 'edit') {
           dispatch('updateToast', {
@@ -468,17 +479,28 @@ export default createStore({
         }
       }
     },
-    openModal({ dispatch, commit, state }, data) {
+    async updateAccountingData({ dispatch, commit, state }, data) {
+      commit('updateLoadingStr', '資料上傳中');
+      dispatch('openModal', {
+        type: 'loading',
+        asynchronous: true,
+      });
+      if (state.userInfo) {
+        await db.ref(`/users/${state.userInfo.uid}/accountingData/${data.key}`).set(data.data);
+      }
+    },
+    openModal({ commit, state }, data) {
       state.formHint = '';
       const el = document.getElementById(`${data.type}Modal`);
       let backdrop: boolean | 'static' | undefined = true;
+      commit('updateModalLoaded', false);
       if (data.type === 'loading') {
         backdrop = 'static';
       }
       if (el) {
         if (data.asynchronous) {
           el.addEventListener('shown.bs.modal', () => {
-            state.modalLoaded = true;
+            commit('updateModalLoaded', true);
           });
         }
         state.modal = new Modal(el, {

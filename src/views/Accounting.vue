@@ -27,9 +27,9 @@
         </button>
       </div>
       <div class="graph-container">
-        <div class="graph-status">
+        <div class="graph-status" :class="{ income: type === 'income' }">
           <span>{{ type === "expenditure" ? "支出" : "收入" }}</span>
-          <span>$99999</span>
+          <span>{{ amount[type].total }}元</span>
         </div>
         <canvas id="summaryGraph"></canvas>
       </div>
@@ -45,65 +45,45 @@
         </button>
       </div>
       <ul class="accounting-list w-100">
-        <li>
+        <li v-for="item in accrountingTypeData[type]" :key="item">
           <div class="tag">
-            <span class="material-icons">sports_esports</span>
-            <span>娛樂</span>
+            <span class="material-icons">{{ item.icon }}</span>
+            <span>{{ item.name }}</span>
           </div>
-          <span>{{ "-$2000" }}</span>
-        </li>
-        <li>
-          <div class="tag">
-            <span class="material-icons">restaurant</span>
-            <span>飲食</span>
-          </div>
-          <span>{{ "-$2000" }}</span>
-        </li>
-        <li>
-          <div class="tag">
-            <span class="material-icons">commute</span>
-            <span>交通</span>
-          </div>
-          <span>{{ "-$2000" }}</span>
-        </li>
-        <li>
-          <div class="tag">
-            <span class="material-icons">category</span>
-            <span>生活</span>
-          </div>
-          <span>{{ "-$2000" }}</span>
-        </li>
-        <li>
-          <div class="tag">
-            <span class="material-icons">local_hospital</span>
-            <span>醫療</span>
-          </div>
-          <span>{{ "-$2000" }}</span>
-        </li>
-        <li>
-          <div class="tag">
-            <span class="material-icons">more</span>
-            <span>其他</span>
-          </div>
-          <span>{{ "-$2000" }}</span>
+          <span>{{ amount[type][item.name] }}元</span>
         </li>
       </ul>
-      <button class="btn btn-secondary" id="bookkeepingBtn">開始記帳</button>
+      <button
+        class="btn btn-secondary"
+        id="bookkeepingBtn"
+        @click="
+          $router.push({ name: 'AccountingList', params: { status: 'add' } })
+        "
+      >
+        開始記帳
+      </button>
     </div>
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import {
   ref,
   reactive,
   defineComponent,
   onMounted,
+  onUnmounted,
   computed,
+  watch,
+  nextTick,
 } from 'vue';
 import Navbar from '@/components/Navbar.vue';
 import { useStore } from 'vuex';
 import { Chart, registerables } from 'chart.js';
+import {
+  Accounting,
+  Accountings,
+} from '@/types';
 
 Chart.register(...registerables);
 
@@ -113,25 +93,142 @@ export default defineComponent({
     Navbar,
   },
   setup() {
+    let chart = null;
     const date = new Date();
     const year = ref(date.getFullYear());
     const month = ref(date.getMonth() + 1);
     const store = useStore();
-    const type = ref('income');
+    const type = ref('expenditure');
+    const accrountingTypeData = {
+      expenditure: [{
+        name: '娛樂',
+        icon: 'sports_esports',
+      }, {
+        name: '飲食',
+        icon: 'restaurant',
+      }, {
+        name: '交通',
+        icon: 'commute',
+      }, {
+        name: '生活',
+        icon: 'category',
+      }, {
+        name: '醫療',
+        icon: 'local_hospital',
+      }, {
+        name: '其他',
+        icon: 'more',
+      }],
+      income: [{
+        name: '薪資',
+        icon: 'attach_money',
+      }, {
+        name: '理財',
+        icon: 'insert_chart_outlined',
+      }, {
+        name: '其他',
+        icon: 'more',
+      }],
+    };
+    const accountingData = ref<Accountings>({});
+    const incomeTags = accrountingTypeData.income.map((el) => el.name);
+    const expenditureTags = accrountingTypeData.expenditure.map((el) => el.name);
+    const incomeAmount = ref({
+      total: 0,
+    });
+    const expenditureAmount = ref({
+      total: 0,
+    });
 
-    onMounted(() => {
+    function getChartData() {
+      const ary = [];
+      if (type.value === 'income') {
+        incomeTags.forEach((tag) => ary.push(incomeAmount.value[tag]));
+      } else {
+        expenditureTags.forEach((tag) => ary.push(expenditureAmount.value[tag]));
+      }
+      let zeroTimes = 0;
+      ary.forEach((num) => {
+        if (num === 0) {
+          zeroTimes += 1;
+        }
+      });
+      if (zeroTimes === ary.length) {
+        ary.push(1);
+      }
+      return ary;
+    }
+
+    function updateChart() {
+      chart.data.labels = type.value === 'income' ? incomeTags : expenditureTags;
+      chart.data.datasets[0].data = getChartData();
+      chart.update();
+    }
+
+    function updateData() {
+      if (accountingData.value) {
+        Object.keys(incomeAmount.value).forEach((key) => { incomeAmount.value[key] = 0; });
+        Object.keys(expenditureAmount.value).forEach((key) => {
+          expenditureAmount.value[key] = 0;
+        });
+        let keys: Array<string> = Object.keys(accountingData.value);
+        keys = keys.filter((str: string) => {
+          const strDate = {
+            year: Number(str.substr(0, 4)),
+            month: Number(str.substr(5, 2)),
+          };
+          if (year.value === strDate.year && month.value === strDate.month) {
+            return true;
+          }
+          return false;
+        });
+        console.log(keys);
+        incomeTags.forEach((el) => { incomeAmount.value[el] = 0; });
+        expenditureTags.forEach(
+          (el) => { expenditureAmount.value[el] = 0; },
+        );
+        keys.forEach((key) => {
+          const dayAccounting: Accounting = accountingData.value[key];
+          console.log(dayAccounting);
+          dayAccounting.forEach((accounting) => {
+            if (accounting.type === 'income') {
+              incomeAmount.value.total += accounting.price;
+              incomeAmount.value[accounting.tag] += accounting.price;
+            } else {
+              expenditureAmount.value.total += accounting.price;
+              expenditureAmount.value[accounting.tag] += accounting.price;
+            }
+          });
+        });
+        console.log(incomeAmount.value, expenditureAmount.value);
+      }
+    }
+
+    watch(type, (n, o) => {
+      console.log('type change');
+      updateChart();
+    });
+
+    watch(year, () => {
+      console.log('year change');
+      updateData();
+      updateChart();
+    });
+
+    watch(month, () => {
+      console.log('month change');
+      updateData();
+      updateChart();
+    });
+
+    onMounted(async () => {
+      accountingData.value = await store.dispatch('getAccountingData') || null;
+      updateData();
       const data = {
-        labels: [
-          '娛樂',
-          '飲食',
-          '交通',
-          '生活',
-          '醫療',
-          '其他',
-        ],
+        labels: expenditureTags,
         datasets: [{
           label: 'My First Dataset',
-          data: [300, 50, 100, 70, 30, 60],
+          data: getChartData(),
           backgroundColor: [
             '#FF6759',
             '#F7BB65',
@@ -146,7 +243,7 @@ export default defineComponent({
         }],
       };
       const ctx = document.getElementById('summaryGraph');
-      const myChart = new Chart(ctx, {
+      chart = new Chart(ctx, {
         type: 'doughnut',
         data,
         options: {
@@ -186,12 +283,21 @@ export default defineComponent({
       }
     }
 
+    onUnmounted(() => {
+      chart.destroy();
+    });
+
     return {
       year,
       month,
       height: computed(() => store.state.height),
       type,
       dateChange,
+      accrountingTypeData,
+      amount: {
+        income: incomeAmount.value,
+        expenditure: expenditureAmount.value,
+      },
     };
   },
 });
@@ -296,6 +402,9 @@ export default defineComponent({
   position: relative;
 }
 .graph-status {
+  &.income {
+    padding-top: 32px;
+  }
   span {
     font-size: 28px;
     font-weight: bold;
@@ -314,6 +423,7 @@ export default defineComponent({
   position: absolute;
   right: 0;
   top: 0;
+  transition: all 0.4s ease-in-out;
 }
 #bookkeepingBtn {
   border-radius: 999px;
@@ -372,7 +482,7 @@ export default defineComponent({
       justify-content: center;
       width: 107px;
     }
-    >span {
+    > span {
       color: $secondary;
       font-weight: bold;
       font-size: 28px;

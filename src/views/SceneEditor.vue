@@ -423,7 +423,6 @@ export default defineComponent({
       if (scene && groups) {
         const result: Array<Promise<boolean>> = [];
         store.commit('updateLoadingStr', '場景存檔中');
-        store.commit('updateModalLoaded', false);
         store.dispatch('openModal', {
           type: 'loading',
           asynchronous: true,

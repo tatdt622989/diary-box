@@ -12,7 +12,7 @@
       <div>
         <p>日記一覽</p>
         <div class="hint">
-          每天前五筆隨機獲得10~50
+          每天前三筆隨機獲得10~100
           <img src="@/assets/images/currency-reverse.svg" alt="" />
         </div>
       </div>
@@ -219,12 +219,20 @@ export default defineComponent({
       });
     }
 
-    function deleteNote(id: string) {
-      store.dispatch('updateNoteData', {
+    async function deleteNote(id: string) {
+      await store.dispatch('updateNoteData', {
         type: 'delete',
         id,
       });
-      selectedMenu.value = [];
+      let times = 0;
+      const closeModal = setInterval(() => {
+        if (times > 50 || store.state.modalLoaded) {
+          store.commit('closeModal');
+          clearInterval(closeModal);
+          times += 1;
+          selectedMenu.value = [];
+        }
+      });
     }
 
     function filterApply() {
