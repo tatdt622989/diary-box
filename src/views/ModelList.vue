@@ -316,7 +316,7 @@ export default defineComponent({
         const asyncLoad = (index: number) => new Promise<SceneData>((resolve) => {
           if (!loadedModel[name]) {
             loader.load(
-              `${publicPath.value}model/${name}.gltf?v=1.0`,
+              `${publicPath.value}model/${name}.gltf?v=1.1`,
               (gltf) => {
                 const model = gltf.scene.children[0];
                 modelStyling(model, (color as ModelColor | null), colorKeys);

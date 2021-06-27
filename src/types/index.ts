@@ -94,3 +94,7 @@ export interface Accounting {
 export interface Accountings {
   [key: string]: Array<Accounting>;
 }
+
+export interface Amount {
+  [key: string]: number;
+}

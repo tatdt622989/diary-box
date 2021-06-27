@@ -6,6 +6,7 @@
       isDatePickerOpen = false;
       editorStatus = false;
       selectedAccountingIndex = null;
+      editorReset()
     "
   >
     <Navbar></Navbar>
@@ -52,7 +53,13 @@
             @click.stop
           >
             <li>
-              <button @click="editorStatus = 'edit'">編輯</button>
+              <button
+                @click="
+                  editorStatus = 'edit';
+                "
+              >
+                編輯
+              </button>
             </li>
             <li>
               <button
@@ -61,7 +68,6 @@
                     type: 'deleteCheck',
                     asynchronous: false,
                   });
-                  selectedAccountingIndex = i;
                 "
               >
                 刪除
@@ -92,7 +98,7 @@
         <button
           @click="
             editorAccountingStatus = 'income';
-            editorTags = '薪資';
+            editorTag = '薪資';
             editorIcon = 'attach_money';
           "
           :class="{ active: editorAccountingStatus === 'income' }"
@@ -102,7 +108,7 @@
         <button
           @click="
             editorAccountingStatus = 'expenditure';
-            editorTags = '娛樂';
+            editorTag = '娛樂';
             editorIcon = 'sports_esports';
           "
           :class="{ active: editorAccountingStatus === 'expenditure' }"
@@ -116,11 +122,11 @@
           class="btn btn-circle tag-btn"
           v-for="item in accountingTags[editorAccountingStatus]"
           @click.stop="
-            editorTags = item.name;
+            editorTag = item.name;
             editorIcon = item.icon;
           "
           :key="item"
-          :class="{ active: editorTags === item.name }"
+          :class="{ active: editorTag === item.name }"
         >
           <span class="material-icons">{{ item.icon }}</span>
           {{ item.name }}
@@ -134,7 +140,7 @@
       </div>
       <hr />
       <div class="btn-group status-group">
-        <button class="btn-rectangle cancel-btn" @click="filterReset">
+        <button class="btn-rectangle cancel-btn" @click="editorReset">
           取消
         </button>
         <button class="btn-rectangle apply-btn" @click="updateAccounting">
@@ -211,7 +217,7 @@ export default defineComponent({
     const editorStatus = ref<boolean | string>(false);
     const editorAccountingStatus = ref('expenditure');
     const editorIcon = ref('sports_esports');
-    const editorTags = ref('娛樂');
+    const editorTag = ref('娛樂');
     const editorPrice = ref();
     const editorTitle = ref('');
     const accountingData = ref<Accountings>({});
@@ -236,7 +242,6 @@ export default defineComponent({
       if (!accountingData.value[date.value]) {
         accountingData.value[date.value] = [];
       }
-      console.log(JSON.stringify(accountingData.value), date.value);
       displayAccountings.value = accountingData.value[date.value] as Array<Accounting> || [];
     });
 
@@ -253,9 +258,16 @@ export default defineComponent({
     });
 
     watch(editorStatus, (n) => {
+      if (n === 'edit') {
+        const data = accountingData.value[date.value][selectedAccountingIndex.value];
+        editorAccountingStatus.value = data.type;
+        editorIcon.value = data.icon;
+        editorTag.value = data.tag;
+        editorTitle.value = data.title;
+        editorPrice.value = data.price;
+      }
       if (n) {
         isDatePickerOpen.value = false;
-        selectedAccountingIndex.value = null;
       }
     });
 
@@ -263,9 +275,10 @@ export default defineComponent({
       editorStatus.value = false;
       editorAccountingStatus.value = 'expenditure';
       editorTitle.value = '';
-      editorTags.value = '娛樂';
+      editorTag.value = '娛樂';
       editorPrice.value = null;
       editorIcon.value = 'sports_esports';
+      selectedAccountingIndex.value = null;
     }
 
     async function updateAccounting() {
@@ -284,10 +297,13 @@ export default defineComponent({
       const data: Accounting = {
         type: editorAccountingStatus.value,
         title: editorTitle.value,
-        tag: editorTags.value,
+        tag: editorTag.value,
         price: editorPrice.value,
         icon: editorIcon.value,
       };
+      if (!accountingData.value[date.value]) {
+        accountingData.value[date.value] = [];
+      }
       if (editorStatus.value === 'add') {
         accountingData.value[date.value].splice(0, 0, data);
       } else if (editorStatus.value === 'edit') {
@@ -297,19 +313,8 @@ export default defineComponent({
         key: date.value,
         data: accountingData.value[date.value],
       });
-      let times = 0;
-      const closeModal = setInterval(() => {
-        if (times > 50 || store.state.modalLoaded) {
-          store.commit('closeModal');
-          store.dispatch('updateToast', {
-            type: 'success',
-            content: '上傳成功',
-          });
-          clearInterval(closeModal);
-          editorReset();
-        }
-        times += 1;
-      }, 100);
+      displayAccountings.value = accountingData.value[date.value] as Array<Accounting> || [];
+      editorReset();
       return false;
     }
 
@@ -337,6 +342,7 @@ export default defineComponent({
     }
 
     return {
+      accountingData,
       date,
       modelConfig: {
         type: 'string',
@@ -347,7 +353,7 @@ export default defineComponent({
       editorStatus,
       editorAccountingStatus,
       accountingTags,
-      editorTags,
+      editorTag,
       updateAccounting,
       selectedAccountingIndex,
       openedFunctionMenu,
@@ -356,6 +362,7 @@ export default defineComponent({
       displayAccountings,
       editorIcon,
       deleteAccounting,
+      editorReset,
     };
   },
 });
@@ -433,7 +440,7 @@ export default defineComponent({
       font-weight: bold;
       height: 52px;
       margin-bottom: 12px;
-      width: 110px;
+      width: 100px;
       padding: 0;
     }
     display: flex;
@@ -474,6 +481,7 @@ export default defineComponent({
   }
   bottom: -526px;
   height: 526px;
+  z-index: 9999;
 }
 .default {
   span {
@@ -547,5 +555,9 @@ export default defineComponent({
   }
   background-color: $primary;
   position: relative;
+}
+.main-wrap {
+  display: flex;
+  flex-direction: column;
 }
 </style>

@@ -83,6 +83,7 @@ import { Chart, registerables } from 'chart.js';
 import {
   Accounting,
   Accountings,
+  Amount,
 } from '@/types';
 
 Chart.register(...registerables);
@@ -93,7 +94,7 @@ export default defineComponent({
     Navbar,
   },
   setup() {
-    let chart = null;
+    let chart: Chart<'doughnut', number[], string>|null = null;
     const date = new Date();
     const year = ref(date.getFullYear());
     const month = ref(date.getMonth() + 1);
@@ -133,36 +134,41 @@ export default defineComponent({
     const accountingData = ref<Accountings>({});
     const incomeTags = accrountingTypeData.income.map((el) => el.name);
     const expenditureTags = accrountingTypeData.expenditure.map((el) => el.name);
-    const incomeAmount = ref({
+    const incomeAmount = ref<Amount>({
       total: 0,
     });
-    const expenditureAmount = ref({
+    const expenditureAmount = ref<Amount>({
       total: 0,
     });
 
     function getChartData() {
-      const ary = [];
+      console.log('chart data');
+      let ary: Array<any> = [];
       if (type.value === 'income') {
         incomeTags.forEach((tag) => ary.push(incomeAmount.value[tag]));
       } else {
         expenditureTags.forEach((tag) => ary.push(expenditureAmount.value[tag]));
       }
       let zeroTimes = 0;
-      ary.forEach((num) => {
+      ary = ary.filter((el) => el >= 0);
+      ary.forEach((num: number) => {
         if (num === 0) {
           zeroTimes += 1;
         }
       });
-      if (zeroTimes === ary.length) {
+      if (ary.length === 0 || zeroTimes === ary.length) {
         ary.push(1);
       }
+      console.log(ary);
       return ary;
     }
 
     function updateChart() {
-      chart.data.labels = type.value === 'income' ? incomeTags : expenditureTags;
-      chart.data.datasets[0].data = getChartData();
-      chart.update();
+      if (chart) {
+        chart.data.labels = type.value === 'income' ? incomeTags : expenditureTags;
+        chart.data.datasets[0].data = getChartData();
+        chart.update();
+      }
     }
 
     function updateData() {
@@ -182,14 +188,12 @@ export default defineComponent({
           }
           return false;
         });
-        console.log(keys);
         incomeTags.forEach((el) => { incomeAmount.value[el] = 0; });
         expenditureTags.forEach(
           (el) => { expenditureAmount.value[el] = 0; },
         );
         keys.forEach((key) => {
-          const dayAccounting: Accounting = accountingData.value[key];
-          console.log(dayAccounting);
+          const dayAccounting: Array<Accounting> = accountingData.value[key];
           dayAccounting.forEach((accounting) => {
             if (accounting.type === 'income') {
               incomeAmount.value.total += accounting.price;
@@ -200,23 +204,19 @@ export default defineComponent({
             }
           });
         });
-        console.log(incomeAmount.value, expenditureAmount.value);
       }
     }
 
     watch(type, (n, o) => {
-      console.log('type change');
       updateChart();
     });
 
     watch(year, () => {
-      console.log('year change');
       updateData();
       updateChart();
     });
 
     watch(month, () => {
-      console.log('month change');
       updateData();
       updateChart();
     });
@@ -242,7 +242,7 @@ export default defineComponent({
           width: 500,
         }],
       };
-      const ctx = document.getElementById('summaryGraph');
+      const ctx: HTMLCanvasElement = document.getElementById('summaryGraph') as HTMLCanvasElement;
       chart = new Chart(ctx, {
         type: 'doughnut',
         data,
@@ -265,7 +265,7 @@ export default defineComponent({
       });
     });
 
-    function dateChange(method) {
+    function dateChange(method: string) {
       if (method === 'next') {
         if (month.value >= 12) {
           month.value = 1;
@@ -284,7 +284,9 @@ export default defineComponent({
     }
 
     onUnmounted(() => {
-      chart.destroy();
+      if (chart) {
+        chart.destroy();
+      }
     });
 
     return {
@@ -436,6 +438,7 @@ export default defineComponent({
   position: fixed;
   right: 16px;
   border: 2px solid $primary;
+  z-index: 99;
 }
 #summaryGraph {
   position: relative;

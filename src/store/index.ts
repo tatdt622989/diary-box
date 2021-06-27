@@ -172,7 +172,7 @@ export default createStore({
               const errorMessage = error.message;
               dispatch('updateToast', {
                 type: 'error',
-                content: errorMessage,
+                content: '登入錯誤，建議使用chrome瀏覽器登入',
               });
             });
           break;
@@ -318,10 +318,10 @@ export default createStore({
                 commit('updateGetPoint', res.data.point);
                 dispatch('getBalance');
               } else {
-                dispatch('updateToast', {
-                  type: 'hint',
-                  content: res.data.msg,
-                });
+                // dispatch('updateToast', {
+                //   type: 'hint',
+                //   content: res.data.msg,
+                // });
               }
             }
           }
@@ -487,6 +487,7 @@ export default createStore({
       });
       if (state.userInfo) {
         await db.ref(`/users/${state.userInfo.uid}/accountingData/${data.key}`).set(data.data);
+        dispatch('getPoint', { type: 'accounting' });
       }
     },
     openModal({ commit, state }, data) {

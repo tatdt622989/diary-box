@@ -63,7 +63,17 @@
                 <button @click="previewNote(item.id)">預覽</button>
               </li>
               <li>
-                <button @click="deleteNote(item.id)">刪除</button>
+                <button
+                  @click="
+                    selectedId = item.id;
+                    $store.dispatch('openModal', {
+                      type: 'deleteCheck',
+                      asynchronous: false,
+                    });
+                  "
+                >
+                  刪除
+                </button>
               </li>
             </ul>
           </li>
@@ -112,6 +122,7 @@
         </button>
       </div>
     </div>
+    <DeleteCheck @deleteEvent="deleteNote"></DeleteCheck>
   </div>
 </template>
 
@@ -128,11 +139,13 @@ import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { Note, NoteList } from '@/types';
 import Navbar from '@/components/Navbar.vue';
+import DeleteCheck from '@/components/DeleteCheck.vue';
 
 export default defineComponent({
   name: 'NoteList',
   components: {
     Navbar,
+    DeleteCheck,
   },
   setup() {
     const store = useStore();
@@ -145,6 +158,7 @@ export default defineComponent({
     const tempFilterSort = ref('new->old');
     const filterKeyword = ref<string>('');
     const searchingWord = ref<string>('');
+    const selectedId = ref<number>();
 
     function getNotelist(data: Array<Note>) {
       noteList.value = [];
@@ -219,10 +233,11 @@ export default defineComponent({
       });
     }
 
-    async function deleteNote(id: string) {
+    async function deleteNote() {
+      store.commit('closeModal');
       await store.dispatch('updateNoteData', {
         type: 'delete',
-        id,
+        id: selectedId.value,
       });
       let times = 0;
       const closeModal = setInterval(() => {
@@ -266,10 +281,10 @@ export default defineComponent({
     });
 
     return {
+      clearSearch,
       createNote,
       deleteNote,
       editNote,
-      previewNote,
       filterApply,
       filterKeyword,
       filterReset,
@@ -278,9 +293,10 @@ export default defineComponent({
       isFilterOpen,
       noteList,
       openFilter,
-      selectedMenu,
+      previewNote,
       searchingWord,
-      clearSearch,
+      selectedMenu,
+      selectedId,
     };
   },
 });
@@ -300,6 +316,7 @@ export default defineComponent({
     }
     align-items: center;
     background-color: $secondary;
+    border: 2px solid $primary;
     border-radius: 999px;
     bottom: 32px;
     color: $primary;

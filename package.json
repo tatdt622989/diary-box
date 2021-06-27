@@ -15,7 +15,7 @@
     "@types/quill": "^2.0.8",
     "axios": "^0.21.1",
     "bootstrap": "^5.0.0-beta1",
-    "chart.js": "^3.3.2",
+    "chart.js": "^3.4.0",
     "core-js": "^3.6.5",
     "dat.gui": "^0.7.7",
     "detect-gpu": "^3.0.0",

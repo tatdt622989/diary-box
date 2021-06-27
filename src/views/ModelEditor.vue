@@ -162,7 +162,7 @@ export default defineComponent({
       }
       const loader = new GLTFLoader();
       loader.load(
-        `${publicPath.value}model/${selectedModel.value.name}.gltf?v=1.0`,
+        `${publicPath.value}model/${selectedModel.value.name}.gltf?v=1.1`,
         (gltf) => {
           model = gltf.scene;
           const { color } = selectedModel.value!;

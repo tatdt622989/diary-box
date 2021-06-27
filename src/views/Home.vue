@@ -185,7 +185,6 @@ export default defineComponent({
     );
 
     function resize() {
-      console.log('resize');
       if (renderer && camera) {
         renderer.setSize(window.innerWidth, window.innerHeight - 66);
         camera.aspect = window.innerWidth / (window.innerHeight - 66);
@@ -315,7 +314,7 @@ export default defineComponent({
         if (!loadedModel[data.name]) {
           threeObj = await new Promise((resolve, reject) => {
             loader.load(
-              `${publicPath.value}model/${data.name}.gltf?v=1.0`,
+              `${publicPath.value}model/${data.name}.gltf?v=1.1`,
               (gltf) => {
                 threeObj = gltf.scene;
                 modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
