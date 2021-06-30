@@ -267,11 +267,27 @@ export default createStore({
           if (result.data.msg === '購買成功') {
             await dispatch('getModelData');
             await dispatch('getBalance');
+            dispatch('updateToast', {
+              type: 'success',
+              content: result.data.msg,
+            });
+            return true;
           }
-          dispatch('updateToast', {
-            type: 'success',
-            content: result.data.msg,
-          });
+          if (result.data.msg === '餘額不足，購買失敗') {
+            dispatch('updateToast', {
+              type: 'hint',
+              content: result.data.msg,
+            });
+            let times = 0;
+            const closeModal = setInterval(() => {
+              if (times > 50 || state.modalLoaded) {
+                commit('closeModal');
+                clearInterval(closeModal);
+              }
+              times += 1;
+            }, 100);
+            return null;
+          }
         } else {
           dispatch('updateToast', {
             type: 'error',
@@ -279,6 +295,7 @@ export default createStore({
           });
         }
       }
+      return null;
     },
     signOut({ dispatch, commit, state }) {
       firebase.auth().signOut().then(() => {

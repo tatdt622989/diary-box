@@ -479,20 +479,22 @@ export default defineComponent({
     function buyModel() {
       let times = 0;
       const closeModal = setInterval(() => {
+        closeBuyModal();
         if (times > 50 || store.state.modalLoaded) {
           modal.hide();
           clearInterval(closeModal);
           if (store.state.userInfo) {
-            store.dispatch('buyModel', buyingModel.value).then(() => {
-              router.push({
-                name: 'ModelEditor',
-                params: {
-                  status: 'new',
-                },
-              });
+            store.dispatch('buyModel', buyingModel.value).then((res) => {
+              if (res) {
+                router.push({
+                  name: 'ModelEditor',
+                  params: {
+                    status: 'new',
+                  },
+                });
+              }
             });
           } else {
-            closeBuyModal();
             store.dispatch('updateToast', {
               type: 'hint',
               content: '請先登入',
