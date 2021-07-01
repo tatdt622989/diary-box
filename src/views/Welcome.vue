@@ -46,6 +46,9 @@
           <img src="@/assets/images/google-icon.svg" />
           <span>Google</span>
         </button>
+        <!-- <button class="facebook-login-btn btn btn-circle" @click="login('facebook')">
+          <img src="@/assets/images/f.svg">
+        </button> -->
         <button
           class="sign-later-btn btn btn-primary"
           @click="login('anonymous')"
@@ -110,19 +113,32 @@ export default defineComponent({
               password: password.value,
             });
             break;
-          case 'google':
-            store.dispatch('login', { type });
-            break;
-          case 'anonymous':
-            store.dispatch('login', { type });
-            break;
           default:
+            store.dispatch('login', { type });
             break;
         }
         lastTs = Date.now();
       }
       return false;
     }
+
+    onMounted(() => {
+      console.log('進入');
+      document.addEventListener('keydown', (e) => {
+        console.log(e.code);
+        if (e.code === 'Enter') {
+          login('email');
+        }
+      });
+      if (sessionStorage.getItem('pending')) {
+        store.commit('updateLoadingStr', '登入中');
+        store.dispatch('openModal', {
+          type: 'loading',
+          asynchronous: true,
+        });
+        store.dispatch('getRedirectRes');
+      }
+    });
 
     function openRegisterModel() {
       if (store.state.modal) {
@@ -259,13 +275,21 @@ export default defineComponent({
       justify-content: center;
       margin-bottom: 16px;
     }
+    button.facebook-login-btn {
+      img {
+        width: 52px;
+      }
+      border-radius: 999px !important;
+      height: 52px;
+      width: 52px;
+    }
     button.sign-later-btn {
       border-radius: 999px;
+      border: 2px solid $secondary;
       color: $secondary;
       font-size: 20px;
       font-weight: bold;
       height: 52px;
-      border: 2px solid $secondary;
       margin-bottom: 16px;
     }
     padding-top: 0;

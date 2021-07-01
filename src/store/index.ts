@@ -160,21 +160,13 @@ export default createStore({
         type: 'loading',
         asynchronous: true,
       });
-      const provider = new firebase.auth.GoogleAuthProvider();
+      const googleProvider = new firebase.auth.GoogleAuthProvider();
+      const facebookProvider = new firebase.auth.FacebookAuthProvider();
       switch (data.type) {
         case 'google':
-          firebase.auth().signInWithPopup(provider)
-            .then((result) => {
-              dispatch('updateUserInfo');
-            })
-            .catch((error) => {
-              // Handle Errors here.
-              const errorMessage = error.message;
-              dispatch('updateToast', {
-                type: 'error',
-                content: '登入錯誤，建議使用chrome瀏覽器登入',
-              });
-            });
+          sessionStorage.setItem('pending', '1');
+          googleProvider.setCustomParameters({ prompt: 'select_account' });
+          firebase.auth().signInWithRedirect(googleProvider);
           break;
         case 'email':
           firebase.auth().signInWithEmailAndPassword(data.email, data.password)
@@ -211,6 +203,33 @@ export default createStore({
               });
             });
           break;
+        // case 'facebook':
+        //   facebookProvider.addScope('public_profile');
+        //   firebase.auth().languageCode = 'zh-tw';
+        //   facebookProvider.setCustomParameters({
+        //     display: 'popup',
+        //   });
+        //   firebase
+        //     .auth()
+        //     .signInWithPopup(facebookProvider)
+        //     .then((result) => {
+        //       /** @type {firebase.auth.OAuthCredential} */
+        //       const { credential } = result;
+        //       // The signed-in user info.
+        //       const { user } = result;
+        //       const { accessToken }: any = credential;
+        //       console.log(credential, user, accessToken);
+        //     })
+        //     .catch((error) => {
+        //       // Handle Errors here.
+        //       const errorCode = error.code;
+        //       const errorMessage = error.message;
+        //       // The email of the user's account used.
+        //       const { email } = error;
+        //       // The firebase.auth.AuthCredential type that was used.
+        //       const { credential } = error;
+        //     });
+        //   break;
         default:
           break;
       }
@@ -298,6 +317,7 @@ export default createStore({
       return null;
     },
     signOut({ dispatch, commit, state }) {
+      console.log('登入');
       firebase.auth().signOut().then(() => {
         dispatch('updateToast', {
           type: 'success',
@@ -428,6 +448,7 @@ export default createStore({
     },
     async updateUserInfo({ dispatch, state, commit }) {
       firebase.auth().onAuthStateChanged((user) => {
+        console.log(user);
         if (user) {
           state.userInfo = user;
           dispatch('getUserData').then(() => {
@@ -526,6 +547,36 @@ export default createStore({
         });
         state.modal.show();
       }
+    },
+    async getRedirectRes({ dispatch, commit, state }) {
+      firebase.auth()
+        .getRedirectResult()
+        .then((result) => {
+          if (result.credential) {
+            /** @type {firebase.auth.OAuthCredential} */
+            const { credential } = result;
+            // This gives you a Google Access Token. You can use it to access the Google API.
+            const token: any = (credential as any).accessToken;
+          }
+          // The signed-in user info.
+          const { user } = result;
+          console.log(user, result);
+          if (user) {
+            state.userInfo = user;
+            dispatch('getUserData').then(() => {
+              state.dataLoaded = true;
+            });
+          }
+          sessionStorage.removeItem('pending');
+        }).catch((error) => {
+          // Handle Errors here.
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          dispatch('updateToast', {
+            type: 'error',
+            content: errorMessage,
+          });
+        });
     },
   },
   modules: {
