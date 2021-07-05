@@ -76,10 +76,14 @@ export default createStore({
     gpuTier: null as null | TierResult,
     isDebug: false,
     modalLoaded: false,
+    functionMenuOpen: false,
   },
   mutations: {
     menuToggler(state, data) {
       state.isMenuOpen = data;
+    },
+    functionMenuToggler(state, data) {
+      state.functionMenuOpen = data;
     },
     getHeight(state) {
       state.height = `${window.innerHeight}px`;
@@ -165,7 +169,7 @@ export default createStore({
       switch (data.type) {
         case 'google':
           sessionStorage.setItem('pending', '1');
-          googleProvider.setCustomParameters({ prompt: 'select_account' });
+          // googleProvider.setCustomParameters({ prompt: 'select_account' });
           firebase.auth().signInWithRedirect(googleProvider);
           break;
         case 'email':

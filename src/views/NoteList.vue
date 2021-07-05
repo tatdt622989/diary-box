@@ -10,7 +10,7 @@
     <Navbar></Navbar>
     <div class="header">
       <div>
-        <p>日記一覽</p>
+        <p>文字日記</p>
         <div class="hint">
           每天前三筆隨機獲得10~100
           <img src="@/assets/images/currency-reverse.svg" alt="" />
@@ -85,7 +85,6 @@
       </div>
     </div>
     <button class="add-btn" @click="createNote">
-      <span class="material-icons">add</span>
       <span>新增日記</span>
     </button>
     <div class="slide-up-window" :class="{ active: isFilterOpen }" @click.stop>
@@ -310,13 +309,12 @@ export default defineComponent({
       background-color: $tertiary;
     }
     span {
-      margin-right: 4px;
       font-size: 24px;
       font-weight: bold;
     }
     align-items: center;
     background-color: $secondary;
-    border: 2px solid $primary;
+    box-shadow: 4px 0px 16px rgba(68, 153, 102, 0.7);
     border-radius: 999px;
     bottom: 32px;
     color: $primary;
@@ -364,6 +362,7 @@ export default defineComponent({
     padding: 0px 16px 0px 16px;
     width: 100%;
     overflow-y: auto;
+    padding-bottom: 90px;
   }
   align-items: center;
   display: flex;

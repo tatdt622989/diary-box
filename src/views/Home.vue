@@ -1,5 +1,9 @@
 <template>
-  <div class="main-wrap home-wrap" :style="{ height }">
+  <div
+    class="main-wrap home-wrap"
+    :style="{ height }"
+    @click="functionMenuToggler($event, false)"
+  >
     <!-- <p class="position-absoulte">{{ store.state.gpuTier }}</p> -->
     <div class="status">
       <div class="currency">
@@ -13,11 +17,6 @@
           <span class="material-icons">menu</span>
         </button>
       </li>
-      <!-- <li>
-        <button @click="menuToggler">
-          <span class="material-icons">help</span>
-        </button>
-      </li> -->
       <li>
         <button @click="enterFullScreen">
           <span class="material-icons">fullscreen</span>
@@ -40,7 +39,10 @@
       </li>
     </ul>
     <p v-if="$store.state.isDebug">{{ $store.state.gpuTier }}</p>
-    <canvas id="mainScene" ref="mainScene"></canvas>
+    <canvas
+      id="mainScene"
+      ref="mainScene"
+    ></canvas>
     <div class="note-wrap" :class="{ active: isNoteOpen }">
       <div class="content">
         <div class="d-flex justify-content-end w-100 mb-2">
@@ -116,6 +118,7 @@ import {
   computed,
   watch,
   onUnmounted,
+  onBeforeUnmount,
   nextTick,
 } from 'vue';
 import { Modal } from 'bootstrap';
@@ -166,6 +169,7 @@ export default defineComponent({
     let base64: string | null;
     let camera: THREE.PerspectiveCamera | null;
     const height = computed(() => store.state.height);
+    const functionMenuOpen = computed(() => store.state.functionMenuOpen);
 
     function getNote() {
       if (noteData.value.length > 0) {
@@ -186,10 +190,14 @@ export default defineComponent({
 
     function resize() {
       if (renderer && camera) {
-        renderer.setSize(window.innerWidth, window.innerHeight - 66);
-        camera.aspect = window.innerWidth / (window.innerHeight - 66);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / (window.innerHeight);
         camera.updateProjectionMatrix();
       }
+    }
+
+    function functionMenuToggler(e: Event, type: string | boolean = false) {
+      store.commit('functionMenuToggler', type);
     }
 
     onMounted(async () => {
@@ -204,14 +212,14 @@ export default defineComponent({
       renderer = rendererCreator(tier, canvas);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.BasicShadowMap;
-      renderer.setSize(window.innerWidth, window.innerHeight - 66);
+      renderer.setSize(window.innerWidth, window.innerHeight);
 
       scene.background = new THREE.Color(0x449966);
 
       // 相機
       camera = new THREE.PerspectiveCamera(
         45,
-        window.innerWidth / (window.innerHeight - 66),
+        window.innerWidth / (window.innerHeight),
         0.1,
         10000,
       );
@@ -349,6 +357,13 @@ export default defineComponent({
         resize();
       });
       window.addEventListener('resize', resize, false);
+      (document.getElementById('mainScene') as HTMLCanvasElement).addEventListener('click', functionMenuToggler, false);
+      (document.getElementById('mainScene') as HTMLCanvasElement).addEventListener('touchstart', functionMenuToggler, false);
+    });
+
+    onBeforeUnmount(() => {
+      (document.getElementById('mainScene') as HTMLCanvasElement).removeEventListener('click', functionMenuToggler);
+      (document.getElementById('mainScene') as HTMLCanvasElement).removeEventListener('touchstart', functionMenuToggler);
     });
 
     onUnmounted(() => {
@@ -452,6 +467,8 @@ export default defineComponent({
       shareImg,
       store,
       userData,
+      functionMenuOpen,
+      functionMenuToggler,
     };
   },
 });
@@ -582,17 +599,18 @@ export default defineComponent({
     flex-shrink: 0;
     font-size: 20px;
     font-weight: bold;
-    height: 135px;
+    height: 125px;
     justify-content: center;
     line-height: 24px;
     user-select: none;
     width: 44px;
     writing-mode: vertical-lr;
     margin-right: -44px;
+    padding-left: 2px;
   }
   .content {
     .text-container {
-      >p {
+      > p {
         text-align: left;
         word-break: break-word;
         width: 100%;

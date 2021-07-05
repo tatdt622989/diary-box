@@ -42,7 +42,7 @@
           </a>
           <a
             class="facebook t-base"
-            href="https://www.facebook.com/profile.php?id=100032140747157"
+            href="https://www.facebook.com/DiaryBoxAPP/?ref=pages_you_manage"
             target="_blank"
           >
             <img src="@/assets/images/facebook.svg" alt="Facebook" />

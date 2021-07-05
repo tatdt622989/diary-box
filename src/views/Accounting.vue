@@ -437,7 +437,7 @@ export default defineComponent({
   padding: 0 24px;
   position: fixed;
   right: 16px;
-  border: 2px solid $primary;
+  box-shadow: 4px 0px 16px rgba(68, 153, 102, 0.7);
   z-index: 99;
 }
 #summaryGraph {
@@ -497,5 +497,6 @@ export default defineComponent({
     justify-content: space-between;
   }
   max-width: 800px;
+  padding-bottom: 40px;
 }
 </style>
