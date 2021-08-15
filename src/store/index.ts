@@ -1,4 +1,5 @@
 import {
+  CanvasNote,
   Model,
   Note,
   Products,
@@ -13,23 +14,27 @@ import 'firebase/database';
 import 'firebase/firestore';
 import 'firebase/analytics';
 import 'firebase/functions';
+import 'firebase/storage';
 import { TierResult } from 'detect-gpu';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: 'AIzaSyCvCRbDN7cTeJEsUsaLniB_p2LMxpf5sVc',
-  authDomain: 'diary-box.firebaseapp.com',
-  projectId: 'diary-box',
-  storageBucket: 'diary-box.appspot.com',
-  messagingSenderId: '857252808766',
-  appId: '1:857252808766:web:f1f3fdcc47bad53545e96f',
-  measurementId: 'G-LYH2T7DNKF',
+  apiKey: 'AIzaSyCiHUhT44nI3fCnNlE_M7CkU9cDBkec1F8',
+  authDomain: 'diary-box-asia.firebaseapp.com',
+  databaseURL: 'https://diary-box-asia-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'diary-box-asia',
+  storageBucket: 'diary-box-asia.appspot.com',
+  messagingSenderId: '399180834464',
+  appId: '1:399180834464:web:551d110d53f629db31cbc5',
+  measurementId: 'G-B1NYQDZZSH',
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 firebase.analytics();
 const db = firebase.database();
+const storage = firebase.storage();
+const functions = firebase.app().functions('asia-northeast2');
 
 export default createStore({
   state: {
@@ -61,6 +66,7 @@ export default createStore({
     userData: {
       modelData: [],
       noteData: [] as Array<Note>,
+      canvasData: [] as Array<CanvasNote>,
       name: '',
       pointInfo: {
         balance: 0,
@@ -77,6 +83,7 @@ export default createStore({
     isDebug: false,
     modalLoaded: false,
     functionMenuOpen: false,
+    modalClosed: false,
   },
   mutations: {
     menuToggler(state, data) {
@@ -107,6 +114,7 @@ export default createStore({
       state.userData = {
         modelData: [],
         noteData: [],
+        canvasData: [],
         name: '',
         pointInfo: {
           balance: 0,
@@ -126,7 +134,12 @@ export default createStore({
       state.dataLoaded = data;
     },
     updateNoteData(state, data) {
-      state.userData.noteData = data;
+      if (data.type === 'text') {
+        state.userData.noteData = data.data;
+      }
+      if (data.type === 'canvas') {
+        state.userData.canvasData = data.data;
+      }
     },
     updateModelData(state, data) {
       state.userData.modelData = data;
@@ -138,6 +151,7 @@ export default createStore({
       state.getPoint = data;
     },
     updateUserData(state, data) {
+      state.userData.canvasData = data.canvasData;
       state.userData.modelData = data.modelData;
       state.userData.name = data.name;
       state.userData.pointInfo = data.pointInfo;
@@ -155,6 +169,9 @@ export default createStore({
     },
     updateModalLoaded(state, data) {
       state.modalLoaded = data;
+    },
+    updateModalClosed(state, data) {
+      state.modalClosed = data;
     },
   },
   actions: {
@@ -179,6 +196,14 @@ export default createStore({
               dispatch('updateUserInfo');
             })
             .catch((error) => {
+              let times = 0;
+              const closeModal = setInterval(() => {
+                if (times > 50 || state.modalLoaded || !state.modal) {
+                  commit('closeModal');
+                  clearInterval(closeModal);
+                }
+                times += 1;
+              }, 100);
               const errorCode = error.code;
               const errorMessage = error.message;
               console.log(errorCode, errorMessage);
@@ -275,7 +300,7 @@ export default createStore({
         type: 'loading',
         asynchronous: true,
       });
-      const buyModel = firebase.functions().httpsCallable('buyModel');
+      const buyModel = functions.httpsCallable('buyModel');
       const result = await buyModel({ buyingModel: data })
         .then((res) => res)
         .catch((err) => {
@@ -343,7 +368,7 @@ export default createStore({
       });
     },
     getPoint({ dispatch, commit, state }, data) {
-      const getPoint = firebase.functions().httpsCallable('getPoint');
+      const getPoint = functions.httpsCallable('getPoint');
       getPoint({ type: data.type }).then((res) => {
         let times = 0;
         const closeModal = setInterval(() => {
@@ -385,18 +410,19 @@ export default createStore({
           } else {
             displayName = state.userInfo?.displayName;
           }
-          const newUserFormat = firebase.functions().httpsCallable('newUserFormat');
+          const newUserFormat = functions.httpsCallable('newUserFormat');
           await newUserFormat({ displayName }).then((res) => {
             if (res.data.userData) {
               userData = res.data.userData;
             }
           });
         }
+        console.log(userData);
         commit('updateUserData', userData);
         commit('menuToggler', false);
         let times = 0;
         const closeModal = setInterval(() => {
-          if (times > 50 || state.modalLoaded) {
+          if (times > 50 || state.modalLoaded || !state.modal) {
             commit('closeModal');
             clearInterval(closeModal);
             let guideState;
@@ -405,12 +431,12 @@ export default createStore({
             } catch (e) {
               localStorage.removeItem('guideState');
             }
-            if (!guideState) {
-              dispatch('openModal', {
-                type: 'guide',
-                asynchronous: false,
-              });
-            }
+            // if (!guideState) {
+            //   dispatch('openModal', {
+            //     type: 'guide',
+            //     asynchronous: false,
+            //   });
+            // }
           }
           times += 1;
         }, 100);
@@ -423,11 +449,17 @@ export default createStore({
         commit('updateBalance', balance);
       }
     },
-    async getNoteData({ commit, state }) {
+    async getNoteData({ commit, state }, data) {
       if (state.userInfo) {
-        let noteData = await db.ref(`/users/${state.userInfo.uid}/noteData`).once('value').then((snap) => snap.val());
-        noteData = noteData.filter((obj: Note) => obj);
-        commit('updateNoteData', noteData);
+        let noteData: any;
+        if (data.type === 'text') {
+          noteData = await db.ref(`/users/${state.userInfo.uid}/noteData`).once('value').then((snap) => snap.val());
+        }
+        if (data.type === 'canvas') {
+          noteData = await db.ref(`/users/${state.userInfo.uid}/canvasData`).once('value').then((snap) => snap.val());
+        }
+        noteData = noteData ? noteData.filter((obj: any) => obj) : [];
+        commit('updateNoteData', { data: noteData, type: data.type });
       }
     },
     async getModelData({ commit, state }) {
@@ -465,7 +497,7 @@ export default createStore({
       });
     },
     async updateModelData({ dispatch, commit, state }, data) {
-      const editModel = firebase.functions().httpsCallable('editModel');
+      const editModel = functions.httpsCallable('editModel');
       let isSuccess = false;
       await editModel(data).then((res) => {
         if (res.data.status === 'ok' && res.data.modelData) {
@@ -476,7 +508,8 @@ export default createStore({
       return isSuccess;
     },
     async updateNoteData({ dispatch, commit, state }, data) {
-      let { noteData } = state.userData;
+      let allData: any = data.type === 'text' ? state.userData.noteData : state.userData.canvasData;
+      if (!allData) { allData = []; }
       let index = null;
       const note = data.data;
       commit('updateLoadingStr', '資料上傳中');
@@ -485,35 +518,45 @@ export default createStore({
         asynchronous: true,
       });
       if (state.userInfo) {
-        switch (data.type) {
+        switch (data.status) {
           case 'add':
-            index = noteData.length;
+            index = allData.length;
             break;
           case 'edit':
-            noteData.forEach((el: Note, i: number) => {
+            allData.forEach((el: Note | CanvasNote, i: number) => {
               if (el.id === data.data.id) {
                 index = i;
               }
             });
             break;
           case 'delete':
-            noteData = noteData.filter((el: Note) => el.id !== data.id);
+            allData = allData.filter((el: Note | CanvasNote) => el.id! !== data.id);
             break;
           default:
             break;
         }
-        if (data.type === 'delete') {
-          await db.ref(`/users/${state.userInfo.uid}/noteData`).set(noteData);
+        if (data.status === 'delete') {
+          if (data.type === 'text') {
+            await db.ref(`/users/${state.userInfo.uid}/noteData`).set(allData);
+          }
+          if (data.type === 'canvas') {
+            await db.ref(`/users/${state.userInfo.uid}/canvasData`).set(allData);
+          }
         } else {
-          await db.ref(`/users/${state.userInfo.uid}/noteData/${index}`).set(note);
+          if (data.type === 'text') {
+            await db.ref(`/users/${state.userInfo.uid}/noteData/${index}`).set(note);
+          }
+          if (data.type === 'canvas') {
+            await db.ref(`/users/${state.userInfo.uid}/canvasData/${index}`).set(note);
+          }
         }
-        await dispatch('getNoteData');
-        if (data.type === 'edit') {
+        await dispatch('getNoteData', { type: data.type });
+        if (data.status === 'edit') {
           dispatch('updateToast', {
             type: 'success',
             content: '編輯成功',
           });
-        } else if (data.type === 'delete') {
+        } else if (data.status === 'delete') {
           dispatch('updateToast', {
             type: 'success',
             content: '刪除成功',
@@ -545,11 +588,20 @@ export default createStore({
           el.addEventListener('shown.bs.modal', () => {
             commit('updateModalLoaded', true);
           });
+          el.addEventListener('hidden.bs.modal', () => {
+            commit('updateModalClosed', true);
+          });
         }
         state.modal = new Modal(el, {
           backdrop,
         });
         state.modal.show();
+      }
+    },
+    closeModal({ commit, state }) {
+      commit('updateModalClosed', false);
+      if (state.modal) {
+        state.modal.hide();
       }
     },
     async getRedirectRes({ dispatch, commit, state }) {
@@ -581,6 +633,22 @@ export default createStore({
             content: errorMessage,
           });
         });
+    },
+    async uploadImg({ state }, data) {
+      if (state.userInfo) {
+        const ref = storage.ref(`/canvas/${state.userInfo.uid}/${data.id}`);
+        await ref.putString(data.data, 'data_url').then((snap) => {
+          console.log(snap);
+        });
+      }
+    },
+    async getImgURL({ state }, data) {
+      if (state.userInfo) {
+        const ref = storage.ref(`/canvas/${state.userInfo.uid}/${data.id}`);
+        const res = await ref.getDownloadURL().then((URL) => URL);
+        return res;
+      }
+      return null;
     },
   },
   modules: {

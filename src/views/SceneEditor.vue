@@ -70,6 +70,7 @@ import rendererCreator from '@/utils/rendererCreator';
 import getModelOverlapState from '@/utils/getModelOverlapState';
 import getModelPosition from '@/utils/getModelPosition';
 import { LoadedModel, Model, ModelColor } from '@/types';
+import textureLoader from '@/utils/textureLoader';
 
 export default defineComponent({
   name: 'SceneEditor',
@@ -80,7 +81,7 @@ export default defineComponent({
     const targetId = route.params.target;
     const publicPath = ref(process.env.BASE_URL);
     const hint = ref('請選擇模型開始編輯');
-    const modelData = store.state.userData
+    const models = store.state.userData
       ? computed(() => store.state.userData.modelData)
       : ref<Array<Model>>([store.state.defaultModelData]);
     const canvas = ref<HTMLCanvasElement>();
@@ -109,7 +110,7 @@ export default defineComponent({
 
     // 地板
     const planeGeometry = new THREE.PlaneGeometry(600, 600, 32);
-    const texture = new THREE.TextureLoader().load(`${publicPath.value}images/grid.png`, (obj) => {
+    const planeTexture = new THREE.TextureLoader().load(`${publicPath.value}images/grid.png`, (obj) => {
       const t = obj;
       t.wrapS = THREE.RepeatWrapping;
       t.wrapT = THREE.RepeatWrapping;
@@ -117,7 +118,7 @@ export default defineComponent({
       t.repeat.set(6, 6);
     });
     const planeMaterial = new THREE.MeshStandardMaterial(
-      { color: '#929292', side: THREE.DoubleSide, map: texture },
+      { color: '#929292', side: THREE.DoubleSide, map: planeTexture },
     );
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.name = 'plane';
@@ -184,7 +185,6 @@ export default defineComponent({
           if (mouse.value && outlinePass && groups) {
             raycaster.setFromCamera(mouse.value, camera);
             const intersects = raycaster.intersectObjects(groups, true);
-            console.log(intersects, mouse.value, scene);
             if (intersects.length > 0
               && intersects[0].object.parent?.parent!.uuid !== selectedModel?.uuid) {
               outlinePass.selectedObjects = [intersects[0].object.parent as Object3D];
@@ -208,14 +208,16 @@ export default defineComponent({
 
       const loader = new GLTFLoader();
       const loadedModel: LoadedModel = {};
-      const modelLen = modelData.value.length;
+      const modelLen = models.value.length;
 
       /**
        * 模型樣式載入
        */
-      function modelStyling(data: Model, obj: THREE.Object3D,
-        color: ModelColor | null, colorKeys: Array<string> | null) {
+      async function modelStyling(data: Model, obj: THREE.Object3D,
+        color: ModelColor | null, colorKeys: Array<string> | null,
+        texture: ModelColor | null, textureKeys: Array<string> | null) {
         const threeObj = obj;
+        const result: Array<any> = [];
         threeObj.traverse((object) => {
           if (object instanceof THREE.Mesh) {
             const mesh = object;
@@ -225,8 +227,13 @@ export default defineComponent({
                 mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
               }
             }
+            if (texture && textureKeys && object.material && texture[object.material.name]) {
+              console.log('123');
+              result.push(textureLoader(texture[object.material.name], object, data.name));
+            }
           }
         });
+        await Promise.all(result);
         threeObj.castShadow = true;
         threeObj.position.set(data.position.x, data.position.y, data.position.z);
         threeObj.rotation.set(data.rotation.x, data.rotation.y, data.rotation.z);
@@ -237,23 +244,21 @@ export default defineComponent({
        * 同步載入模型
        */
       async function ModelLoad(i: number) {
-        const data = modelData.value[i];
-        console.log(data);
-        const { color } = modelData.value[i];
-        let colorKeys: Array<string> | null = null;
+        const data = JSON.parse(JSON.stringify(models.value[i]));
+        const { color } = models.value[i];
         let threeObj;
-        if (color) {
-          colorKeys = Object.keys(color);
-        }
+        const { texture } = models.value[i];
+        const colorKeys: Array<string> | null = color ? Object.keys(color) : null;
+        const textureKeys: Array<string> | null = texture ? Object.keys(texture) : null;
         if (!loadedModel[data.name]) {
           threeObj = await new Promise((resolve, reject) => {
             loader.load(
-              `${publicPath.value}model/${data.name}.gltf?v=1.1`,
-              (gltf) => {
+              `${publicPath.value}model/${data.name}.gltf?v=1.2`,
+              async (gltf) => {
                 threeObj = gltf.scene;
                 threeObj.userData.id = data.id;
-                modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
-                console.log(threeObj.userData, '模型資訊');
+                await modelStyling(data, threeObj, (color as ModelColor | null), colorKeys,
+                  (texture as ModelColor | null), textureKeys);
                 resolve(threeObj);
               },
               (xhr) => {
@@ -267,7 +272,8 @@ export default defineComponent({
         } else {
           threeObj = loadedModel[data.name].clone();
           threeObj.userData.id = data.id;
-          modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
+          await modelStyling(data, threeObj, (color as ModelColor | null), colorKeys,
+            (texture as ModelColor | null), textureKeys);
         }
         scene.add(threeObj as Object3D);
       }
@@ -275,7 +281,7 @@ export default defineComponent({
       const result = [];
       let i = 0;
       while (i < modelLen) {
-        if (!modelData.value[i].passive) {
+        if (!models.value[i].passive) {
           result.push(ModelLoad(i));
         }
         i += 1;
@@ -303,7 +309,6 @@ export default defineComponent({
     });
 
     function controller(type: string, direction: string) {
-      console.log(selectedModel, direction);
       const posUnit = 1;
       const rotateUnit = Math.PI / 8;
       if (!selectedModel && type !== 'point') {
@@ -315,7 +320,6 @@ export default defineComponent({
       }
       function setModelTransform(model: THREE.Object3D) {
         const targetModel = model;
-        console.log(type, targetModel, 'tranform');
         const axis = new THREE.Vector3(0, 1, 0);
         if (type === 'rotate') {
           switch (direction) {
@@ -348,7 +352,6 @@ export default defineComponent({
           targetModel.position.set(targetModel.position.x += axis.x,
             0, targetModel.position.z += axis.z);
         } else if (type === 'point' && planePoint) {
-          console.log(planePoint);
           axis.set(planePoint.x, 0, planePoint.z);
           targetModel.position.set(axis.x, 0, axis.z);
         }
@@ -365,7 +368,6 @@ export default defineComponent({
             }
           });
         }
-        console.log(currentIsOverlap, overlapping.value);
         if (!currentIsOverlap && groups) {
           setModelTransform(targetModel);
           if (getModelOverlapState(groups, targetModel as Object3D, selectedModel.uuid)) {
@@ -378,7 +380,6 @@ export default defineComponent({
     }
 
     function onPointerClick(e: Event, pos: any) {
-      console.log(pos);
       if (renderer && camera && mouse.value && groups) {
         pointer.x = (pos.x / renderer.domElement.clientWidth) * 2 - 1;
         pointer.y = -(pos.y / renderer.domElement.clientHeight) * 2 + 1;
@@ -396,7 +397,6 @@ export default defineComponent({
     }
 
     function getMousePos(e: any) {
-      console.log(e);
       mouse.value = new THREE.Vector2();
       let pos;
       if (window.TouchEvent && e instanceof TouchEvent) {
@@ -406,7 +406,6 @@ export default defineComponent({
           x: e.touches[0].clientX,
           y: e.touches[0].clientY,
         };
-        console.log(e.touches[0].clientX, e.touches[0].clientY, '按下');
       } else {
         mouse.value.x = (e.clientX / window.innerWidth) * 2 - 1;
         mouse.value.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -414,7 +413,6 @@ export default defineComponent({
           x: e.clientX,
           y: e.clientY,
         };
-        console.log(e, e.clientX, e.clientY, '按下');
       }
       onPointerClick(e, pos);
     }
@@ -431,7 +429,7 @@ export default defineComponent({
           const pos = group.position.toArray();
           const rotation = group.rotation.toArray();
           const id = group.userData?.id;
-          modelData.value.forEach((obj: Model) => {
+          models.value.forEach((obj: Model) => {
             const data = obj;
             if (id === data.id) {
               if (pos[0] !== data.position.x || pos[1] !== data.position.y
@@ -484,7 +482,7 @@ export default defineComponent({
     });
 
     return {
-      modelData,
+      models,
       getMousePos,
       mouse,
       controller,

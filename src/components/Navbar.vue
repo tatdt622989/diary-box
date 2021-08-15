@@ -49,6 +49,7 @@ export default defineComponent({
   >img {
     cursor: pointer;
     width: 180px;
+    user-select: none;
   }
   button {
     &:hover, &:active {

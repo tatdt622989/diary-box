@@ -41,7 +41,9 @@ export default defineComponent({
       store.commit('getHeight');
       window.addEventListener('resize', () => {
         store.commit('getHeight');
+        document.body.style.height = '';
       }, false);
+      await store.dispatch('updateUserInfo');
       (async () => {
         const gpuTier = await getGPUTier();
         console.log(gpuTier);
@@ -57,8 +59,8 @@ export default defineComponent({
 
 <style lang="scss">
 @import "~bootstrap/scss/bootstrap";
-@import '~@/assets/scss/app.scss';
-@import '~material-icons/iconfont/material-icons.css';
+@import "~@/assets/scss/app.scss";
+@import "~material-icons/iconfont/material-icons.css";
 
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
@@ -66,6 +68,7 @@ export default defineComponent({
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  min-width: 360px;
 }
 
 body {

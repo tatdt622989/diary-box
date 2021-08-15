@@ -39,10 +39,7 @@
       </li>
     </ul>
     <p v-if="$store.state.isDebug">{{ $store.state.gpuTier }}</p>
-    <canvas
-      id="mainScene"
-      ref="mainScene"
-    ></canvas>
+    <canvas id="mainScene" ref="mainScene"></canvas>
     <div class="note-wrap" :class="{ active: isNoteOpen }">
       <div class="content">
         <div class="d-flex justify-content-end w-100 mb-2">
@@ -64,7 +61,7 @@
         </div>
       </div>
       <button class="toggler" @click="isNoteOpen = !isNoteOpen">
-        近期日記
+        <span>近期日記</span>
       </button>
     </div>
     <FunctionBar :mode="'home'"></FunctionBar>
@@ -106,6 +103,45 @@
         </div>
       </div>
     </div>
+    <div
+      class="modal fade"
+      id="welcomeModal"
+      tabindex="-1"
+      aria-labelledby="welcomeModalModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="welcomeModalModalLabel">
+              歡迎來到日記盒DiaryBox
+            </h5>
+            <button
+              type="button"
+              class="btn btn-circle"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            >
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            日記盒提供<strong>記錄生活、繪畫、記帳、編輯模型、布置場景</strong>等多項服務，來看看如何開始吧！
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            >
+              略過教學
+            </button>
+            <button class="btn btn-primary" @click="guide">下一步</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -139,6 +175,8 @@ import {
 import { Geometry, Object3D } from 'three';
 import screenfull from 'screenfull/dist/screenfull';
 import rendererCreator from '@/utils/rendererCreator';
+import textureLoader from '@/utils/textureLoader';
+import Shepherd from 'shepherd.js';
 
 export default defineComponent({
   name: 'Home',
@@ -148,12 +186,11 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    const router = useRouter();
     let canvas: HTMLCanvasElement;
     const screenShotModal = ref<HTMLElement | null>(null);
     const publicPath = ref(process.env.BASE_URL);
     // const datGui = ref(new dat.GUI());
-    const modelData = ref<Array<Model>>(store.state.userData
+    const models = ref<Array<Model>>(store.state.userData
       ? store.state.userData.modelData : [store.state.defaultModelData]);
     const isNoteOpen = ref<boolean>(false);
     const lastestNoteData = ref<Array<Note>>([]);
@@ -201,6 +238,7 @@ export default defineComponent({
     }
 
     onMounted(async () => {
+      document.dispatchEvent(new Event('render-event'));
       getNote();
       canvas = document.getElementById('mainScene') as HTMLCanvasElement;
       let tier;
@@ -284,13 +322,15 @@ export default defineComponent({
       const loader = new GLTFLoader();
 
       const loadedModel: LoadedModel = {};
-      const modelLen = modelData.value.length;
+      const modelLen = models.value.length;
       /**
        * 模型樣式載入
        */
-      function modelStyling(data: Model, obj: THREE.Object3D,
-        color: ModelColor | null, colorKeys: Array<string> | null) {
+      async function modelStyling(data: Model, obj: THREE.Object3D,
+        color: ModelColor | null, colorKeys: Array<string> | null,
+        texture: ModelColor | null, textureKeys: Array<string> | null) {
         const threeObj = obj;
+        const result: Array<any> = [];
         threeObj.traverse((object) => {
           if (object instanceof THREE.Mesh) {
             const mesh = object;
@@ -300,8 +340,12 @@ export default defineComponent({
                 mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
               }
             }
+            if (texture && textureKeys && object.material && texture[object.material.name]) {
+              result.push(textureLoader(texture[object.material.name], object, data.name));
+            }
           }
         });
+        await Promise.all(result);
         threeObj.castShadow = true;
         threeObj.position.set(data.position.x, data.position.y, data.position.z);
         threeObj.rotation.set(data.rotation.x, data.rotation.y, data.rotation.z);
@@ -312,20 +356,20 @@ export default defineComponent({
        * 同步載入模型
        */
       async function ModelLoad(i: number) {
-        const data = JSON.parse(JSON.stringify(modelData.value[i]));
-        const { color } = modelData.value[i];
-        let colorKeys: Array<string> | null = null;
+        const data = JSON.parse(JSON.stringify(models.value[i]));
+        const { color } = models.value[i];
         let threeObj;
-        if (color) {
-          colorKeys = Object.keys(color);
-        }
+        const { texture } = models.value[i];
+        const colorKeys: Array<string> | null = color ? Object.keys(color) : null;
+        const textureKeys: Array<string> | null = texture ? Object.keys(texture) : null;
         if (!loadedModel[data.name]) {
           threeObj = await new Promise((resolve, reject) => {
             loader.load(
-              `${publicPath.value}model/${data.name}.gltf?v=1.1`,
-              (gltf) => {
+              `${publicPath.value}model/${data.name}.gltf?v=1.2`,
+              async (gltf) => {
                 threeObj = gltf.scene;
-                modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
+                await modelStyling(data, threeObj, (color as ModelColor | null), colorKeys,
+                  (texture as ModelColor | null), textureKeys);
                 resolve(threeObj);
               },
               (xhr) => {
@@ -338,7 +382,8 @@ export default defineComponent({
           });
         } else {
           threeObj = loadedModel[data.name].clone();
-          modelStyling(data, threeObj, (color as ModelColor | null), colorKeys);
+          await modelStyling(data, threeObj, (color as ModelColor | null), colorKeys,
+            (texture as ModelColor | null), textureKeys);
         }
         scene.add(threeObj as Object3D);
       }
@@ -346,7 +391,7 @@ export default defineComponent({
       const result = [];
       let i = 0;
       while (i < modelLen) {
-        if (!modelData.value[i].passive) {
+        if (!models.value[i].passive) {
           result.push(ModelLoad(i));
         }
         i += 1;
@@ -355,6 +400,12 @@ export default defineComponent({
       Promise.all(result).then(() => {
         render();
         resize();
+        if (!localStorage.getItem('isGuide')) {
+          store.dispatch('openModal', {
+            type: 'welcome',
+            asynchronous: false,
+          });
+        }
       });
       window.addEventListener('resize', resize, false);
       (document.getElementById('mainScene') as HTMLCanvasElement).addEventListener('click', functionMenuToggler, false);
@@ -406,14 +457,6 @@ export default defineComponent({
       }
     }
 
-    function createNote() {
-      const ts = Date.now();
-      router.push({
-        name: 'TextEditor',
-        params: { status: 'note-add', id: ts },
-      });
-    }
-
     function downloadImg() {
       const link = document.createElement('a');
       const ts = Date.now();
@@ -442,8 +485,124 @@ export default defineComponent({
       }
     }
 
+    function guide() {
+      store.commit('closeModal');
+      const tour = new Shepherd.Tour({
+        useModalOverlay: true,
+        defaultStepOptions: {
+          classes: 'shadow-md bg-purple-dark',
+        },
+      });
+      tour.on('active', () => {
+        (document.querySelector('.shepherd-modal-overlay-container') as SVGElement).style.height = `${window.innerHeight}px`;
+      });
+      tour.addSteps([
+        {
+          id: 'custom-step',
+          text: '這是你持有的日記幣，透過寫日記或記帳可以獲得日記幣喔！',
+          canClickTarget: false,
+          attachTo: {
+            element: '.status',
+            on: 'auto',
+          },
+          classes: 'custom-step',
+          buttons: [
+            {
+              text: '下一步',
+              action: tour.next,
+            },
+          ],
+        },
+        {
+          id: 'custom-step',
+          text: '日記幣可以到商店中購買模型並放置到場景中！',
+          canClickTarget: false,
+          attachTo: {
+            element: '#storeBtn',
+            on: 'top',
+          },
+          classes: 'custom-step',
+          buttons: [
+            {
+              text: '下一步',
+              action: tour.next,
+            },
+          ],
+        },
+        {
+          id: 'custom-step',
+          text: '寫過的日記可以到這裡查看！',
+          canClickTarget: false,
+          attachTo: {
+            element: '#noteBtn',
+            on: 'top',
+          },
+          classes: 'custom-step',
+          buttons: [
+            {
+              text: '下一步',
+              action: tour.next,
+            },
+          ],
+        },
+        {
+          id: 'custom-step',
+          text: '記帳的資料則可以到這裡查看！',
+          canClickTarget: false,
+          attachTo: {
+            element: '#accountingBtn',
+            on: 'top',
+          },
+          classes: 'custom-step',
+          buttons: [
+            {
+              text: '下一步',
+              action: tour.next,
+            },
+          ],
+        },
+        {
+          id: 'custom-step',
+          text: '這裡可以查看近期寫過的日記！',
+          canClickTarget: false,
+          attachTo: {
+            element: '.toggler',
+            on: 'auto',
+          },
+          classes: 'custom-step',
+          buttons: [
+            {
+              text: '下一步',
+              action: tour.next,
+            },
+          ],
+        },
+        {
+          id: 'custom-step',
+          text: '點擊+號開始寫日記或記帳吧！',
+          canClickTarget: false,
+          attachTo: {
+            element: '#addBtn',
+            on: 'top',
+          },
+          classes: 'custom-step',
+          buttons: [
+            {
+              text: '完成',
+              action: tour.complete,
+            },
+          ],
+        },
+      ]);
+      tour.start();
+      tour.on('complete', () => {
+        localStorage.setItem('isGuide', '1');
+        // tour.removeStep('custom-step');
+        resize();
+      });
+    }
+
     return {
-      createNote,
       downloadImg,
       enterFullScreen,
       height,
@@ -469,12 +628,15 @@ export default defineComponent({
       userData,
       functionMenuOpen,
       functionMenuToggler,
+      guide,
     };
   },
 });
 </script>
 
-<style lang="scss" socped>
+<style lang="scss">
+@import "~shepherd.js/dist/css/shepherd.css";
+
 .home-wrap {
   display: flex;
   flex-direction: column;
@@ -591,20 +753,22 @@ export default defineComponent({
 }
 .note-wrap {
   .toggler {
+    span {
+      font-size: 20px;
+      font-weight: bold;
+      writing-mode: vertical-lr;
+      letter-spacing: 4px;
+      user-select: none;
+    }
     align-items: center;
     background-color: $secondary;
     border-radius: 0 20px 20px 0;
     color: $primary;
     display: flex;
     flex-shrink: 0;
-    font-size: 20px;
-    font-weight: bold;
     height: 125px;
     justify-content: center;
-    line-height: 24px;
-    user-select: none;
     width: 44px;
-    writing-mode: vertical-lr;
     margin-right: -44px;
     padding-left: 2px;
   }
@@ -687,5 +851,54 @@ export default defineComponent({
   transition: $t-base;
   width: 100%;
   z-index: 10;
+}
+.custom-step {
+  max-width: 340px;
+  background-color: $secondary;
+  border-radius: 20px;
+  padding: 20px;
+  .shepherd-text {
+    color: $primary;
+    font-size: 20px;
+    line-height: 1.5;
+    letter-spacing: 1px;
+    font-weight: 400;
+    padding: 0;
+  }
+  .shepherd-button {
+    margin-top: 20px;
+    background-color: $primary;
+    font-weight: 400;
+    font-size: 20px;
+    border-radius: 999px;
+    color: $secondary;
+    &:hover {
+      background-color: #34764e;
+    }
+  }
+  .shepherd-arrow {
+    display: none;
+  }
+  .shepherd-footer {
+    padding: 0;
+  }
+}
+#welcomeModal {
+  letter-spacing: 0.8px;
+  .modal-body {
+    color: $primary;
+    font-size: 20px;
+    font-weight: 400;
+    display: inline;
+    line-height: 1.5;
+  }
+  .modal-footer {
+    .btn {
+      letter-spacing: 0.8px;
+    }
+    .btn:first-child {
+      opacity: 0.8;
+    }
+  }
 }
 </style>

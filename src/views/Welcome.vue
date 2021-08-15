@@ -1,6 +1,5 @@
 <template>
   <div class="welcome-wrap" :style="{ height }">
-    <div></div>
     <div class="logo">
       <img src="@/assets/images/logo-no-text.svg" alt="logo" />
     </div>
@@ -40,7 +39,6 @@
       <p class="register-text" @click="openRegisterModel">
         沒有日記盒的帳戶嗎?{{ "\xa0\xa0" }}<span>立即註冊</span>
       </p>
-      <!-- <hr> -->
       <div class="btn-group">
         <button class="google-login-btn" @click="login('google')">
           <img src="@/assets/images/google-icon.svg" />
@@ -58,6 +56,10 @@
       </div>
     </div>
     <Register></Register>
+    <div class="contact">
+      <p>聯絡我們：<span>contact@6yuwei.com</span></p>
+      <p>官網留言：<a href="https://6yuwei.com/contact.html">留言表單</a></p>
+    </div>
     <a class="privacy-btn" @click="$router.push('/privacy')">隱私權條款</a>
   </div>
 </template>
@@ -65,11 +67,10 @@
 <script lang="ts">
 import {
   ref,
-  reactive,
   defineComponent,
   onMounted,
+  onUnmounted,
   computed,
-  nextTick,
   watch,
 } from 'vue';
 import { useStore } from 'vuex';
@@ -123,9 +124,7 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      console.log('進入');
       document.addEventListener('keydown', (e) => {
-        console.log(e.code);
         if (e.code === 'Enter') {
           login('email');
         }
@@ -167,24 +166,25 @@ export default defineComponent({
 .welcome-wrap {
   .logo {
     img {
-      height: 90px;
-      width: 90px;
+      height: 70px;
+      width: 70px;
     }
     align-items: center;
     background-color: $secondary;
     border-radius: 999px;
     display: flex;
-    height: 110px;
+    height: 90px;
     justify-content: center;
-    width: 110px;
+    width: 90px;
   }
   .title {
     color: $secondary;
-    font-size: 36px;
+    font-size: 32px;
     font-weight: bold;
-    margin-top: 8px;
-    margin-bottom: 0;
+    margin-top: 4px;
+    margin-bottom: 4px;
     letter-spacing: 2px;
+    line-height: 36px;
   }
   form {
     span.material-icons {
@@ -209,7 +209,7 @@ export default defineComponent({
       border: 2px solid $secondary;
       color: $secondary;
       font-size: 20px;
-      height: 52px;
+      height: 48px;
       text-indent: 16px;
       padding-left: 38px;
       min-width: 320px;
@@ -222,7 +222,7 @@ export default defineComponent({
   .login-group {
     button.login-btn {
       color: $primary;
-      height: 52px;
+      height: 48px;
       border-radius: 999px;
       width: 100%;
       flex-grow: 0;
@@ -230,6 +230,7 @@ export default defineComponent({
       background-color: $secondary;
       font-size: 20px;
       font-weight: bold;
+      border-color: $secondary;
     }
     button {
       width: 100%;
@@ -271,9 +272,9 @@ export default defineComponent({
       display: flex;
       font-size: 20px;
       font-weight: bold;
-      height: 52px;
+      height: 48px;
       justify-content: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     button.facebook-login-btn {
       img {
@@ -289,8 +290,8 @@ export default defineComponent({
       color: $secondary;
       font-size: 20px;
       font-weight: bold;
-      height: 52px;
-      margin-bottom: 16px;
+      height: 48px;
+      margin-bottom: 12px;
     }
     padding-top: 0;
     width: 100%;
@@ -300,7 +301,7 @@ export default defineComponent({
     color: $secondary;
     font-size: 16px;
     letter-spacing: 4px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
   .register-text {
     span {
@@ -310,7 +311,7 @@ export default defineComponent({
     font-size: 16px;
     font-weight: bold;
     color: #fff;
-    margin: 16px 0;
+    margin: 10px 0;
   }
   .btn-group {
     button {
@@ -324,9 +325,23 @@ export default defineComponent({
   .privacy-btn {
     background: none;
     color: $secondary;
-    position: absolute;
-    bottom: 16px;
     cursor: pointer;
+  }
+  .contact {
+    p, a {
+      color: $secondary;
+      letter-spacing: 2px;
+    }
+    a {
+      font-weight: bold;
+    }
+    p {
+      &:nth-of-type(1) {
+        margin-bottom: 0;
+      }
+    }
+    margin-top: 10px;
+    margin-bottom: 4px;
   }
   display: flex;
   align-items: center;

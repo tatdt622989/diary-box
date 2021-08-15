@@ -4,13 +4,16 @@ module.exports = {
       .plugin('html')
       .tap((args) => {
         // eslint-disable-next-line no-param-reassign
-        args[0].title = '日記盒';
+        args[0].title = '日記盒DiaryBox';
         return args;
       });
   },
-  publicPath: './',
+
+  publicPath: process.env.NODE_ENV === 'production' ? '/diary-box/' : '/',
+
   // 這是將bootstrap的variables和mixins導入到所有元件中的方式，讓這些內容可以在各個元件中使用
   productionSourceMap: false,
+
   css: {
     loaderOptions: {
       scss: {

@@ -9,14 +9,12 @@
   <link rel="icon" href="<%= BASE_URL %>favicon.png?v=1.1">
   <link rel="apple-touch-icon" type="image/png" sizes="144x144" href="<%= BASE_URL %>favicon-144x144.png?v=1.1">
   <link rel="apple-touch-icon" type="image/png" sizes="192x192" href="<%= BASE_URL %>favicon-192x192.png?v=1.1">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&family=Noto+Serif+TC&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <title><%= htmlWebpackPlugin.options.title %></title>
-  <script data-ad-client="ca-pub-3389697259947664" async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-168048164-1">
-  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-168048164-1"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
 
@@ -27,14 +25,406 @@
 
     gtag('config', 'UA-168048164-1');
   </script>
+  <style>
+    body {
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      overflow-x: hidden;
+      width: 100%;
+      overscroll-behavior: contain;
+    }
+
+    @media (max-width: 360px) {
+      body {
+        width: 360px;
+        overflow-x: auto;
+      }
+    }
+
+    /* body #appAd {
+      background-color: #f8ebcf;
+      display: flex;
+      flex-shrink: 0;
+      height: 100px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    body #appAd .ad-style {
+      width: 100%;
+    } */
+
+    #app {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+  </style>
 </head>
 
 <body>
+  <script>
+    document.body.style.height = window.innerHeight + 'px';
+  </script>
   <noscript>
     <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
       Please enable it to continue.</strong>
   </noscript>
-  <div id="app"></div>
+  <!-- <div id="appAd">
+  </div> -->
+  <div id="app">
+    <style>
+      body {
+        background-color: #449966 !important;
+        margin: 0;
+        font-family: var(--bs-font-sans-serif);
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      }
+
+      #app {
+        font-family: Avenir, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-align: center;
+        color: #2c3e50;
+      }
+
+      .welcome-wrap,
+      .welcome-wrap .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .welcome-wrap {
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .welcome-wrap .logo {
+        background-color: #f8ebcf;
+        border-radius: 999px;
+        height: 90px;
+        width: 90px;
+      }
+
+      .welcome-wrap .logo img {
+        height: 70px;
+        width: 70px;
+      }
+
+      .welcome-wrap .title {
+        color: #f8ebcf;
+        font-size: 32px;
+        font-weight: 700;
+        margin-top: 4px;
+        margin-bottom: 4px;
+        letter-spacing: 2px;
+        line-height: 36px;
+      }
+
+      .welcome-wrap .text {
+        color: #f8ebcf;
+        font-size: 16px;
+        letter-spacing: 4px;
+        margin-bottom: 16px;
+        margin-top: 0;
+      }
+
+      .mb-3 {
+        margin-bottom: 1rem !important;
+      }
+
+      .position-relative {
+        position: relative !important;
+      }
+
+      .mb-2 {
+        margin-bottom: .5rem !important;
+      }
+
+      .mt-2 {
+        margin-top: 0.5rem !important;
+      }
+
+      .welcome-wrap form span.material-icons {
+        color: #f8ebcf;
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .material-icons,
+      .material-icons-outlined {
+        font-weight: 400;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+
+      .material-icons {
+        font-family: Material Icons;
+        font-feature-settings: "liga";
+      }
+
+      form {
+        min-width: 320px;
+      }
+
+      form>div {
+        display: flex;
+      }
+
+      .form-control {
+        display: block;
+        width: 100%;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: .25rem;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+      }
+
+      .welcome-wrap form input {
+        background-color: transparent;
+        border-radius: 999px;
+        border: 2px solid #f8ebcf;
+        color: #f8ebcf;
+        font-size: 20px;
+        height: 48px;
+        text-indent: 16px;
+        padding-left: 38px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .welcome-wrap form input::placeholder {
+        color: #f8ebcf;
+        opacity: 0.5;
+      }
+
+      button,
+      input,
+      textarea {
+        border: 0;
+      }
+
+      button,
+      input,
+      optgroup,
+      select,
+      textarea {
+        margin: 0;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+      }
+
+      .welcome-wrap .login-group {
+        padding-top: 0;
+        width: 100%;
+        max-width: 320px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .welcome-wrap .login-group button {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+
+      [type=button]:not(:disabled),
+      [type=reset]:not(:disabled),
+      [type=submit]:not(:disabled),
+      button:not(:disabled) {
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        color: #000;
+        background-color: #496;
+        border-color: #496;
+      }
+
+      .welcome-wrap .register-text {
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+        margin: 10px 0;
+        text-align: center;
+      }
+
+      .btn-group,
+      .btn-group-vertical {
+        position: relative;
+        display: inline-flex;
+        vertical-align: middle;
+      }
+
+      .welcome-wrap .btn-group {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .welcome-wrap .login-group .google-login-btn {
+        background-color: #fff;
+        border-radius: 999px;
+        align-items: center;
+        display: flex;
+        font-size: 20px;
+        font-weight: 700;
+        height: 48px;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+
+      .welcome-wrap .btn-group button {
+        width: calc(50% - 8px);
+        flex-shrink: 0;
+        flex-grow: 0;
+      }
+
+      .welcome-wrap .login-group button.sign-later-btn {
+        border-radius: 999px;
+        border: 2px solid #f8ebcf;
+        color: #f8ebcf;
+        font-size: 20px;
+        font-weight: 700;
+        height: 48px;
+        margin-bottom: 12px;
+      }
+
+      .welcome-wrap .privacy-btn {
+        background: none;
+        color: #F8EBCF;
+        cursor: pointer;
+      }
+
+      .welcome-wrap .register-text span {
+        color: #F8EBCF;
+      }
+
+      .welcome-wrap .login-group .google-login-btn span {
+        color: #495057;
+        margin-left: 14px;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      .welcome-wrap .login-group .google-login-btn img {
+        height: 32px;
+        pointer-events: none;
+      }
+
+      .welcome-wrap .login-group button.login-btn {
+        color: #449966;
+        height: 48px;
+        border-radius: 999px;
+        width: 100%;
+        flex-grow: 0;
+        flex-shrink: 0;
+        background-color: #F8EBCF;
+        font-size: 20px;
+        font-weight: bold;
+        box-sizing: border-box;
+      }
+
+      .welcome-wrap .contact {
+        margin-top: 10px;
+        margin-bottom: 4px;
+      }
+
+      .welcome-wrap .contact p {
+        margin-bottom: 16px;
+        margin-top: 0;
+      }
+
+      .welcome-wrap .contact p,
+      .welcome-wrap .contact a {
+        color: #F8EBCF;
+        letter-spacing: 2px;
+      }
+
+      .welcome-wrap .contact p:nth-of-type(1) {
+        margin-bottom: 0;
+      }
+    </style>
+    <div class="welcome-wrap">
+      <div class="logo">
+        <img src="<%= BASE_URL %>images/logo-no-text.svg" alt="logo" />
+      </div>
+      <p class="title">Diary Box</p>
+      <p class="text">記錄生活，打造屬於你的日記盒</p>
+      <form action="">
+        <div class="mb-3 position-relative">
+          <input type="email" class="form-control" placeholder="電子郵件" autocomplete="on" />
+        </div>
+        <div class="mb-2 position-relative">
+          <input type="password" class="form-control" placeholder="密碼" autocomplete="on" />
+        </div>
+      </form>
+      <div class="login-group mt-2">
+        <button type="button" class="login-btn btn btn-primary">
+          登入
+        </button>
+        <p class="register-text" @click="openRegisterModel">
+          沒有日記盒的帳戶嗎?&nbsp;&nbsp;<span>立即註冊</span>
+        </p>
+        <!-- <hr> -->
+        <div class="btn-group">
+          <button class="google-login-btn">
+            <img src="<%= BASE_URL %>images/google-icon.svg" />
+            <span>Google</span>
+          </button>
+          <!-- <button class="facebook-login-btn btn btn-circle" @click="login('facebook')">
+            <img src="@/assets/images/f.svg">
+          </button> -->
+          <button class="sign-later-btn btn btn-primary">
+            訪客登入
+          </button>
+        </div>
+      </div>
+      <Register></Register>
+      <div class="contact">
+        <p>聯絡方式：<span>contact@6yuwei.com</span></p>
+        <p>官網留言：<a href="https://6yuwei.com/contact.html">留言表單</a></p>
+      </div>
+      <a class="privacy-btn" @click="$router.push('/privacy')">隱私權條款</a>
+    </div>
+  </div>
   <!-- built files will be auto injected -->
 </body>
 

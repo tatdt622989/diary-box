@@ -29,7 +29,7 @@
       </div>
     </div>
     <div class="content">
-      <div class="models container-fluid scroll-bar">
+      <div class="models container-fluid scroll-bar over-scroll">
         <div class="row">
           <div
             class="item col-6 col-md-4 col-lg-3"
@@ -163,6 +163,7 @@ import {
   LoadedModel,
 } from '@/types';
 import { Modal } from 'bootstrap';
+import textureLoader from '@/utils/textureLoader';
 
 export default defineComponent({
   name: 'ModelList',
@@ -281,10 +282,13 @@ export default defineComponent({
       /**
        * 模型樣式載入
        */
-      function modelStyling(obj: THREE.Object3D,
-        color: ModelColor | null, colorKeys: Array<string> | null) {
+      async function modelStyling(obj: THREE.Object3D,
+        color: ModelColor | null, colorKeys: Array<string> | null,
+        texture: ModelColor | null, textureKeys: Array<string> | null) {
         const model = obj;
+        const result: Array<any> = [];
         model.traverse((object) => {
+          console.log(texture, object);
           if (object instanceof THREE.Mesh) {
             const mesh = object;
             mesh.castShadow = true;
@@ -293,8 +297,14 @@ export default defineComponent({
                 mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
               }
             }
+            console.log(object.material.name);
+            if (texture && textureKeys && view.value === 'ModelList' && object.material && texture[object.material.name]) {
+              console.log('123');
+              result.push(textureLoader(texture[object.material.name], object, obj.name));
+            }
           }
         });
+        await Promise.all(result);
         model.castShadow = true;
         model.position.set(model.position.x, model.position.y, model.position.z);
         model.receiveShadow = false;
@@ -309,34 +319,38 @@ export default defineComponent({
         const sceneData: SceneData = createScene(el);
         const { name } = models.value[i];
         const { color } = models.value[i];
-        let colorKeys: Array<string> | null = null;
-        if (color) {
-          colorKeys = Object.keys(color);
-        }
-        const asyncLoad = (index: number) => new Promise<SceneData>((resolve) => {
+        const { texture } = models.value[i];
+        const colorKeys: Array<string> | null = color ? Object.keys(color) : null;
+        const textureKeys: Array<string> | null = texture ? Object.keys(texture) : null;
+
+        const asyncLoad: any = async () => {
           if (!loadedModel[name]) {
-            loader.load(
-              `${publicPath.value}model/${name}.gltf?v=1.1`,
-              (gltf) => {
-                const model = gltf.scene.children[0];
-                modelStyling(model, (color as ModelColor | null), colorKeys);
-                sceneData.scene.add(model);
-                resolve(sceneData);
-              },
-              (xhr) => {
-                console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
-              },
-              (error) => {
-                console.log('An error happened');
-              },
-            );
+            await new Promise((res) => {
+              loader.load(
+                `${publicPath.value}model/${name}.gltf?v=1.2`, async (gltf) => {
+                  const model = gltf.scene.children[0];
+                  await modelStyling(model, (color as ModelColor | null), colorKeys,
+                    (texture as ModelColor | null), textureKeys);
+                  sceneData.scene.add(model);
+                  res(sceneData);
+                },
+                (xhr) => {
+                  console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
+                },
+                (error) => {
+                  console.log('An error happened');
+                },
+              );
+            });
           } else {
             const model = loadedModel[name].clone();
-            modelStyling(model, (color as ModelColor | null), colorKeys);
+            await modelStyling(model, (color as ModelColor | null), colorKeys,
+              (texture as ModelColor | null), textureKeys);
             sceneData.scene.add(model);
           }
-        });
-        loadResult.push(asyncLoad(i));
+          return sceneData;
+        };
+        loadResult.push(asyncLoad());
         i += 1;
       }
       Promise.all(loadResult).then((data: Array<SceneData>) => {
@@ -530,22 +544,23 @@ export default defineComponent({
       selectedId.value = id;
       store.dispatch('openModal', {
         type: 'hint',
-        asynchronous: false,
+        asynchronous: true,
       });
     }
 
     async function deleteModel() {
+      store.dispatch('closeModal');
       let times = 0;
       await new Promise((resolve) => {
-        const closeModal = setInterval(() => {
-          if (times > 50 || store.state.modalLoaded) {
-            store.commit('closeModal');
-            clearInterval(closeModal);
+        const timer = setInterval(() => {
+          if (times > 50 || store.state.modalClosed || !store.state.modal) {
             resolve(null);
+            clearInterval(timer);
           }
           times += 1;
         }, 100);
       });
+      console.log(selectedId.value);
       store.commit('updateLoadingStr', '模型刪除中');
       store.dispatch('openModal', {
         type: 'loading',
@@ -564,6 +579,13 @@ export default defineComponent({
               getModels();
               selectedMenu.value = [];
               selectedId.value = null;
+              clearCanvas();
+              firstLoad = true;
+              getModels();
+              if (models.value.length > 0) {
+                init();
+                firstLoad = false;
+              }
             }
             times += 1;
           }, 100);
@@ -788,6 +810,9 @@ export default defineComponent({
 }
 .content {
   .models {
+    .row {
+      padding-bottom: 100px;
+    }
     padding: 0 16px;
     flex-grow: 1;
   }

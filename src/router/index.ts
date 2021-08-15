@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import store from '../store';
 
 const Home = () => import('@/views/Home.vue');
@@ -12,6 +12,8 @@ const NotePreviewer = () => import('@/views/NotePreviewer.vue');
 const Privacy = () => import('@/views/Privacy.vue');
 const Accounting = () => import('@/views/Accounting.vue');
 const AccountingList = () => import('@/views/AccountingList.vue');
+const DrawingNotes = () => import('@/views/DrawingNotes.vue');
+const Canvas = () => import('@/views/Canvas.vue');
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -79,10 +81,20 @@ const routes: Array<RouteRecordRaw> = [
     name: 'AccountingList',
     component: AccountingList,
   },
+  {
+    path: '/drawing-notes',
+    name: 'DrawingNotes',
+    component: DrawingNotes,
+  },
+  {
+    path: '/canvas',
+    name: 'Canvas',
+    component: Canvas,
+  },
 ];
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(process.env.NODE_ENV === 'production' ? '/diary-box/' : '/'),
   routes,
 });
 

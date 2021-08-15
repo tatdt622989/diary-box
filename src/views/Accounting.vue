@@ -45,11 +45,15 @@
         </button>
       </div>
       <ul class="accounting-list w-100">
-        <li v-for="item in accrountingTypeData[type]" :key="item">
-          <div class="tag">
+        <li
+          v-for="item in accrountingTypeData[type]"
+          :key="item"
+          @click="openAccountingTypeModal(item.name)"
+        >
+          <button class="tag">
             <span class="material-icons">{{ item.icon }}</span>
             <span>{{ item.name }}</span>
-          </div>
+          </button>
           <span>{{ amount[type][item.name] }}元</span>
         </li>
       </ul>
@@ -63,6 +67,11 @@
         開始記帳
       </button>
     </div>
+    <AccountingType
+      :data="modalData"
+      :month="month"
+      :type="selectedTag"
+    ></AccountingType>
   </div>
 </template>
 
@@ -78,6 +87,7 @@ import {
   nextTick,
 } from 'vue';
 import Navbar from '@/components/Navbar.vue';
+import AccountingType from '@/components/AccountingType.vue';
 import { useStore } from 'vuex';
 import { Chart, registerables } from 'chart.js';
 import {
@@ -92,6 +102,7 @@ export default defineComponent({
   name: 'SpendList',
   components: {
     Navbar,
+    AccountingType,
   },
   setup() {
     let chart: Chart<'doughnut', number[], string>|null = null;
@@ -140,9 +151,10 @@ export default defineComponent({
     const expenditureAmount = ref<Amount>({
       total: 0,
     });
+    const selectedTag = ref<string>();
+    const modalData = ref<Array<any>>([]);
 
     function getChartData() {
-      console.log('chart data');
       let ary: Array<any> = [];
       if (type.value === 'income') {
         incomeTags.forEach((tag) => ary.push(incomeAmount.value[tag]));
@@ -159,7 +171,6 @@ export default defineComponent({
       if (ary.length === 0 || zeroTimes === ary.length) {
         ary.push(1);
       }
-      console.log(ary);
       return ary;
     }
 
@@ -283,6 +294,34 @@ export default defineComponent({
       }
     }
 
+    function openAccountingTypeModal(t: string) {
+      modalData.value = [];
+      selectedTag.value = t;
+      const dates: Array<string> = Object.keys(accountingData.value);
+      dates.forEach((dateStr: string) => {
+        const str = {
+          year: Number(dateStr.substr(0, 4)),
+          month: Number(dateStr.substr(5, 2)),
+        };
+        let i = 0;
+        while (i < accountingData.value[dateStr].length) {
+          if (str.month === month.value
+            && accountingData.value[dateStr][i].tag === selectedTag.value) {
+            console.log('push');
+            modalData.value.push({
+              price: accountingData.value[dateStr][i].price,
+              title: accountingData.value[dateStr][i].title,
+            });
+          }
+          i += 1;
+        }
+      });
+      store.dispatch('openModal', {
+        type: 'accountingType',
+        asynchronous: false,
+      });
+    }
+
     onUnmounted(() => {
       if (chart) {
         chart.destroy();
@@ -300,6 +339,9 @@ export default defineComponent({
         income: incomeAmount.value,
         expenditure: expenditureAmount.value,
       },
+      openAccountingTypeModal,
+      selectedTag,
+      modalData,
     };
   },
 });
@@ -383,7 +425,7 @@ export default defineComponent({
     }
     align-items: center;
     background-color: $secondary;
-    border-radius: 6px;
+    border-radius: 26px;
     display: flex;
     flex-shrink: 0;
     height: 52px;
@@ -452,17 +494,20 @@ export default defineComponent({
     }
     background: none;
     color: $secondary;
-    height: 44px;
+    height: 48px;
     font-size: 20px;
     font-weight: bold;
     flex-grow: 1;
     transition: all 0.2s ease-in-out;
+    border-radius: 999px;
   }
-  border-radius: 6px;
+  border-radius: 999px;
   border: 2px solid $secondary;
   display: flex;
   margin-top: 20px;
   min-width: 376px;
+  box-sizing: border-box;
+  margin-bottom: 12px;
 }
 .accounting-list {
   li {
@@ -477,13 +522,20 @@ export default defineComponent({
         font-size: 28px;
         margin-right: 8px;
       }
+      &:hover,
+      &:active {
+        background-color: $tertiary;
+      }
+      border: 2px solid $secondary;
       align-items: center;
       background-color: $secondary;
-      border-radius: 6px;
+      border-radius: 999px;
+      cursor: pointer;
       display: flex;
       height: 52px;
       justify-content: center;
-      width: 107px;
+      width: 120px;
+      transition: all 0.3s ease-out;
     }
     > span {
       color: $secondary;
@@ -496,6 +548,7 @@ export default defineComponent({
     align-items: center;
     justify-content: space-between;
   }
+  cursor: pointer;
   max-width: 800px;
   padding-bottom: 40px;
 }

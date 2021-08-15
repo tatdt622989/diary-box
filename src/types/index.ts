@@ -34,6 +34,7 @@ export interface Model {
   color: ModelColor;
   isUsed: boolean;
   passive: boolean;
+  texture?: ModelColor;
 }
 
 export interface SceneData {
@@ -55,6 +56,7 @@ export interface Product {
   color: object;
   displayName: string;
   price: number;
+  texture?: object;
 }
 
 export interface Products {
@@ -67,6 +69,7 @@ export interface UserData {
   name: string;
   modelData: Array<Model>;
   noteData: Array<Note>;
+  canvasData: Array<CanvasNote>;
 }
 
 export interface PointInfo {
@@ -97,4 +100,14 @@ export interface Accountings {
 
 export interface Amount {
   [key: string]: number;
+}
+
+export interface CanvasNote {
+  title: string;
+  id: string;
+  URL: string;
+}
+
+export interface CanvasNoteList {
+  [key: string]: Array<CanvasNote>;
 }

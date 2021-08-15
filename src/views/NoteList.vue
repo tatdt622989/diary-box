@@ -12,15 +12,20 @@
       <div>
         <p>文字日記</p>
         <div class="hint">
-          每天前三筆隨機獲得10~100
+          每日首筆獲得10~300
           <img src="@/assets/images/currency-reverse.svg" alt="" />
         </div>
       </div>
-      <button class="btn-circle" @click.stop="openFilter">
-        <span class="material-icons">filter_alt</span>
-      </button>
+      <div class="d-flex">
+        <button class="btn-circle me-3" @click.stop="$router.push('/drawing-notes')">
+          <span class="material-icons">palette</span>
+        </button>
+        <button class="btn-circle" @click.stop="openFilter">
+          <span class="material-icons">filter_alt</span>
+        </button>
+      </div>
     </div>
-    <div class="content scroll-bar" @click="isFilterOpen = false">
+    <div class="content scroll-bar over-scroll" @click="isFilterOpen = false">
       <div v-if="searchingWord" class="search-status">
         <p class="search-result">
           搜尋"&nbsp;&nbsp;<span>{{ searchingWord }}</span
@@ -227,6 +232,7 @@ export default defineComponent({
       router.push({
         name: 'NotePreviewer',
         params: {
+          type: 'text',
           id,
         },
       });
@@ -235,7 +241,8 @@ export default defineComponent({
     async function deleteNote() {
       store.commit('closeModal');
       await store.dispatch('updateNoteData', {
-        type: 'delete',
+        type: 'text',
+        status: 'delete',
         id: selectedId.value,
       });
       let times = 0;
@@ -336,6 +343,13 @@ export default defineComponent({
     justify-content: center;
   }
   .header {
+    button {
+      span {
+        font-size: 28px;
+      }
+      height: 44px;
+      width: 44px;
+    }
     img {
       height: 22px;
       width: 22px;
@@ -352,7 +366,7 @@ export default defineComponent({
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     margin-top: 16px;
     padding: 0 16px;
     width: 100%;
@@ -370,24 +384,6 @@ export default defineComponent({
   height: 100vh;
   justify-content: flex-start;
   width: 100%;
-}
-.search-status {
-  .search-result {
-    span {
-      font-weight: bold;
-    }
-    color: $secondary;
-    font-size: 20px;
-    width: 100%;
-    text-align: left;
-  }
-  .cancel-btn {
-    span {
-      color: $secondary;
-    }
-  }
-  display: flex;
-  margin-bottom: 20px;
 }
 .default {
   span {
@@ -414,9 +410,13 @@ export default defineComponent({
     }
     // border: 1px solid $secondary;
     background-color: $secondary;
-    border-radius: 6px;
+    border-radius: 99px;
     margin-bottom: 12px;
     padding: 4px 16px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .note-list {
     > li {
@@ -449,6 +449,10 @@ export default defineComponent({
         transform: translateY(-50%);
         right: 60px;
       }
+      &:last-of-type {
+        border: 0;
+        margin-bottom: 0;
+      }
       align-items: center;
       border-bottom: 1px solid $secondary;
       cursor: pointer;
@@ -466,9 +470,9 @@ export default defineComponent({
     justify-content: space-between;
     margin-bottom: 0;
     padding: 0;
+    margin-bottom: 12px;
   }
   display: flex;
   flex-direction: column;
-  margin-bottom: 32px;
 }
 </style>

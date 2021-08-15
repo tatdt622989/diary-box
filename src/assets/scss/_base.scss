@@ -1,7 +1,10 @@
-button, textarea, input {
+button,
+textarea,
+input {
   &:focus {
     outline: 0 !important;
   }
+
   border: 0;
 }
 
@@ -23,9 +26,13 @@ ul {
     user-select: none;
     display: inline-block;
   }
-  &:hover, &:active, &.active {
+
+  &:hover,
+  &:active,
+  &.active {
     background: #F0E0B9;
   }
+
   align-items: center;
   background: $secondary;
   border-radius: 999px;
@@ -37,17 +44,20 @@ ul {
 }
 
 .btn-rectangle {
-  &:hover, &:active {
+
+  &:hover,
+  &:active {
     font-size: 20px;
     color: $primary;
     font-weight: bold;
     background: #F0E0B9;
     border-color: $primary;
   }
+
   align-items: center;
   background: transparent;
   border-radius: 999px;
-  border: 3px solid $primary;
+  border: 2px solid $primary;
   color: $primary;
   display: flex;
   font-size: 20px;
@@ -65,6 +75,7 @@ ul {
     font-weight: bold;
     margin: 0;
   }
+
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -91,10 +102,14 @@ ul {
       }
     }
   }
-  button {
-    &:hover, &:active {
+
+  button, a {
+
+    &:hover,
+    &:active {
       background-color: $tertiary;
     }
+
     &::after {
       background-color: $primary;
       bottom: 0;
@@ -105,6 +120,7 @@ ul {
       transform: translateX(-50%);
       width: 90px;
     }
+
     background-color: transparent;
     color: $primary;
     font-size: 18px;
@@ -115,7 +131,12 @@ ul {
     text-align: center;
     transition: $t-base;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
   }
+
   background-color: $secondary;
   border-radius: 20px;
   display: flex;
@@ -130,15 +151,21 @@ ul {
 }
 
 .toast-container .toast {
-  &.hint, &.hint .toast-header {
+
+  &.hint,
+  &.hint .toast-header {
     background-color: rgb(252, 193, 84);
     color: rgb(47, 47, 47);
   }
-  &.success, &.success .toast-header {
+
+  &.success,
+  &.success .toast-header {
     background-color: rgb(62, 167, 80);
     color: rgb(255, 255, 255);
   }
-  &.error, &.error .toast-header {
+
+  &.error,
+  &.error .toast-header {
     background-color: rgb(219, 62, 62);
     color: rgb(255, 255, 255);
   }
@@ -147,6 +174,8 @@ ul {
 .main-wrap {
   position: relative;
   overflow: hidden;
+  height: 100%;
+  width: 100%;
 }
 
 button {
@@ -160,16 +189,19 @@ button {
       font-weight: bold;
       font-size: 20px;
     }
+
     .close {
       &:hover {
         background: $tertiary;
       }
+
       span {
         color: $primary;
         font-size: 36px;
         padding: 0;
         line-height: 36px;
       }
+
       background: $secondary;
       border: 0;
       height: 52px;
@@ -179,14 +211,17 @@ button {
       width: 52px;
       transition: $t-base;
     }
+
     border: 0;
     height: 69px;
     position: relative;
   }
+
   .modal-content {
     background: $secondary;
     border-radius: 20px;
   }
+
   .modal-footer {
     button {
       border-radius: 999px;
@@ -196,6 +231,7 @@ button {
       height: 52px;
       width: 150px;
     }
+
     border: 0;
     justify-content: space-between;
   }
@@ -209,13 +245,16 @@ button {
   &::-webkit-scrollbar {
     width: 6px;
   }
+
   &::-webkit-scrollbar-track {
     background-color: $secondary;
     border-radius: 20px;
   }
+
   &::-webkit-scrollbar-button {
     background-color: $primary;
   }
+
   &::-webkit-scrollbar-thumb {
     background-color: #e7d6ac;
     border-radius: 20px;
@@ -229,25 +268,30 @@ button {
     color: $primary;
     margin-bottom: 20px;
   }
+
   input {
     height: 52px;
     width: 100%;
     border-radius: 999px;
-    border: 3px solid $primary;
+    border: 2px solid $primary;
     background: transparent;
     text-indent: 20px;
     font-size: 20px;
     font-weight: bold;
     color: $primary;
   }
+
   .close-btn {
     &:hover {
       background-color: $tertiary;
     }
+
     span {
       color: $primary;
       line-height: 52px;
+      font-size: 32px;
     }
+
     background-color: transparent;
     border-radius: 999px;
     height: 52px;
@@ -257,55 +301,64 @@ button {
     transition: $t-base;
     width: 52px;
   }
+
   .btn-group {
     button {
       &.active {
         background: $primary;
         color: $secondary;
       }
+
       &:first-child {
         margin-right: 20px;
       }
+
       width: 170px;
     }
+
     .cancel-btn {
       &:hover {
         background-color: darken(#9f9684, 10%);
       }
+
       background-image: linear-gradient();
       background-color: #9f9684;
       color: $secondary;
       border: 0;
       margin-top: 20px;
     }
+
     .apply-btn {
       &:hover {
         background-position: 0 0;
       }
-      background: linear-gradient(
-          90deg,
-          $primary 0%,
-          $primary 50%,
-          $secondary 110%
-        )
-        100% 0 / 200%;
+
+      background: linear-gradient(90deg,
+        $primary 0%,
+        $primary 50%,
+        $secondary 110%) 100% 0 / 200%;
       border: 0;
       color: $secondary;
       margin-top: 20px;
     }
+
     display: flex;
     justify-content: flex-start;
   }
+
   .status-group {
     justify-content: flex-end;
   }
+
   hr {
     height: 0;
     border-top: 1px dashed #9f9684;
   }
+
   &.active {
     bottom: 0;
   }
+
   background-color: $secondary;
   border-radius: 20px 20px 0 0;
   bottom: -400px;
@@ -315,6 +368,7 @@ button {
   text-align: left;
   transition: $t-base;
   width: 100%;
+  box-shadow: 0 8px 16px rgba(68, 153, 102, 0.7);
 }
 
 .function-menu {
@@ -325,12 +379,66 @@ button {
     justify-content: center;
     white-space: nowrap;
   }
+
   box-shadow: 4px 0px 16px rgba(68, 153, 102, 0.7);
   opacity: 1;
 }
 
 .ellipsis {
-  overflow:hidden;
+  overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+input[type="range"] {
+  appearance: none;
+  background: $tertiary;
+  height: 12px;
+  border-radius: 999px;
+  width: 300px;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    background: $primary;
+    border-radius: 99px;
+    cursor: pointer;
+    height: 40px;
+    width: 40px;
+  }
+}
+
+.img-cover {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.search-status {
+  .search-result {
+    span {
+      font-weight: bold;
+    }
+    color: $secondary;
+    font-size: 24px;
+    margin: 0;
+    text-align: left;
+    width: 100%;
+  }
+  .cancel-btn {
+    span {
+      color: $secondary;
+      font-size: 32px;
+    }
+  }
+  align-items: center;
+  display: flex;
+  height: 44px;
+  margin-bottom: 16px;
+  position: relative;
+  margin-top: -8px;
+  // border-top: 2px solid $secondary;
+}
+
+.over-scroll {
+  overscroll-behavior: none;
 }

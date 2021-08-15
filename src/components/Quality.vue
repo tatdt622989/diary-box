@@ -79,19 +79,4 @@ export default defineComponent({
   margin-top: 32px;
   width: 300px;
 }
-input[type="range"] {
-  appearance: none;
-  background: $tertiary;
-  height: 12px;
-  border-radius: 999px;
-  width: 300px;
-  &::-webkit-slider-thumb {
-    appearance: none;
-    background: $primary;
-    border-radius: 99px;
-    cursor: pointer;
-    height: 40px;
-    width: 40px;
-  }
-}
 </style>

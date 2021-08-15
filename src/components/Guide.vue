@@ -52,7 +52,7 @@
               </div>
             </div>
           </div>
-          <div class="guide-hint-group">
+          <!-- <div class="guide-hint-group">
             <input type="checkbox" id="guideHint" v-model="guideState"/>
             <label for="guideHint">
               <div class="check-box">
@@ -60,7 +60,7 @@
               </div>
               <p>不再提醒(可以到右上角目錄內查看)</p>
             </label>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -230,11 +230,13 @@ export default defineComponent({
       font-size: 20px;
       margin: 0;
     }
+    .close {
+      right: 0;
+    }
     align-items: center;
     display: flex;
     justify-content: space-between;
     padding: 16px;
-    padding-bottom: 0;
   }
 }
 </style>

@@ -1,42 +1,57 @@
 <template>
   <div class="menu-wrap" :class="{ active: isMenuOpen }">
     <div class="content" :style="{ height }">
-      <button class="close-btn t-base" @click="menuToggler">
-        <span class="material-icons">close</span>
-      </button>
-      <ul class="menu-list">
-        <li class="t-base user-info" v-if="userInfo">
-          <div class="photo">
-            <span class="material-icons" v-if="!userInfo.photoURL">account_circle</span>
-            <img :src="userInfo.photoURL" v-if="userInfo.photoURL">
-          </div>
-          <p class="w-100 px-2 text-center user-text">
-            {{ userInfo.displayName || (userData && userData.name) }}
-          </p>
-        </li>
+      <div class="w-100">
+        <div class="w-100 d-flex">
+          <button class="close-btn t-base" @click="menuToggler">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <ul class="menu-list">
+          <li class="t-base user-info" v-if="userInfo">
+            <div class="photo">
+              <span class="material-icons" v-if="!userInfo.photoURL"
+                >account_circle</span
+              >
+              <img :src="userInfo.photoURL" v-if="userInfo.photoURL" />
+            </div>
+            <p class="w-100 px-2 text-center user-text">
+              {{ userInfo.displayName || (userData && userData.name) }}
+            </p>
+          </li>
 
-        <li class="t-base" v-if="userInfo && userInfo.email">
-          <button @click="signOut">
-            <span class="material-icons">logout</span>
-            會員登出
-          </button>
-        </li>
-        <li class="t-base">
-          <button @click="openModal('guide')">
-            <span class="material-icons">help</span>
-            操作引導
-          </button>
-        </li>
-        <!-- <li class="t-base">
+          <li class="t-base" v-if="userInfo && userInfo.email">
+            <button @click="signOut">
+              <span class="material-icons">logout</span>
+              會員登出
+            </button>
+          </li>
+          <li class="t-base">
+            <button @click="openModal('guide')">
+              <span class="material-icons">help</span>
+              操作引導
+            </button>
+          </li>
+          <!-- <li class="t-base">
           <button @click="openModal">
             <span class="material-icons">settings</span>
             畫質設定
           </button>
         </li> -->
-      </ul>
+        </ul>
+      </div>
+      <!-- <div class="donate">
+        <p>贊助作者</p>
+        <a
+          href="https://payment.opay.tw/Broadcaster/Donate/295B12291C902E3532C2AEAD0516C39E"
+        >
+          <img src="@/assets/images/coffee.jpg" alt="" />
+        </a>
+      </div> -->
       <div class="about">
-        <p>關於作者</p>
-        <div class="d-flex justify-content-between">
+        <p>聯絡方式</p>
+        <p>contact@6yuwei.com</p>
+        <div class="d-flex justify-content-between px-4">
           <a class="website t-base" href="https://6yuwei.com" target="_blank">
             <img src="@/assets/images/web-logo.svg" alt="六魚丸設計" />
           </a>
@@ -49,6 +64,7 @@
           </a>
         </div>
       </div>
+      <p class="uid">UID：{{ uid }}</p>
     </div>
     <transition name="fade">
       <div class="bg" v-if="isMenuOpen" @click="menuToggler"></div>
@@ -76,6 +92,7 @@ export default defineComponent({
   setup(props, { attrs, slots, emit }) {
     const store = useStore();
     const timer = ref<number | null>(null);
+    const uid = ref<number | null>();
 
     function resize() {
       if (timer.value) {
@@ -88,6 +105,9 @@ export default defineComponent({
     }
 
     onMounted(() => {
+      if (store.state.userInfo) {
+        uid.value = store.state.userInfo.uid;
+      }
       window.addEventListener('resize', resize);
     });
 
@@ -116,6 +136,7 @@ export default defineComponent({
       userData: computed(() => store.state.userData),
       signOut,
       openModal,
+      uid,
     };
   },
 });
@@ -155,14 +176,19 @@ export default defineComponent({
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
       margin-left: 8px;
+      margin-bottom: 8px;
     }
     .about {
       p {
+        &:nth-of-type(2) {
+          font-size: 15px;
+          margin-bottom: 16px;
+        }
         color: $primary;
         font-size: 20px;
         font-weight: bold;
+        margin-bottom: 6px;
       }
       a {
         &:hover,
@@ -172,23 +198,55 @@ export default defineComponent({
         background-color: transparent;
         padding: 0;
       }
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 56px;
-      position: absolute;
+      img {
+        width: 44px;
+      }
+      margin: 0 16px;
       width: calc(100% - 32px);
+    }
+    .donate {
+      p {
+        color: $primary;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 12px;
+      }
+      a {
+        img {
+          object-fit: cover;
+          width: 100%;
+          height: 100%;
+        }
+        border-radius: 8px;
+        display: flex;
+        height: 80px;
+        width: 120px;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin: 0;
+        margin-bottom: 16px;
+      }
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
     }
     background-color: $secondary;
     box-shadow: -4px 0px 16px rgba(46, 131, 80, 0.5);
     border-radius: 20px 0px 0px 20px;
     height: 100vh;
-    width: 160px;
+    width: 190px;
     padding: 16px 0;
     transition: all 0.3s ease-out;
     z-index: 2;
     position: absolute;
     top: 0;
-    right: -176px;
+    right: -220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
   }
   .bg {
     background-color: rgba(0, 0, 0, 0.5);
@@ -216,7 +274,7 @@ export default defineComponent({
       background-color: $primary;
     }
     span {
-      line-height: 56px;
+      line-height: 52px;
       color: $primary;
       margin-right: 12px;
     }
@@ -231,7 +289,7 @@ export default defineComponent({
     display: flex;
     justify-content: center;
     width: 100%;
-    height: 56px;
+    height: 52px;
   }
   .user-info {
     &:hover {
@@ -241,7 +299,7 @@ export default defineComponent({
       background-color: transparent;
     }
     .photo {
-      >span {
+      > span {
         margin: 0;
         font-size: 72px;
       }
@@ -273,9 +331,10 @@ export default defineComponent({
     justify-content: center;
     height: auto;
     padding: 0;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
   }
   padding: 0;
+  width: 100%;
 }
 
 .fade-enter-active,
@@ -286,5 +345,14 @@ export default defineComponent({
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.uid {
+  color: #989898;
+  font-size: 13px;
+  word-break: break-all;
+  margin: 0 16px;
+  text-align: center;
+  margin-top: 6px;
 }
 </style>

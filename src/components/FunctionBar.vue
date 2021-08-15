@@ -1,6 +1,6 @@
 <template>
   <div class="function-bar container-fluid">
-    <button class="t-base position-relative" @click.stop="menuToggler('note')">
+    <button class="t-base position-relative" @click.stop="menuToggler('note')" id="noteBtn">
       <span class="material-icons">article</span>
       <span class="text">日記</span>
       <ul
@@ -9,19 +9,47 @@
         @click.stop
       >
         <img src="@/assets/images/menu-arrow.svg" />
-        <li><button @click="$router.push('/note-list')">文字日記</button></li>
-        <li><button>手繪日記</button></li>
+        <li>
+          <button
+            @click="
+              menuToggler(false);
+              $router.push('/note-list');
+            "
+          >
+            文字日記
+          </button>
+        </li>
+        <li>
+          <button
+            @click="
+              menuToggler(false);
+              $router.push('/drawing-notes');
+            "
+          >
+            手繪日記
+          </button>
+        </li>
       </ul>
     </button>
-    <button class="t-base" @click="$router.push('/accounting')">
+    <!-- <button
+      class="t-base position-relative"
+      @click="$router.push('/note-list')"
+    >
+      <span class="material-icons">article</span>
+      <span class="text">日記</span>
+    </button> -->
+    <button
+      class="t-base"
+      @click="
+        menuToggler(false);
+        $router.push('/accounting');
+      "
+      id="accountingBtn"
+    >
       <span class="material-icons">savings</span>
       <span class="text">記帳</span>
     </button>
-    <button
-      class="t-base"
-      id="addBtn"
-      @click.stop="menuToggler('add')"
-    >
+    <button class="t-base" id="addBtn" @click.stop="menuToggler('add')">
       <span class="material-icons">add</span>
       <ul
         class="function-menu add"
@@ -29,9 +57,20 @@
         @click.stop
       >
         <img src="@/assets/images/menu-arrow.svg" />
-        <li><button>文字日記</button></li>
-        <li><button>手繪日記</button></li>
-        <li><button>開始記帳</button></li>
+        <li><button @click="createNote('text')">文字日記</button></li>
+        <li><button @click="createNote('canvas')">手繪日記</button></li>
+        <li>
+          <button
+            @click="
+              $router.push({
+                name: 'AccountingList',
+                params: { status: 'add' },
+              })
+            "
+          >
+            開始記帳
+          </button>
+        </li>
       </ul>
     </button>
     <button
@@ -45,7 +84,7 @@
       <span class="material-icons">category</span>
       <span class="text">模型</span>
     </button>
-    <button class="t-base" @click="$router.push('/store')">
+    <button class="t-base" @click="$router.push('/store')" id="storeBtn">
       <span class="material-icons">store</span>
       <span class="text">商店</span>
     </button>
@@ -54,24 +93,42 @@
 
 <script lang="ts">
 import {
-  ref, reactive, defineComponent, onMounted, computed,
+  ref, defineComponent, onMounted, computed,
 } from 'vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'FunctionBar',
-  props: ['mode'],
-  setup(props) {
+  setup() {
     const store = useStore();
+    const router = useRouter();
     const functionMenuOpen = computed(() => store.state.functionMenuOpen);
 
     function menuToggler(type: string | boolean) {
       store.commit('functionMenuToggler', type);
     }
 
+    function createNote(type: string) {
+      menuToggler(false);
+      const ts = Date.now();
+      if (type === 'text') {
+        router.push({
+          name: 'TextEditor',
+          params: { status: 'note-add', id: ts },
+        });
+      } else if (type === 'canvas') {
+        router.push({
+          name: 'Canvas',
+          params: { status: 'add', id: ts },
+        });
+      }
+    }
+
     return {
       menuToggler,
       functionMenuOpen,
+      createNote,
     };
   },
 });
@@ -91,11 +148,12 @@ export default defineComponent({
       font-size: 36px;
       line-height: 36px;
       margin-bottom: 3px;
-      transition: all .2s ease-in-out;
+      transition: all 0.2s ease-in-out;
     }
     span.text {
       font-size: 14px;
       line-height: 14px;
+      white-space: nowrap;
     }
     background: none;
     align-items: center;

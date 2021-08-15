@@ -9,15 +9,28 @@
       <button class="btn-circle" @click="$router.push('/note-list')">
         <span class="material-icons">arrow_back</span>
       </button>
-      <p>{{ status === "note-add" ? "新增日記" : "編輯日記" }}</p>
+      <div class="title">
+        <span class="ellipsis">{{ title }}</span>
+        <button
+          class="btn"
+          @click="
+            $store.dispatch('openModal', {
+              type: 'titleEditor',
+              asynchronous: false,
+            })
+          "
+        >
+          <span class="material-icons">edit</span>
+        </button>
+      </div>
       <button class="btn-circle" @click="saveData">
         <span class="material-icons">check</span>
       </button>
     </div>
     <div class="content container-fluid">
-      <div id="editorHeader">
+      <!-- <div id="editorHeader">
         <input type="text" placeholder="請輸入標題" v-model="title" />
-      </div>
+      </div> -->
       <div class="editor-wrap" ref="editor">
         <div class="toolbar" id="toolbar">
           <div class="ql-formats">
@@ -65,6 +78,7 @@
         <div id="editorContent" class="editor" spellcheck="false"></div>
       </div>
     </div>
+    <TitleEditor :title="title" @title-edit="titleEdit"></TitleEditor>
   </div>
 </template>
 
@@ -82,12 +96,14 @@ import { useStore } from 'vuex';
 import { useRouter, useRoute } from 'vue-router';
 import Quill from 'quill';
 import Navbar from '@/components/Navbar.vue';
+import TitleEditor from '@/components/TitleEditor.vue';
 import { Note } from '@/types';
 
 export default defineComponent({
   name: 'TextEditor',
   components: {
     Navbar,
+    TitleEditor,
   },
   setup() {
     const store = useStore();
@@ -100,7 +116,7 @@ export default defineComponent({
     const editor = ref<HTMLElement | null>(null);
     const quill = ref<Quill | null>(null);
     const sizeList = ref<Array<string>>([]);
-    const title = ref<string>('');
+    const title = ref<string>('未命名標題');
     const status = ref<string | null>(null);
     const noteData = computed(() => store.state.userData.noteData);
     let qlEditor: HTMLElement | null = null;
@@ -132,7 +148,6 @@ export default defineComponent({
       qlEditor = document.querySelector('.ql-editor');
 
       if (status.value === 'note-edit') {
-        console.log('編輯開啟');
         const targetNote: Note = noteData.value.filter((note: Note) => note.id === noteId)[0];
         if (targetNote) {
           (qlEditor as HTMLElement).innerHTML = targetNote.content;
@@ -142,6 +157,10 @@ export default defineComponent({
         (qlEditor as HTMLElement).innerHTML = '';
       }
     };
+
+    function titleEdit(str: string) {
+      title.value = str;
+    }
 
     onMounted(() => {
       if (!route.params.status) {
@@ -169,7 +188,8 @@ export default defineComponent({
         };
         if (status.value === 'note-edit') {
           await store.dispatch('updateNoteData', {
-            type: 'edit',
+            type: 'text',
+            status: 'edit',
             data,
           });
           let times = 0;
@@ -183,7 +203,8 @@ export default defineComponent({
           router.push('/note-list');
         } else if (status.value === 'note-add') {
           await store.dispatch('updateNoteData', {
-            type: 'add',
+            type: 'text',
+            status: 'add',
             data,
           });
           store.dispatch('getPoint', { type: 'note' });
@@ -206,6 +227,7 @@ export default defineComponent({
       sizeList,
       textColor,
       title,
+      titleEdit,
     };
   },
 });
@@ -216,6 +238,33 @@ export default defineComponent({
 @import "~quill/dist/quill.snow.css";
 
 .text-editor-wrap {
+  .header {
+    .title {
+      > span {
+        color: $secondary;
+        font-size: 24px;
+        font-weight: bold;
+      }
+      button {
+        span {
+          color: $secondary;
+          font-size: 24px;
+        }
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        padding: 0;
+        height: 44px;
+        width: 44px;
+        flex-shrink: 0;
+      }
+      align-items: center;
+      display: flex;
+      flex-grow: 1;
+      margin: 0 8px;
+      justify-content: center;
+    }
+  }
   display: flex;
   flex-direction: column;
   height: 100vh;
