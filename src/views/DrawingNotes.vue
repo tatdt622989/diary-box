@@ -327,6 +327,9 @@ export default defineComponent({
     });
 
     onMounted(async () => {
+      if (!canvasData.value || canvasData.value.length === 0) {
+        await store.dispatch('getNoteData', { type: 'canvas' });
+      }
       filterApply();
       await nextTick();
       displayImg();

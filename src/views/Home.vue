@@ -597,7 +597,6 @@ export default defineComponent({
       tour.start();
       tour.on('complete', () => {
         localStorage.setItem('isGuide', '1');
-        // tour.removeStep('custom-step');
         resize();
       });
     }
@@ -783,10 +782,9 @@ export default defineComponent({
       border: 2px solid $primary;
       border-radius: 10px;
       width: 100%;
-      flex-grow: 1;
       padding: 16px;
-      display: flex;
-      flex-wrap: wrap;
+      display: block;
+      flex-grow: 1;
     }
     .date {
       font-size: 28px;
@@ -795,6 +793,8 @@ export default defineComponent({
       border: 2px solid $primary;
       padding: 0 20px;
       margin-bottom: 32px;
+      width: 100%;
+      border-radius: 8px;
     }
     .default {
       span {
@@ -851,6 +851,7 @@ export default defineComponent({
   transition: $t-base;
   width: 100%;
   z-index: 10;
+  max-width: 500px;
 }
 .custom-step {
   max-width: 340px;

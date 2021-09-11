@@ -64,12 +64,14 @@ export interface Products {
 }
 
 export interface UserData {
+  accountingData?: Accountings;
   pointInfo: PointInfo;
   email: string;
   name: string;
   modelData: Array<Model>;
   noteData: Array<Note>;
   canvasData: Array<CanvasNote>;
+  [key: string]: any;
 }
 
 export interface PointInfo {

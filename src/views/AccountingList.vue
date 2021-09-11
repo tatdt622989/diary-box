@@ -238,7 +238,11 @@ export default defineComponent({
       if (route.params.status && route.params.status === 'add') {
         editorStatus.value = 'add';
       }
-      accountingData.value = await store.dispatch('getAccountingData') || {};
+      if (!store.state.userData.accountingData
+        || Object.keys(store.state.userData.accountingData).length === 0) {
+        await store.dispatch('getAccountingData');
+      }
+      accountingData.value = store.state.userData.accountingData || null;
       if (!accountingData.value[date.value]) {
         accountingData.value[date.value] = [];
       }
@@ -384,6 +388,7 @@ export default defineComponent({
 
 .content {
   height: 100%;
+  overflow: auto;
 }
 .header {
   p[v-cloak] {

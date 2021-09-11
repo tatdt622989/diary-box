@@ -233,7 +233,11 @@ export default defineComponent({
     });
 
     onMounted(async () => {
-      accountingData.value = await store.dispatch('getAccountingData') || null;
+      if (!store.state.userData.accountingData
+        || Object.keys(store.state.userData.accountingData).length === 0) {
+        await store.dispatch('getAccountingData');
+      }
+      accountingData.value = store.state.userData.accountingData || null;
       updateData();
       const data = {
         labels: expenditureTags,

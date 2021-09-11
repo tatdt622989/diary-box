@@ -201,7 +201,10 @@ export default defineComponent({
       }
     }
 
-    onMounted(() => {
+    onMounted(async () => {
+      if (!noteData.value || noteData.value.length <= 1) {
+        await store.dispatch('getNoteData', { type: 'text' });
+      }
       getNotelist(noteData.value);
     });
 

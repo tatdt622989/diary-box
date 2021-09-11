@@ -1,4 +1,5 @@
 import {
+  Accountings,
   CanvasNote,
   Model,
   Note,
@@ -74,6 +75,7 @@ export default createStore({
         pointCounter: 0,
       },
       email: '',
+      accountingData: {} as Accountings,
     } as UserData,
     dataLoaded: false,
     getPoint: null,
@@ -111,7 +113,9 @@ export default createStore({
       }
     },
     resetUserData(state) {
+      state.userData = null!;
       state.userData = {
+        accountingData: {},
         modelData: [],
         noteData: [],
         canvasData: [],
@@ -151,12 +155,10 @@ export default createStore({
       state.getPoint = data;
     },
     updateUserData(state, data) {
-      state.userData.canvasData = data.canvasData;
-      state.userData.modelData = data.modelData;
-      state.userData.name = data.name;
-      state.userData.pointInfo = data.pointInfo;
-      state.userData.email = data.email;
-      state.userData.noteData = data.noteData ? data.noteData : [];
+      const keys = Object.keys(data);
+      keys.forEach((key: string) => {
+        state.userData[key] = data[key] ? data[key] : null;
+      });
     },
     updateQuality(state, data) {
       state.quality = data;
@@ -182,7 +184,7 @@ export default createStore({
         asynchronous: true,
       });
       const googleProvider = new firebase.auth.GoogleAuthProvider();
-      const facebookProvider = new firebase.auth.FacebookAuthProvider();
+      // const facebookProvider = new firebase.auth.FacebookAuthProvider();
       switch (data.type) {
         case 'google':
           sessionStorage.setItem('pending', '1');
@@ -346,7 +348,6 @@ export default createStore({
       return null;
     },
     signOut({ dispatch, commit, state }) {
-      console.log('登入');
       firebase.auth().signOut().then(() => {
         dispatch('updateToast', {
           type: 'success',
@@ -400,10 +401,11 @@ export default createStore({
         });
       });
     },
-    async getUserData({ dispatch, commit, state }) {
+    async getHomeData({ dispatch, commit, state }) {
       if (state.userInfo) {
-        let userData = await db.ref(`/users/${state.userInfo.uid}`).once('value').then((snapshot) => snapshot.val());
-        if (!userData) {
+        let userData = {};
+        const name = await db.ref(`/users/${state.userInfo.uid}/name`).once('value').then((snapshot) => snapshot.val());
+        if (!name) {
           let displayName;
           if (state.userInfo?.isAnonymous) {
             displayName = '訪客';
@@ -412,12 +414,25 @@ export default createStore({
           }
           const newUserFormat = functions.httpsCallable('newUserFormat');
           await newUserFormat({ displayName }).then((res) => {
-            if (res.data.userData) {
-              userData = res.data.userData;
+            if (res.data) {
+              userData = res.data;
             }
           });
+        } else {
+          const pointInfo = await db.ref(`/users/${state.userInfo.uid}/pointInfo`).once('value').then((snapshot) => snapshot.val());
+          const modelData = await db.ref(`/users/${state.userInfo.uid}/modelData`).once('value').then((snapshot) => snapshot.val());
+          const noteData = await db.ref(`/users/${state.userInfo.uid}/noteData`).limitToLast(1).once('value').then((snapshot) => {
+            const obj = snapshot.val() ? snapshot.val() : {};
+            return Object.values(obj);
+          });
+          userData = {
+            pointInfo,
+            modelData,
+            noteData,
+            name,
+            email: state.userInfo.email,
+          };
         }
-        console.log(userData);
         commit('updateUserData', userData);
         commit('menuToggler', false);
         let times = 0;
@@ -454,12 +469,14 @@ export default createStore({
         let noteData: any;
         if (data.type === 'text') {
           noteData = await db.ref(`/users/${state.userInfo.uid}/noteData`).once('value').then((snap) => snap.val());
+          noteData = noteData ? noteData.filter((obj: any) => obj) : [];
+          commit('updateUserData', { noteData });
         }
         if (data.type === 'canvas') {
           noteData = await db.ref(`/users/${state.userInfo.uid}/canvasData`).once('value').then((snap) => snap.val());
+          noteData = noteData ? noteData.filter((obj: any) => obj) : [];
+          commit('updateUserData', { canvasData: noteData });
         }
-        noteData = noteData ? noteData.filter((obj: any) => obj) : [];
-        commit('updateNoteData', { data: noteData, type: data.type });
       }
     },
     async getModelData({ commit, state }) {
@@ -468,13 +485,11 @@ export default createStore({
         commit('updateModelData', modelData);
       }
     },
-    async getAccountingData({ state }) {
+    async getAccountingData({ commit, state }) {
       if (state.userInfo) {
-        const accountingData = await db.ref(`/users/${state.userInfo.uid}/accountingData`).once('value').then((snap) => snap.val());
-        console.log(accountingData);
-        return accountingData;
+        const data = await db.ref(`/users/${state.userInfo.uid}/accountingData`).once('value').then((snap) => snap.val()) as Array<Accountings>;
+        commit('updateUserData', { accountingData: data });
       }
-      return null;
     },
     updateToast({ commit }, data) {
       commit('addToast', data);
@@ -484,10 +499,9 @@ export default createStore({
     },
     async updateUserInfo({ dispatch, state, commit }) {
       firebase.auth().onAuthStateChanged((user) => {
-        console.log(user);
         if (user) {
           state.userInfo = user;
-          dispatch('getUserData').then(() => {
+          dispatch('getHomeData').then(() => {
             state.dataLoaded = true;
           });
         } else {
@@ -616,10 +630,9 @@ export default createStore({
           }
           // The signed-in user info.
           const { user } = result;
-          console.log(user, result);
           if (user) {
             state.userInfo = user;
-            dispatch('getUserData').then(() => {
+            dispatch('getHomeData').then(() => {
               state.dataLoaded = true;
             });
           }
@@ -637,9 +650,7 @@ export default createStore({
     async uploadImg({ state }, data) {
       if (state.userInfo) {
         const ref = storage.ref(`/canvas/${state.userInfo.uid}/${data.id}`);
-        await ref.putString(data.data, 'data_url').then((snap) => {
-          console.log(snap);
-        });
+        await ref.putString(data.data, 'data_url');
       }
     },
     async getImgURL({ state }, data) {
