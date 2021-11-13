@@ -11,7 +11,6 @@ const ModelEditor = () => import('@/views/ModelEditor.vue');
 const NotePreviewer = () => import('@/views/NotePreviewer.vue');
 const Privacy = () => import('@/views/Privacy.vue');
 const Accounting = () => import('@/views/Accounting.vue');
-const AccountingList = () => import('@/views/AccountingList.vue');
 const DrawingNotes = () => import('@/views/DrawingNotes.vue');
 const Canvas = () => import('@/views/Canvas.vue');
 
@@ -75,11 +74,6 @@ const routes: Array<RouteRecordRaw> = [
     path: '/accounting',
     name: 'Accounting',
     component: Accounting,
-  },
-  {
-    path: '/accounting-list',
-    name: 'AccountingList',
-    component: AccountingList,
   },
   {
     path: '/drawing-notes',

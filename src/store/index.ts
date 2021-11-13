@@ -613,7 +613,6 @@ export default createStore({
       }
     },
     closeModal({ commit, state }) {
-      commit('updateModalClosed', false);
       if (state.modal) {
         state.modal.hide();
       }

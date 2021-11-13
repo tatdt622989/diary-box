@@ -167,7 +167,8 @@ export default defineComponent({
     function getNotelist(data: Array<Note>) {
       noteList.value = [];
       const dateList: Array<string> = [];
-      data.forEach((el: Note) => {
+      const sortData = data.sort((a, b) => Number(a.id) - Number(b.id));
+      sortData.forEach((el: Note) => {
         const date = new Date(parseInt(el.id, 10));
         const dateStr = `${date.getFullYear()} / ${date.getMonth() + 1 >= 10 ? date.getMonth() + 1 : `0${date.getMonth() + 1}`} / ${date.getDate() >= 10 ? date.getDate() : `0${date.getDate()}`}`;
         const index = dateList.indexOf(dateStr);

@@ -560,7 +560,6 @@ export default defineComponent({
           times += 1;
         }, 100);
       });
-      console.log(selectedId.value);
       store.commit('updateLoadingStr', '模型刪除中');
       store.dispatch('openModal', {
         type: 'loading',

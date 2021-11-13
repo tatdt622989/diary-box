@@ -9,7 +9,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="accountingTypeModalLabel">{{ month }}月{{ type }}明細</h5>
+          <h5 class="modal-title" id="accountingTypeModalLabel">{{ title }}</h5>
           <button
             type="button"
             class="btn btn-circle"
@@ -48,9 +48,16 @@ import {
 
 export default defineComponent({
   name: 'AccountingType',
-  props: ['data', 'month', 'type'],
+  props: ['data', 'month', 'type', 'dateType', 'year'],
   setup(props) {
+    const title = computed(() => {
+      if (props.dateType === 'month') {
+        return `${props.month}月${props.type}明細`;
+      }
+      return `${props.year}年${props.type}明細`;
+    });
     return {
+      title,
     };
   },
 });
