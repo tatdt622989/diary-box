@@ -50,21 +50,21 @@
               </button>
             </div>
             <hr />
-            <div class="tags-group">
-              <button
-                class="btn btn-circle tag-btn"
-                v-for="item in accountingTags[editorAccountingStatus]"
-                @click.stop="
-                  editorTag = item.name;
-                  editorIcon = item.icon;
-                "
-                :key="item"
-                :class="{ active: editorTag === item.name }"
-              >
-                <span class="material-icons">{{ item.icon }}</span>
-                {{ item.name }}
-              </button>
-            </div>
+            <ul class="tags-group">
+              <li v-for="item in accountingTags[editorAccountingStatus]" :key="item">
+                <button
+                  class="btn btn-circle tag-btn"
+                  @click.stop="
+                    editorTag = item.name;
+                    editorIcon = item.icon;
+                  "
+                  :class="{ active: editorTag === item.name }"
+                >
+                  <span class="material-icons">{{ item.icon }}</span>
+                  {{ item.name }}
+                </button>
+              </li>
+            </ul>
             <hr />
             <input type="text" placeholder="名稱" v-model="editorTitle" />
             <div class="money">
@@ -187,20 +187,6 @@ export default defineComponent({
       getDayAccountings();
     });
 
-    watch(selectedDate, () => {
-      getDayAccountings();
-    });
-
-    watch(selectedIndex, (newVal: number) => {
-      console.log(selectedDate.value, newVal);
-      const data = accountingData.value[selectedDate.value][newVal];
-      editorAccountingStatus.value = data.type;
-      editorIcon.value = data.icon;
-      editorTag.value = data.tag;
-      editorTitle.value = data.title;
-      editorPrice.value = data.price;
-    });
-
     function editorReset() {
       editorAccountingStatus.value = 'expenditure';
       editorTitle.value = '';
@@ -224,9 +210,29 @@ export default defineComponent({
       return true;
     }
 
+    function getEditorData() {
+      const data = accountingData.value[selectedDate.value][selectedIndex.value];
+      // console.log(data, selectedDate.value, selectedIndex);
+      editorAccountingStatus.value = data.type;
+      editorIcon.value = data.icon;
+      editorTag.value = data.tag;
+      editorTitle.value = data.title;
+      editorPrice.value = data.price;
+    }
+
+    watch(selectedDate, () => {
+      getDayAccountings();
+    });
+
+    watch(selectedIndex, (newVal: number) => {
+      getEditorData();
+    });
+
     watch(status, (newVal: string) => {
       if (newVal === 'add') {
         editorReset();
+      } else {
+        getEditorData();
       }
     });
 
@@ -266,6 +272,7 @@ export default defineComponent({
       });
       getDayAccountings();
       await store.dispatch('getAccountingData');
+      context.emit('update');
       // editorReset();
       return false;
     }
@@ -353,17 +360,25 @@ export default defineComponent({
     overflow: hidden;
   }
   .tags-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+    // margin-bottom: -12px;
+    li {
+      width: 25%;
+      display: flex;
+      justify-content: center;
+      padding: 0;
+      @media (max-width: 540px) {
+        width: 33.33%;
+      }
+      @media (max-width: 374px) {
+        width: 50%;
+      }
+    }
     .tag-btn {
-      &.active {
-        span {
-          color: $secondary;
-        }
-        background-color: $primary;
-        color: $secondary;
-      }
-      span {
-        margin-right: 8px;
-      }
+      flex-shrink: 0;
       align-items: center;
       background: none;
       border-radius: 6px;
@@ -376,11 +391,17 @@ export default defineComponent({
       margin-bottom: 12px;
       width: 100px;
       padding: 0;
+      &.active {
+        background-color: $primary;
+        color: $secondary;
+        span {
+          color: $secondary;
+        }
+      }
+      span {
+        margin-right: 8px;
+      }
     }
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin-bottom: -12px;
   }
   input {
     &:nth-of-type(1) {
@@ -493,23 +514,6 @@ export default defineComponent({
 }
 #accountingCRUDModal {
   .modal-body {
-    ul {
-      width: 100%;
-      li {
-        display: flex;
-        justify-content: space-between;
-        font-size: 20px;
-        font-weight: 500;
-        color: $primary;
-        padding: 16px 0;
-        border-bottom: 1px solid $primary;
-        span {
-          &:last-of-type {
-            font-weight: bold;
-          }
-        }
-      }
-    }
     input {
       height: 52px;
       width: 100%;

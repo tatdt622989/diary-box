@@ -12,7 +12,7 @@ export default function getModelPosition(
       if (target.uuid !== g.uuid) {
         const currentBox = new THREE.Box3().setFromObject(g as THREE.Object3D);
         if (targetBox.intersectsBox(currentBox)) {
-          console.log('重疊', g);
+          // console.log('重疊', g);
           tgtModel.position.setX(tgtModel.position.x + 5);
           isOverlap = true;
         }

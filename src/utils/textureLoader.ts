@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export default async function textureLoader(URL: string, model: THREE.Mesh, name: string) {
-  console.log('texture load start', URL, model);
+  // console.log('texture load start', URL, model);
   // 將圖片裁切後再縮放到1024*1024
   const img = new Image();
   const frame = document.createElement('canvas');
@@ -12,7 +12,7 @@ export default async function textureLoader(URL: string, model: THREE.Mesh, name
     img.addEventListener('load', resolve, false);
     img.addEventListener('error', resolve, false);
   });
-  console.log(res);
+  // console.log(res);
   if (res.type === 'error') {
     return null;
   }
@@ -44,7 +44,7 @@ export default async function textureLoader(URL: string, model: THREE.Mesh, name
   texture.flipY = false;
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  console.log(name);
+  // console.log(name);
   switch (name) {
     case 'album':
       texture.repeat.set(0.75, 1);

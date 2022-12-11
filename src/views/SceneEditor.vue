@@ -51,7 +51,7 @@ import {
   ref,
   defineComponent,
   onMounted,
-  onUnmounted,
+  onBeforeUnmount,
   computed,
 } from 'vue';
 import * as THREE from 'three';
@@ -151,7 +151,8 @@ export default defineComponent({
 
     onMounted(() => {
       canvas.value = document.getElementById('editor') as HTMLCanvasElement;
-      renderer = rendererCreator(store.state.gpuTier ? store.state.gpuTier.tier : 0, canvas.value);
+      renderer = rendererCreator(store.state.gpuTier ? store.state.gpuTier.tier : 0,
+        canvas.value, !!store.state.gpuTier.isMobile);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -228,7 +229,6 @@ export default defineComponent({
               }
             }
             if (texture && textureKeys && object.material && texture[object.material.name]) {
-              console.log('123');
               result.push(textureLoader(texture[object.material.name], object, data.name));
             }
           }
@@ -291,14 +291,14 @@ export default defineComponent({
         groups = scene.children.filter((el) => el.type === 'Group');
         if (modelLen > 1 && groups) {
           overlapping.value = modelOverlapping(groups) as Array<Array<THREE.Object3D>>;
-          console.log('取得模型重疊狀態', overlapping.value);
+          // console.log('取得模型重疊狀態', overlapping.value);
           overlapping.value.forEach((ary) => {
             const target = ary[0];
             getModelPosition(groups!, target);
           });
         }
         const model = groups.find((obj) => obj.userData.id === Number(targetId));
-        console.log(model, '框選目標', groups);
+        // console.log(model, '框選目標', groups);
         if (outlinePass && model) {
           outlinePass.selectedObjects = [model];
           selectedModel = model;
@@ -387,7 +387,7 @@ export default defineComponent({
         const intersects = raycaster.intersectObjects(
           [plane as THREE.Object3D, ...groups], true,
         );
-        console.log('與平面相交', intersects, groups);
+        // console.log('與平面相交', intersects, groups);
         if (intersects[0].object.name !== 'plane') {
           return;
         }
@@ -476,7 +476,7 @@ export default defineComponent({
     }
     window.addEventListener('resize', resize, false);
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
       window.removeEventListener('resize', resize);
       renderer = null;
     });

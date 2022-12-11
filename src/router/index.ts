@@ -94,7 +94,7 @@ const router = createRouter({
 
 // 導航守衛
 router.beforeEach((to, from, next) => {
-  console.log(to, from);
+  // console.log(to, from);
   if (to.name !== 'Welcome' && to.name !== 'Privacy' && !store.state.userInfo) {
     next({
       path: '/',

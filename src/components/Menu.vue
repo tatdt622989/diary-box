@@ -81,6 +81,7 @@ import {
   computed,
   onMounted,
   onUnmounted,
+  onBeforeUnmount,
 } from 'vue';
 import { useStore } from 'vuex';
 
@@ -111,7 +112,7 @@ export default defineComponent({
       window.addEventListener('resize', resize);
     });
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
       window.removeEventListener('resize', resize);
     });
 

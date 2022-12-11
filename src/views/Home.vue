@@ -247,7 +247,7 @@ export default defineComponent({
       } else {
         tier = store.state.gpuTier ? store.state.gpuTier.tier : 0;
       }
-      renderer = rendererCreator(tier, canvas);
+      renderer = rendererCreator(tier, canvas, !!store.state.gpuTier.isMobile);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.BasicShadowMap;
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -293,8 +293,8 @@ export default defineComponent({
       pointLight.position.set(15, 27, 7);
       pointLight.castShadow = true;
       pointLight.shadow.radius = 2;
-      pointLight.shadow.mapSize.width = 2048;
-      pointLight.shadow.mapSize.height = 2048;
+      pointLight.shadow.mapSize.width = 1024;
+      pointLight.shadow.mapSize.height = 1024;
       pointLight.shadow.camera.near = 1;
       pointLight.shadow.camera.far = 10000;
       const directionalLight = new THREE.DirectionalLight(0xF8EBCF, 0.6);
@@ -307,15 +307,26 @@ export default defineComponent({
       // 霧
       scene.fog = new THREE.Fog(0x449966, 1, 300);
 
+      const clock = new THREE.Clock();
+      const FPS = 30;
+      const rt = 1 / FPS;
+      let ts = 0;
+
       function render() {
         if (renderer && camera) {
-          controls.update();
-          camera.updateProjectionMatrix();
           animation = requestAnimationFrame(render);
-          renderer.render(scene, camera);
-          if (takeScreenShot) {
-            takeScreenShot = false;
-            base64 = renderer.domElement.toDataURL('image/jpeg', 1.0);
+          const T = clock.getDelta();
+          ts += T;
+
+          if (ts > rt) {
+            controls.update();
+            camera.updateProjectionMatrix();
+            renderer.render(scene, camera);
+            if (takeScreenShot) {
+              takeScreenShot = false;
+              base64 = renderer.domElement.toDataURL('image/jpeg', 1.0);
+            }
+            ts = 0;
           }
         }
       }
@@ -415,9 +426,7 @@ export default defineComponent({
     onBeforeUnmount(() => {
       (document.getElementById('mainScene') as HTMLCanvasElement).removeEventListener('click', functionMenuToggler);
       (document.getElementById('mainScene') as HTMLCanvasElement).removeEventListener('touchstart', functionMenuToggler);
-    });
 
-    onUnmounted(() => {
       window.removeEventListener('resize', resize);
       controls.dispose();
       scene.traverse((obj) => {
@@ -851,7 +860,7 @@ export default defineComponent({
   transition: $t-base;
   width: 100%;
   z-index: 10;
-  max-width: 500px;
+  // max-width: 500px;
 }
 .custom-step {
   max-width: 340px;

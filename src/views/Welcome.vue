@@ -69,6 +69,7 @@ import {
   ref,
   defineComponent,
   onMounted,
+  onBeforeUnmount,
   onUnmounted,
   computed,
   watch,
@@ -123,12 +124,14 @@ export default defineComponent({
       return false;
     }
 
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.code === 'Enter') {
+        login('email');
+      }
+    }
+
     onMounted(() => {
-      document.addEventListener('keydown', (e) => {
-        if (e.code === 'Enter') {
-          login('email');
-        }
-      });
+      document.addEventListener('keydown', handleKeyDown);
       if (sessionStorage.getItem('pending')) {
         store.commit('updateLoadingStr', '登入中');
         store.dispatch('openModal', {
@@ -148,6 +151,10 @@ export default defineComponent({
         asynchronous: false,
       });
     }
+
+    onBeforeUnmount(() => {
+      document.removeEventListener('keydown', handleKeyDown);
+    });
 
     return {
       height: computed(() => store.state.height),

@@ -145,6 +145,7 @@ import {
   computed,
   nextTick,
   onUnmounted,
+  onBeforeUnmount,
   watch,
   watchEffect,
 } from 'vue';
@@ -288,7 +289,7 @@ export default defineComponent({
         const model = obj;
         const result: Array<any> = [];
         model.traverse((object) => {
-          console.log(texture, object);
+          // console.log(texture, object);
           if (object instanceof THREE.Mesh) {
             const mesh = object;
             mesh.castShadow = true;
@@ -297,9 +298,8 @@ export default defineComponent({
                 mesh.material.color = new THREE.Color((color as ModelColor)[object.name]);
               }
             }
-            console.log(object.material.name);
+            // console.log(object.material.name);
             if (texture && textureKeys && view.value === 'ModelList' && object.material && texture[object.material.name]) {
-              console.log('123');
               result.push(textureLoader(texture[object.material.name], object, obj.name));
             }
           }
@@ -445,8 +445,10 @@ export default defineComponent({
       canvas = document.querySelector('#modelList') as HTMLCanvasElement;
       renderer = new THREE.WebGLRenderer({
         canvas,
-        antialias: true,
+        antialias: false,
         alpha: true,
+        precision: 'lowp',
+        powerPreference: 'low-power',
       });
       getModels();
       if (models.value.length > 0) {
@@ -455,7 +457,7 @@ export default defineComponent({
       }
     });
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
       window.removeEventListener('resize', resize);
       allSceneData.forEach((el) => {
         el.controls.dispose();

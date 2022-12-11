@@ -8,18 +8,18 @@ export default function getModelOverlapState(
   const targetBox = new THREE.Box3().setFromObject(target as THREE.Object3D);
   let isOverlap = false;
   if (groups) {
-    console.log(groups, uuid);
+    // console.log(groups, uuid);
     groups.forEach((g) => {
       if (uuid !== g.uuid) {
-        console.log(g, '其他模型');
+        // console.log(g, '其他模型');
         const currentBox = new THREE.Box3().setFromObject(g as THREE.Object3D);
         if (targetBox.intersectsBox(currentBox)) {
-          console.log('重疊');
+          // console.log('重疊');
           isOverlap = true;
         }
       }
     });
   }
-  console.log(isOverlap);
+  // console.log(isOverlap);
   return isOverlap;
 }

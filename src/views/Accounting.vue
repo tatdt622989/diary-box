@@ -11,14 +11,6 @@
         >
           <span class="material-icons">edit_calendar</span>
         </button> -->
-        <DatePicker
-          color="green"
-          v-model="date"
-          :model-config="modelConfig"
-          v-if="isDatePickerOpen"
-          @click.stop
-        >
-        </DatePicker>
       </div>
       <p>收支狀態</p>
       <div class="hint">
@@ -49,7 +41,7 @@
         </button>
       </div>
       <div class="current-date">
-        <div class="year">
+        <!-- <div class="year">
           <input type="text" v-model="year" />
         </div>
         <span v-if="dateType !== 'year'">.</span>
@@ -62,7 +54,8 @@
         <span v-if="dateType === 'day'">.</span>
         <div class="day" :class="{ active: dateType === 'day' }">
           <input type="text" v-model="day" />
-        </div>
+        </div> -->
+        <Datepicker v-model="currentDate" :locale="zhTW"  />
       </div>
     </div>
     <div class="content">
@@ -162,6 +155,7 @@ import {
   defineComponent,
   onMounted,
   onUnmounted,
+  onBeforeUnmount,
   computed,
   watch,
   nextTick,
@@ -170,21 +164,23 @@ import AccountingCRUD from '@/components/AccountingCRUD.vue';
 import AccountingType from '@/components/AccountingType.vue';
 import { useStore } from 'vuex';
 import { Chart, registerables } from 'chart.js';
+import Datepicker from 'vue3-datepicker';
+import { zhTW } from 'date-fns/locale';
+
 import {
   Accounting,
   Accountings,
   Amount,
 } from '@/types';
-import { DatePicker } from 'v-calendar';
 
 Chart.register(...registerables);
 
 export default defineComponent({
   name: 'Accounting',
   components: {
-    DatePicker,
     AccountingCRUD,
     AccountingType,
+    Datepicker,
   },
   setup() {
     let chart: Chart<'doughnut', number[], string>|Chart<'line', number[], string>|null = null;
@@ -195,6 +191,7 @@ export default defineComponent({
     const store = useStore();
     const type = ref('expenditure');
     const dateType = ref('month');
+    const currentDate = ref(date);
     const accountingTypeData = ref<any>({
       expenditure: [{
         name: '娛樂',
@@ -250,7 +247,7 @@ export default defineComponent({
     });
     const selectedTag = ref<string>();
     const modalData = ref<Array<any>>([]);
-    const isDatePickerOpen = ref(false);
+    // const isDatePickerOpen = ref(false);
     const accountingInfo = ref<any>({
       expenditure: [],
       income: [],
@@ -301,6 +298,7 @@ export default defineComponent({
     }
 
     function updateData() {
+      // console.log('update data');
       if (dateType.value === 'year' || dateType.value === 'month') {
         incomeTags = accountingTypeData.value.income.map((el: any) => el.name);
         expenditureTags = accountingTypeData.value.expenditure.map((el: any) => el.name);
@@ -477,10 +475,19 @@ export default defineComponent({
       }
     });
 
-    watch([year, month, day], () => {
+    watch(currentDate, (n) => {
+      const inputDate = new Date(n);
+      year.value = Number(inputDate.getFullYear());
+      month.value = Number((inputDate.getMonth() + 1).toString());
+      day.value = Number(inputDate.getDate().toString());
       updateData();
       getChartData();
     });
+
+    // watch([year, month, day], () => {
+    //   updateData();
+    //   getChartData();
+    // });
 
     watch(dateType, () => {
       if (chart) {
@@ -572,7 +579,7 @@ export default defineComponent({
       return res;
     }
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
       if (chart) {
         chart.destroy();
       }
@@ -591,7 +598,8 @@ export default defineComponent({
       modalData,
       day,
       dateType,
-      isDatePickerOpen,
+      // isDatePickerOpen,
+      currentDate,
       accountingData,
       openEditorModal,
       getColor,
@@ -600,12 +608,15 @@ export default defineComponent({
       selectedIndex,
       selectedDate,
       total,
+      updateData,
+      zhTW,
     };
   },
 });
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+
 .btnBox {
   display: flex;
   width: 100%;
@@ -649,47 +660,47 @@ export default defineComponent({
     margin-bottom: 16px;
     // padding: 0 24px;
     // border-bottom: 2px solid rgba($secondary, 50%);
-    .year {
-      width: 109px;
-      // flex-grow: 2;
-      margin-right: 16px;
-      flex-shrink: 0;
-      input {
-        border-color: $secondary;
-        color: $secondary;
-      }
-    }
-    .month {
-      width: 68px;
-      // flex-grow: 1;
-      max-width: 26%;
-      margin-right: 16px;
-      flex-shrink: 0;
-      &.active {
-        input {
-          border-color: $secondary;
-          color: $secondary;
-        }
-      }
-    }
-    .day {
-      width: 68px;
-      // flex-grow: 1;
-      max-width: 26%;
-      flex-shrink: 0;
-      &.active {
-        input {
-          border-color: $secondary;
-          color: $secondary;
-        }
-      }
-    }
+    // .year {
+    //   width: 109px;
+    //   // flex-grow: 2;
+    //   margin-right: 16px;
+    //   flex-shrink: 0;
+    //   input {
+    //     border-color: $secondary;
+    //     color: $secondary;
+    //   }
+    // }
+    // .month {
+    //   width: 68px;
+    //   // flex-grow: 1;
+    //   max-width: 26%;
+    //   margin-right: 16px;
+    //   flex-shrink: 0;
+    //   &.active {
+    //     input {
+    //       border-color: $secondary;
+    //       color: $secondary;
+    //     }
+    //   }
+    // }
+    // .day {
+    //   width: 68px;
+    //   // flex-grow: 1;
+    //   max-width: 26%;
+    //   flex-shrink: 0;
+    //   &.active {
+    //     input {
+    //       border-color: $secondary;
+    //       color: $secondary;
+    //     }
+    //   }
+    // }
     span {
-      font-size: 32px;
-      // width: 12px;
-      padding: 0 8px;
-      flex-shrink: 0;
-      display: none;
+      // font-size: 32px;
+      // // width: 12px;
+      // padding: 0 8px;
+      // flex-shrink: 0;
+      // display: none;
     }
     input {
       font-size: 28px;
@@ -932,10 +943,12 @@ export default defineComponent({
   font-weight: bold;
   height: 52px;
   padding: 0 24px;
-  position: fixed;
+  position: sticky;
   right: 16px;
   box-shadow: 4px 0px 16px rgba(68, 153, 102, 0.7);
   z-index: 99;
+  display: block;
+  margin-left: auto;
 }
 #summaryGraph {
   position: relative;
@@ -1026,7 +1039,7 @@ export default defineComponent({
       }
       &:hover,
       &:active {
-        background-color: $tertiary;
+        // background-color: $tertiary;
       }
     }
     > span {
@@ -1135,5 +1148,9 @@ export default defineComponent({
   bottom: -526px;
   height: 526px;
   z-index: 9999;
+}
+.v3dp__popout {
+  left: 50%;
+  transform: translateX(-50%);
 }
 </style>

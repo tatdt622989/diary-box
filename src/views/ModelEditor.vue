@@ -53,6 +53,7 @@ import {
   onMounted,
   computed,
   onUnmounted,
+  onBeforeUnmount,
   nextTick,
 } from 'vue';
 import { useStore } from 'vuex';
@@ -64,6 +65,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import store from '@/store';
 import { Model, ModelColor, Product } from '@/types';
 import CanvasSelector from '@/components/CanvasSelector.vue';
+import rendererCreator from '@/utils/rendererCreator';
 
 export default defineComponent({
   name: 'ModelEditor',
@@ -128,7 +130,7 @@ export default defineComponent({
             img.addEventListener('load', resolve, false);
             img.addEventListener('error', resolve, false);
           });
-          console.log(res);
+          // console.log(res);
           if (res.type === 'error') {
             return null;
           }
@@ -148,7 +150,7 @@ export default defineComponent({
           resCtx.fillStyle = '#fff';
           resCtx.fillRect(0, 0, 1024, 1024);
           resCtx.drawImage(frame, 0, 0, 1024, 1024);
-          console.log(resFrame.toDataURL());
+          // console.log(resFrame.toDataURL());
           // 圖片載入材質
           const texture: any = await new Promise<any>((resolve, reject) => {
             new THREE.TextureLoader().load(resFrame.toDataURL(), (t) => {
@@ -247,10 +249,7 @@ export default defineComponent({
         });
       }
       canvas = document.getElementById('modelPreviewer') as HTMLCanvasElement;
-      renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        canvas,
-      });
+      renderer = rendererCreator(1, canvas, !!store.state.gpuTier?.isMobile);
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -393,7 +392,7 @@ export default defineComponent({
 
     window.addEventListener('resize', resize, false);
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
       window.removeEventListener('resize', resize);
       if (scene && controls && renderer && animation) {
         controls.dispose();

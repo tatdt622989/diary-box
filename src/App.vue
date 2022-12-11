@@ -14,6 +14,7 @@ import {
   defineComponent,
   computed,
   onMounted,
+  onBeforeUnmount,
   provide,
 } from 'vue';
 import { useStore } from 'vuex';
@@ -37,18 +38,24 @@ export default defineComponent({
     const store = useStore();
     store.dispatch('getModelFormat');
 
+    function handleResize() {
+      store.commit('getHeight');
+      document.body.style.height = '';
+    }
+
     onMounted(async () => {
       store.commit('getHeight');
-      window.addEventListener('resize', () => {
-        store.commit('getHeight');
-        document.body.style.height = '';
-      }, false);
+      window.addEventListener('resize', handleResize, false);
       await store.dispatch('updateUserInfo');
       (async () => {
         const gpuTier = await getGPUTier();
         console.log(gpuTier);
         store.commit('updateGpuTier', gpuTier);
       })();
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('resize', handleResize);
     });
 
     return {

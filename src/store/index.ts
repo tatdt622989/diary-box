@@ -208,7 +208,7 @@ export default createStore({
               }, 100);
               const errorCode = error.code;
               const errorMessage = error.message;
-              console.log(errorCode, errorMessage);
+              // console.log(errorCode, errorMessage);
               if (errorCode.search('invalid-email') > 0) {
                 state.formHint = '電子郵件格式錯誤';
               }
