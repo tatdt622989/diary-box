@@ -273,7 +273,7 @@ export default defineComponent({
       getDayAccountings();
       await store.dispatch('getAccountingData');
       context.emit('update');
-      // editorReset();
+      editorReset();
       return false;
     }
 

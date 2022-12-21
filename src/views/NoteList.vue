@@ -45,7 +45,7 @@
             :key="n"
             @click="editNote(item.id)"
           >
-            <span class="title">{{ item.title }}</span>
+            <span class="title ellipsis">{{ item.title }}</span>
             <span class="time">{{ noteList[i].time[[n]] }}</span>
             <button
               class="btn-circle"
@@ -441,6 +441,7 @@ export default defineComponent({
       > span {
         color: $secondary;
         font-size: 20px;
+        min-width: 0;
       }
       .title {
         flex: 1;

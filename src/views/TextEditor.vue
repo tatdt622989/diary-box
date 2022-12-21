@@ -240,12 +240,14 @@ export default defineComponent({
 .text-editor-wrap {
   .header {
     .title {
+      min-width: 0;
       > span {
         color: $secondary;
         font-size: 24px;
         font-weight: bold;
       }
       button {
+        flex-shrink: 0;
         span {
           color: $secondary;
           font-size: 24px;
@@ -263,6 +265,9 @@ export default defineComponent({
       flex-grow: 1;
       margin: 0 8px;
       justify-content: center;
+    }
+    button {
+      flex-shrink: 0;
     }
   }
   display: flex;

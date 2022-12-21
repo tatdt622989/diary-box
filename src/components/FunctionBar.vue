@@ -63,7 +63,7 @@
           <button
             @click="
               $router.push({
-                name: 'AccountingList',
+                name: 'Accounting',
                 params: { status: 'add' },
               })
             "

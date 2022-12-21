@@ -4,7 +4,7 @@
       <button class="btn btn-circle close-btn" @click="$router.go(-1)">
         <span class="material-icons">arrow_back</span>
       </button>
-      <span class="title">{{ title }}</span>
+      <span class="title ellipsis">{{ title }}</span>
     </div>
     <div class="content" v-if="type === 'canvas'">
       <img :src="URL" class="img-cover">
@@ -70,6 +70,8 @@ export default defineComponent({
       font-size: 24px;
       font-weight: bold;
       padding-right: 52px;
+      min-width: 0;
+      padding-left: 10px;
     }
     display: flex;
     padding: 16px 0;

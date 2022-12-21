@@ -163,6 +163,7 @@ import {
 import AccountingCRUD from '@/components/AccountingCRUD.vue';
 import AccountingType from '@/components/AccountingType.vue';
 import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
 import { Chart, registerables } from 'chart.js';
 import Datepicker from 'vue3-datepicker';
 import { zhTW } from 'date-fns/locale';
@@ -183,6 +184,7 @@ export default defineComponent({
     Datepicker,
   },
   setup() {
+    const route = useRoute();
     let chart: Chart<'doughnut', number[], string>|Chart<'line', number[], string>|null = null;
     const date = new Date();
     const year = ref(date.getFullYear());
@@ -484,25 +486,11 @@ export default defineComponent({
       getChartData();
     });
 
-    // watch([year, month, day], () => {
-    //   updateData();
-    //   getChartData();
-    // });
-
     watch(dateType, () => {
       if (chart) {
         chart.destroy();
         getChart();
       }
-    });
-
-    onMounted(async () => {
-      if (!store.state.userData.accountingData
-        || Object.keys(store.state.userData.accountingData).length === 0) {
-        await store.dispatch('getAccountingData');
-      }
-      accountingData.value = store.state.userData.accountingData || null;
-      getChart();
     });
 
     function openEditorModal(status: string) {
@@ -579,6 +567,18 @@ export default defineComponent({
       return res;
     }
 
+    onMounted(async () => {
+      if (!store.state.userData.accountingData
+        || Object.keys(store.state.userData.accountingData).length === 0) {
+        await store.dispatch('getAccountingData');
+      }
+      accountingData.value = store.state.userData.accountingData || null;
+      getChart();
+      if (route.params.status === 'add') {
+        openEditorModal('add');
+      }
+    });
+
     onBeforeUnmount(() => {
       if (chart) {
         chart.destroy();
@@ -615,7 +615,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 
 .btnBox {
   display: flex;
@@ -635,7 +635,7 @@ export default defineComponent({
   padding-top: 0;
   overflow: auto;
 }
-.header {
+:deep .header {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
@@ -707,9 +707,9 @@ export default defineComponent({
       font-weight: bold;
       letter-spacing: 1px;
       background: transparent;
-      color: rgba($secondary, 50%);
+      color: $secondary;
       border-radius: 16px;
-      border: 2px solid rgba($secondary, 50%);
+      border: 2px solid $secondary;
       width: 100%;
       text-align: center;
       height: 52px;
@@ -1149,7 +1149,7 @@ export default defineComponent({
   height: 526px;
   z-index: 9999;
 }
-.v3dp__popout {
+:deep .v3dp__popout {
   left: 50%;
   transform: translateX(-50%);
 }
