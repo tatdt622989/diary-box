@@ -526,14 +526,14 @@ export default defineComponent({
       color: $primary;
     }
     .btn-group {
+      display: flex;
+      justify-content: space-between;
+      margin: 0 -10px;
       button {
+        margin: 0 10px;
         &.active {
           background: $primary;
           color: $secondary;
-        }
-
-        &:first-child {
-          margin-right: 20px;
         }
 
         width: 170px;
@@ -567,9 +567,6 @@ export default defineComponent({
         color: $secondary;
         margin-top: 20px;
       }
-
-      display: flex;
-      justify-content: flex-start;
     }
   }
 }
