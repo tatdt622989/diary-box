@@ -58,10 +58,10 @@ export default defineComponent({
         if (times > 50 || store.state.modalLoaded || !store.state.modal) {
           store.commit('closeModal');
           clearInterval(closeModal);
-          router.push('/store');
         }
         times += 1;
       }, 100);
+      router.push('/store');
     }
     return {
       goShop,

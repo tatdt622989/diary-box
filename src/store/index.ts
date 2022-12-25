@@ -178,10 +178,10 @@ export default createStore({
   },
   actions: {
     login({ dispatch, commit, state }, data) {
-      commit('updateLoadingStr', '登入中');
       dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
+        loadingStr: '登入中',
       });
       const googleProvider = new firebase.auth.GoogleAuthProvider();
       // const facebookProvider = new firebase.auth.FacebookAuthProvider();
@@ -297,10 +297,10 @@ export default createStore({
       });
     },
     async buyModel({ dispatch, commit, state }, data) {
-      commit('updateLoadingStr', '購買中');
       dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
+        loadingStr: '購買中',
       });
       const buyModel = functions.httpsCallable('buyModel');
       const result = await buyModel({ buyingModel: data })
@@ -526,10 +526,10 @@ export default createStore({
       if (!allData) { allData = []; }
       let index = null;
       const note = data.data;
-      commit('updateLoadingStr', '資料上傳中');
       dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
+        loadingStr: '資料上傳中',
       });
       if (state.userInfo) {
         switch (data.status) {
@@ -579,10 +579,10 @@ export default createStore({
       }
     },
     async updateAccountingData({ dispatch, commit, state }, data) {
-      commit('updateLoadingStr', '資料上傳中');
       dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
+        loadingStr: '資料上傳中',
       });
       if (state.userInfo) {
         await db.ref(`/users/${state.userInfo.uid}/accountingData/${data.key}`).set(data.data);
@@ -594,8 +594,10 @@ export default createStore({
       const el = document.getElementById(`${data.type}Modal`);
       let backdrop: boolean | 'static' | undefined = true;
       commit('updateModalLoaded', false);
-      if (data.type === 'loading') {
+      if (data.type === 'loading' && data.loadingStr) {
         backdrop = 'static';
+        console.log(data.loadingStr);
+        commit('updateLoadingStr', data.loadingStr);
       }
       if (el) {
         if (data.asynchronous) {

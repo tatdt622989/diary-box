@@ -9,7 +9,7 @@ module.exports = {
       });
   },
 
-  publicPath: process.env.NODE_ENV === 'production' ? '/diary-box/' : '/',
+  publicPath: process.env.NODE_ENV === 'production' ? '/' : '/',
 
   // 這是將bootstrap的variables和mixins導入到所有元件中的方式，讓這些內容可以在各個元件中使用
   productionSourceMap: false,

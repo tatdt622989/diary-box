@@ -309,10 +309,10 @@ export default defineComponent({
         model.position.set(model.position.x, model.position.y, model.position.z);
         model.receiveShadow = false;
       }
-      store.commit('updateLoadingStr', '模型載入中');
       store.dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
+        loadingStr: '模型載入中',
       });
       while (i < modelLen) {
         const el = document.getElementById(`scene${i}`) as HTMLElement;
@@ -562,10 +562,10 @@ export default defineComponent({
           times += 1;
         }, 100);
       });
-      store.commit('updateLoadingStr', '模型刪除中');
       store.dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
+        loadingStr: '模型刪除中',
       });
       await store.dispatch('updateModelData', {
         method: 'delete',
@@ -596,10 +596,10 @@ export default defineComponent({
 
     async function togglePassiveState(i: number) {
       const model = JSON.parse(JSON.stringify(models.value.filter((obj, index) => index === i)))[0];
-      store.commit('updateLoadingStr', '狀態切換中');
       store.dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
+        loadingStr: '狀態切換中',
       });
       model.passive = !model.passive;
       await store.dispatch('updateModelData', {

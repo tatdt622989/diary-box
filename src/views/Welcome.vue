@@ -133,10 +133,10 @@ export default defineComponent({
     onMounted(() => {
       document.addEventListener('keydown', handleKeyDown);
       if (sessionStorage.getItem('pending')) {
-        store.commit('updateLoadingStr', '登入中');
         store.dispatch('openModal', {
           type: 'loading',
           asynchronous: true,
+          loadingStr: '登入中',
         });
         store.dispatch('getRedirectRes');
       }

@@ -88,7 +88,7 @@ const routes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.NODE_ENV === 'production' ? '/diary-box/' : '/'),
+  history: createWebHistory(process.env.NODE_ENV === 'production' ? '/' : '/'),
   routes,
 });
 

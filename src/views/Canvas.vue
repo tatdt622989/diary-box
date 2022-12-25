@@ -516,10 +516,10 @@ export default defineComponent({
         // elCtx.fillRect(0, 0, el.width, el.height);
         // elCtx.drawImage(canvas.value, 0, 0);
         dataURL = canvas.value.toDataURL();
-        store.commit('updateLoadingStr', '畫布上傳中');
         store.dispatch('openModal', {
           type: 'loading',
           asynchronous: true,
+          loadingStr: '畫布上傳中',
         });
         await store.dispatch('uploadImg', { data: dataURL, id: route.params.id });
         let times = 0;

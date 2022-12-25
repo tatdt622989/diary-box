@@ -420,10 +420,10 @@ export default defineComponent({
     async function apply() {
       if (scene && groups) {
         const result: Array<Promise<boolean>> = [];
-        store.commit('updateLoadingStr', '場景存檔中');
         store.dispatch('openModal', {
           type: 'loading',
           asynchronous: true,
+          loadingStr: '場景存檔中',
         });
         groups.forEach((group) => {
           const pos = group.position.toArray();

@@ -93,11 +93,11 @@ export default defineComponent({
         return store.commit('updateFormHint', '不能使用特殊符號');
       }
       store.commit('closeModal');
-      store.commit('updateLoadingStr', '帳號註冊中');
       store.commit('updateModalLoaded', false);
       store.dispatch('openModal', {
         type: 'loading',
         asynchronous: true,
+        loadingStr: '帳號註冊中',
       });
       store.dispatch('register', {
         userName: userName.value,

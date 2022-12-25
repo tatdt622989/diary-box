@@ -64,7 +64,6 @@ export default defineComponent({
   name: 'CanvasSelector',
   setup(props, context) {
     const store = useStore();
-    const router = useRouter();
     const canvasData = computed(() => store.state.userData.canvasData);
     const content = ref<HTMLElement>();
     const selectedURL = ref<string>();
@@ -102,6 +101,7 @@ export default defineComponent({
     }
 
     onMounted(async () => {
+      await store.dispatch('getNoteData', { type: 'canvas' });
       displayImg();
       if (content.value) {
         content.value.addEventListener('scroll', scroll);

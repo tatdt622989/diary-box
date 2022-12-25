@@ -344,10 +344,10 @@ export default defineComponent({
             }
           }
         });
-        store.commit('updateLoadingStr', '模型存檔中');
         store.dispatch('openModal', {
           type: 'loading',
           asynchronous: true,
+          loadingStr: '模型存檔中',
         });
         store.dispatch('updateModelData', {
           method: 'edit',
