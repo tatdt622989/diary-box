@@ -79,6 +79,7 @@ export default createStore({
     } as UserData,
     dataLoaded: false,
     getPoint: null,
+    loading: false,
     loadingStr: '',
     quality: null,
     gpuTier: null as null | TierResult,
@@ -108,6 +109,7 @@ export default createStore({
       }
     },
     closeModal(state) {
+      state.loading = false;
       if (state.modal) {
         state.modal.hide();
       }
@@ -130,6 +132,9 @@ export default createStore({
     },
     updateLoadingStr(state, data) {
       state.loadingStr = data;
+    },
+    updateLoading(state, data) {
+      state.loading = data;
     },
     updateFormHint(state, data) {
       state.formHint = data;
@@ -180,7 +185,6 @@ export default createStore({
     login({ dispatch, commit, state }, data) {
       dispatch('openModal', {
         type: 'loading',
-        asynchronous: true,
         loadingStr: '登入中',
       });
       const googleProvider = new firebase.auth.GoogleAuthProvider();
@@ -299,7 +303,6 @@ export default createStore({
     async buyModel({ dispatch, commit, state }, data) {
       dispatch('openModal', {
         type: 'loading',
-        asynchronous: true,
         loadingStr: '購買中',
       });
       const buyModel = functions.httpsCallable('buyModel');
@@ -528,7 +531,6 @@ export default createStore({
       const note = data.data;
       dispatch('openModal', {
         type: 'loading',
-        asynchronous: true,
         loadingStr: '資料上傳中',
       });
       if (state.userInfo) {
@@ -581,7 +583,6 @@ export default createStore({
     async updateAccountingData({ dispatch, commit, state }, data) {
       dispatch('openModal', {
         type: 'loading',
-        asynchronous: true,
         loadingStr: '資料上傳中',
       });
       if (state.userInfo) {
@@ -592,12 +593,12 @@ export default createStore({
     openModal({ commit, state }, data) {
       state.formHint = '';
       const el = document.getElementById(`${data.type}Modal`);
-      let backdrop: boolean | 'static' | undefined = true;
+      const backdrop: boolean | 'static' | undefined = true;
       commit('updateModalLoaded', false);
       if (data.type === 'loading' && data.loadingStr) {
-        backdrop = 'static';
-        console.log(data.loadingStr);
+        commit('updateLoading', true);
         commit('updateLoadingStr', data.loadingStr);
+        return;
       }
       if (el) {
         if (data.asynchronous) {
@@ -615,6 +616,7 @@ export default createStore({
       }
     },
     closeModal({ commit, state }) {
+      commit('updateLoading', false);
       if (state.modal) {
         state.modal.hide();
       }

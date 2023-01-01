@@ -29,6 +29,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/home',
     name: 'Home',
     component: Home,
+    meta: { hasLoading: true, loadingStr: '場景準備中' },
   },
   {
     path: '/note-list',
@@ -44,16 +45,19 @@ const routes: Array<RouteRecordRaw> = [
     path: '/model-list',
     name: 'ModelList',
     component: ModelList,
+    meta: { hasLoading: true, loadingStr: '模型載入中' },
   },
   {
     path: '/store',
     name: 'Store',
     component: ModelList,
+    meta: { hasLoading: true, loadingStr: '模型載入中' },
   },
   {
     path: '/scene-editor',
     name: 'SceneEditor',
     component: SceneEditor,
+    meta: { hasLoading: true, loadingStr: '編輯器載入中' },
   },
   {
     path: '/model-editor',
@@ -95,6 +99,13 @@ const router = createRouter({
 // 導航守衛
 router.beforeEach((to, from, next) => {
   // console.log(to, from);
+  if (to.meta.hasLoading && to.meta.loadingStr) {
+    store.dispatch('openModal', {
+      type: 'loading',
+      loadingStr: to.meta.loadingStr,
+    });
+  }
+
   if (to.name !== 'Welcome' && to.name !== 'Privacy' && !store.state.userInfo) {
     next({
       path: '/',

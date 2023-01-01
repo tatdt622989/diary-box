@@ -518,7 +518,6 @@ export default defineComponent({
         dataURL = canvas.value.toDataURL();
         store.dispatch('openModal', {
           type: 'loading',
-          asynchronous: true,
           loadingStr: '畫布上傳中',
         });
         await store.dispatch('uploadImg', { data: dataURL, id: route.params.id });

@@ -238,12 +238,6 @@ export default defineComponent({
     }
 
     onMounted(async () => {
-      store.dispatch('openModal', {
-        type: 'loading',
-        asynchronous: true,
-        loadingStr: '載入中',
-      });
-
       document.dispatchEvent(new Event('render-event'));
       getNote();
       canvas = document.getElementById('mainScene') as HTMLCanvasElement;
@@ -417,20 +411,13 @@ export default defineComponent({
       Promise.all(result).then(() => {
         render();
         resize();
-        let times = 0;
-        const closeModal = setInterval(() => {
-          if (times > 50 || store.state.modalLoaded) {
-            store.commit('closeModal');
-            if (!localStorage.getItem('isGuide')) {
-              store.dispatch('openModal', {
-                type: 'welcome',
-                asynchronous: false,
-              });
-            }
-            clearInterval(closeModal);
-          }
-          times += 1;
-        }, 100);
+        store.commit('closeModal');
+        if (!localStorage.getItem('isGuide')) {
+          store.dispatch('openModal', {
+            type: 'welcome',
+            asynchronous: false,
+          });
+        }
       });
       window.addEventListener('resize', resize, false);
       (document.getElementById('mainScene') as HTMLCanvasElement).addEventListener('click', functionMenuToggler, false);

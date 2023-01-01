@@ -346,7 +346,6 @@ export default defineComponent({
         });
         store.dispatch('openModal', {
           type: 'loading',
-          asynchronous: true,
           loadingStr: '模型存檔中',
         });
         store.dispatch('updateModelData', {

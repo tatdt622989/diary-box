@@ -305,6 +305,7 @@ export default defineComponent({
         }
 
         render();
+        store.commit('closeModal');
       });
     });
 
@@ -422,7 +423,6 @@ export default defineComponent({
         const result: Array<Promise<boolean>> = [];
         store.dispatch('openModal', {
           type: 'loading',
-          asynchronous: true,
           loadingStr: '場景存檔中',
         });
         groups.forEach((group) => {

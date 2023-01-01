@@ -96,7 +96,6 @@ export default defineComponent({
       store.commit('updateModalLoaded', false);
       store.dispatch('openModal', {
         type: 'loading',
-        asynchronous: true,
         loadingStr: '帳號註冊中',
       });
       store.dispatch('register', {

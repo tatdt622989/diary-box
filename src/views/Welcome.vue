@@ -135,7 +135,6 @@ export default defineComponent({
       if (sessionStorage.getItem('pending')) {
         store.dispatch('openModal', {
           type: 'loading',
-          asynchronous: true,
           loadingStr: '登入中',
         });
         store.dispatch('getRedirectRes');
