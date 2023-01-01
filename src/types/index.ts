@@ -113,3 +113,24 @@ export interface CanvasNote {
 export interface CanvasNoteList {
   [key: string]: Array<CanvasNote>;
 }
+
+export interface Res {
+  data: unknown;
+}
+
+export interface ResPoint {
+  msg: string;
+  point: number;
+  status: string;
+}
+
+export interface ResEditorModel {
+  msg: string;
+  status: string;
+  modelData: Array<Model>;
+}
+
+export interface ResBuyModel {
+  msg: string;
+  status: string;
+}

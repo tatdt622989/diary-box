@@ -99,7 +99,7 @@ export default defineComponent({
       if (timer.value) {
         clearTimeout(timer.value);
       }
-      timer.value = setTimeout(() => {
+      timer.value = window.setTimeout(() => {
         store.commit('getHeight', `${window.innerHeight}px`);
         timer.value = null;
       }, 500);

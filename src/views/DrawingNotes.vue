@@ -277,7 +277,7 @@ export default defineComponent({
       if (timer) {
         clearTimeout(timer);
       }
-      timer = setTimeout(() => {
+      timer = window.setTimeout(() => {
         displayImg();
       }, 100);
     }
