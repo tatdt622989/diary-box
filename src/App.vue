@@ -46,7 +46,9 @@ export default defineComponent({
     onMounted(async () => {
       store.commit('getHeight');
       window.addEventListener('resize', handleResize, false);
-      await store.dispatch('updateUserInfo');
+      if (!sessionStorage.getItem('pending')) {
+        await store.dispatch('updateUserInfo');
+      }
       (async () => {
         const gpuTier = await getGPUTier();
         console.log(gpuTier);

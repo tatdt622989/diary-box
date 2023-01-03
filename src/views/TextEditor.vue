@@ -192,14 +192,7 @@ export default defineComponent({
             status: 'edit',
             data,
           });
-          let times = 0;
-          const closeModal = setInterval(() => {
-            if (times > 50 || store.state.modalLoaded) {
-              store.commit('closeModal');
-              clearInterval(closeModal);
-              times += 1;
-            }
-          });
+          store.commit('closeModal');
           router.push('/note-list');
         } else if (status.value === 'note-add') {
           await store.dispatch('updateNoteData', {
@@ -210,6 +203,7 @@ export default defineComponent({
           store.dispatch('getPoint', { type: 'note' });
           router.push('/note-list');
         }
+        store.commit('closeModal');
         // store.commit('updateNote', data);
       }
     }

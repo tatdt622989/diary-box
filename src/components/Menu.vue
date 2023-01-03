@@ -124,8 +124,8 @@ export default defineComponent({
       });
     }
 
-    function signOut() {
-      openModal('signOut');
+    async function signOut() {
+      await store.dispatch('signOut');
       router.push('/');
     }
 

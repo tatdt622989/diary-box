@@ -131,12 +131,10 @@ export default defineComponent({
     }
 
     onMounted(() => {
+      store.commit('closeModal');
       document.addEventListener('keydown', handleKeyDown);
-      if (sessionStorage.getItem('pending')) {
-        store.dispatch('openModal', {
-          type: 'loading',
-          loadingStr: '登入中',
-        });
+      if (sessionStorage.getItem('pending') === '1') {
+        sessionStorage.removeItem('pending');
         store.dispatch('getRedirectRes');
       }
     });

@@ -53,7 +53,7 @@ const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const storage = getStorage(app);
-const functions = getFunctions(app);
+const functions = getFunctions(app, 'asia-northeast2');
 
 export default createStore({
   state: {
@@ -209,15 +209,15 @@ export default createStore({
       // const facebookProvider = new firebase.auth.FacebookAuthProvider();
       switch (data.type) {
         case 'google':
-          sessionStorage.setItem('pending', '1');
           // googleProvider.setCustomParameters({ prompt: 'select_account' });
+          sessionStorage.setItem('pending', '1');
           signInWithRedirect(auth, googleProvider);
           break;
         case 'email':
           signInWithEmailAndPassword(auth, data.email, data.password)
             .then((userCredential) => {
               // Signed in
-              dispatch('updateUserInfo');
+              // dispatch('updateUserInfo');
             })
             .catch((error) => {
               let times = 0;
@@ -230,7 +230,6 @@ export default createStore({
               }, 100);
               const errorCode = error.code;
               const errorMessage = error.message;
-              // console.log(errorCode, errorMessage);
               if (errorCode.search('invalid-email') > 0) {
                 state.formHint = '電子郵件格式錯誤';
               }
@@ -246,7 +245,6 @@ export default createStore({
           signInAnonymously(auth)
             .then(() => {
               // Signed in..
-              dispatch('updateUserInfo');
             })
             .catch((error) => {
               const errorMessage = error.message;
@@ -294,7 +292,13 @@ export default createStore({
           updateProfile(auth.currentUser, {
             displayName: data.userName,
           }).then(() => {
-            dispatch('updateUserInfo');
+            const user = auth.currentUser;
+            if (user) {
+              state.userInfo = user as User;
+              dispatch('getHomeData').then((res) => {
+                state.dataLoaded = res;
+              });
+            }
           }).catch((err) => {
             dispatch('updateToast', {
               type: 'error',
@@ -374,8 +378,8 @@ export default createStore({
       }
       return null;
     },
-    signOut({ dispatch, commit, state }) {
-      signOut(auth).then(() => {
+    async signOut({ dispatch, commit, state }) {
+      await signOut(auth).then(() => {
         dispatch('updateToast', {
           type: 'success',
           content: '登出成功',
@@ -453,6 +457,7 @@ export default createStore({
           } else {
             displayName = state.userInfo?.displayName;
           }
+          if (!displayName) return false;
           const newUserFormat = httpsCallable(functions, 'newUserFormat');
           await newUserFormat({ displayName }).then((res: Res) => {
             const resData: UserData = res.data as UserData;
@@ -467,7 +472,6 @@ export default createStore({
           const modelData: Array<Model> = await new Promise((resolve) => {
             onValue(ref(db, `/users/${state.userInfo?.uid}/modelData`), (snapshot) => resolve(snapshot.val()), { onlyOnce: true });
           });
-          console.log(modelData);
           const noteData = await new Promise((resolve) => {
             onValue(query(ref(db, `/users/${state.userInfo?.uid}/noteData`), limitToLast(1)), (snapshot) => {
               const obj = snapshot.val() ? snapshot.val() : {};
@@ -505,6 +509,7 @@ export default createStore({
           }
           times += 1;
         }, 100);
+        return true;
       }
       return false;
     },
@@ -561,8 +566,8 @@ export default createStore({
       onAuthStateChanged(auth, (user) => {
         if (user) {
           state.userInfo = user as User;
-          dispatch('getHomeData').then(() => {
-            state.dataLoaded = true;
+          dispatch('getHomeData').then((res) => {
+            state.dataLoaded = res;
           });
         } else {
           commit('resetUserData');
@@ -680,6 +685,10 @@ export default createStore({
       }
     },
     async getRedirectRes({ dispatch, commit, state }) {
+      dispatch('openModal', {
+        type: 'loading',
+        loadingStr: '登入中',
+      });
       getRedirectResult(auth)
         .then((result) => {
           if (result) {
@@ -688,12 +697,23 @@ export default createStore({
             // The signed-in user info.
             if (user) {
               state.userInfo = user;
-              dispatch('getHomeData').then(() => {
-                state.dataLoaded = true;
+              dispatch('getHomeData').then((res) => {
+                state.dataLoaded = res;
+              });
+            } else {
+              dispatch('updateToast', {
+                type: 'error',
+                content: '狀態過期，請重新登入',
               });
             }
-            sessionStorage.removeItem('pending');
+          } else {
+            dispatch('updateToast', {
+              type: 'error',
+              content: 'result is null',
+            });
           }
+          commit('closeModal');
+          dispatch('updateUserInfo');
         }).catch((error) => {
           // Handle Errors here.
           const errorCode = error.code;
